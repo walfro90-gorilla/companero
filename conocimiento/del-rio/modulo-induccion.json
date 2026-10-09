@@ -1,7 +1,7 @@
 {
-  "nota": "Generado con IA (groq) desde el material publicado de Tienda Escuela el 2026-10-09. Revisado por el equipo el 9-oct contra el manual: se corrigió un cálculo de la IA (pregunta 4: el cupón DESC10 no aplica bajo $150 a precio de lista), opciones repetidas, el momento del retiro (pregunta 6), los personajes de las prácticas (eran el propio cajero) y redacción de 4 pasos.",
+  "nota": "Generado con IA (groq) desde el manual oficial del reto (Tienda Escuela, ficticio) el 2026-10-09. Revisado por el equipo el 9-oct contra el manual: se corrigió un cálculo de la IA (pregunta 4: el cupón DESC10 no aplica bajo $150 a precio de lista), opciones repetidas, el momento del retiro (pregunta 6), los personajes de las prácticas (eran el propio cajero) y redacción de 4 pasos.",
   "titulo": "Inducción del cajero: un turno completo",
-  "descripcion": "Aprende paso a paso cómo abrir, operar y cerrar tu caja en Tienda Escuela.",
+  "descripcion": "Aprende paso a paso cómo abrir, operar y cerrar tu caja.",
   "puesto": "Cajero",
   "lecciones": [
     {

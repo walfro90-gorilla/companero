@@ -14,6 +14,8 @@ export function peticionReescritura(consulta: string, giro?: string | null): Pet
       '"cuánto dinero puedo tener" → "límite efectivo gaveta retiro"). Sin explicaciones ni signos: responde solo las palabras separadas por espacios.',
     messages: [{ role: 'user', content: consulta.slice(0, 800) }],
     maxOutputTokens: 1200,
+    // Determinista en lo posible: la misma pregunta debe buscar lo mismo (medido en pruebas/busqueda.json).
+    temperature: 0,
   };
 }
 

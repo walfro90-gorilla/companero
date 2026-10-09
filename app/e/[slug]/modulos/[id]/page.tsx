@@ -18,8 +18,8 @@ export default async function Modulo({ params }: PageProps<'/e/[slug]/modulos/[i
   if (!m) notFound();
   const [{ data: avances }, { data: intentos }, { data: practicas }, progreso] = await Promise.all([
     supabase.from('avances').select('leccion_id').eq('usuario_id', usuario.id).eq('modulo_id', id),
-    supabase.from('intentos').select('aciertos, total').eq('usuario_id', usuario.id).eq('modulo_id', id),
-    supabase.from('practicas').select('escenario_id').eq('usuario_id', usuario.id).eq('modulo_id', id),
+    supabase.from('intentos').select('aciertos, total, calificacion, comentario, revisado_en').eq('usuario_id', usuario.id).eq('modulo_id', id),
+    supabase.from('practicas').select('escenario_id, calificacion, comentario, revisado_en').eq('usuario_id', usuario.id).eq('modulo_id', id),
     progresoDe(supabase, empresa.id, usuario.id),
   ]);
   const orden = <T extends { orden: number }>(xs: T[]) => [...xs].sort((a, b) => a.orden - b.orden);
@@ -45,6 +45,8 @@ export default async function Modulo({ params }: PageProps<'/e/[slug]/modulos/[i
       vistas={(avances ?? []).map(a => a.leccion_id)}
       mejorTest={mejor}
       practicadas={(practicas ?? []).map(p => p.escenario_id)}
+      revisionTest={(intentos ?? []).filter(i => i.calificacion !== null).sort((a, b) => (b.revisado_en ?? '').localeCompare(a.revisado_en ?? ''))[0] ?? null}
+      revisionesPractica={Object.fromEntries((practicas ?? []).filter(p => p.calificacion !== null).map(p => [p.escenario_id, { calificacion: p.calificacion!, comentario: p.comentario }]))}
       progresoInicial={progreso}
     />
     </ProveedorEtiquetas>

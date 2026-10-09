@@ -121,6 +121,34 @@ select pg_temp.esperar((select count(*) from public.canalizaciones) = 0, 'Beto n
 select pg_temp.esperar((select count(*) from public.huecos_del_material((select id from public.empresas where slug = 'uno'))) = 0,
   'ni los huecos de Uno');
 
+-- Revisión de respuestas (ADR 0014): Caro hace un test; no puede calificarse; Ana (admin) sí, pero sin tocar respuestas.
+select pg_temp.como('00000000-0000-4000-8000-0000000000a1', 'ana@uno.mx');
+insert into public.modulos (empresa_id, titulo, estado) select id, 'Módulo de prueba', 'autorizado' from public.empresas where slug = 'uno';
+select pg_temp.como('00000000-0000-4000-8000-0000000000c3', 'caro@uno.mx');
+insert into public.intentos (empresa_id, usuario_id, modulo_id, respuestas, aciertos, total)
+  select m.empresa_id, auth.uid(), m.id, '[]'::jsonb, 3, 5 from public.modulos m where m.titulo = 'Módulo de prueba';
+select pg_temp.esperar((select count(*) from public.intentos) = 1, 'Caro ve su intento');
+update public.intentos set calificacion = 10;
+select pg_temp.esperar((select calificacion from public.intentos) is null, 'Caro NO puede ponerse calificación');
+do $$ begin
+  insert into public.intentos (empresa_id, usuario_id, modulo_id, respuestas, aciertos, total, calificacion)
+    select m.empresa_id, auth.uid(), m.id, '[]'::jsonb, 5, 5, 10 from public.modulos m where m.titulo = 'Módulo de prueba';
+  raise exception 'FALLÓ: Caro creó un intento ya calificado';
+exception when insufficient_privilege then raise notice 'ok: Caro no puede crear un intento ya calificado'; end $$;
+select pg_temp.como('00000000-0000-4000-8000-0000000000a1', 'ana@uno.mx');
+update public.intentos set calificacion = 8, comentario = 'Repasa cancelaciones', revisado_por = auth.uid(), revisado_en = now();
+select pg_temp.esperar((select calificacion from public.intentos) = 8, 'Ana (admin) califica el intento');
+do $$ begin
+  update public.intentos set aciertos = 5;
+  raise exception 'FALLÓ: Ana cambió el puntaje automático';
+exception when insufficient_privilege then raise notice 'ok: quien califica no puede cambiar las respuestas ni el puntaje'; end $$;
+select pg_temp.como('00000000-0000-4000-8000-0000000000b2', 'beto@dos.mx');
+select pg_temp.esperar((select count(*) from public.intentos) = 0, 'Beto (otra empresa) no ve intentos de Uno');
+do $$ begin
+  perform count(*) from public.accesos_reloj;
+  raise exception 'FALLÓ: un usuario leyó accesos_reloj';
+exception when insufficient_privilege then raise notice 'ok: nadie con sesión lee los intentos de acceso por número de reloj'; end $$;
+
 -- Un usuario anónimo (modo invitado) no puede crear empresas.
 select pg_temp.root();
 select set_config('role', 'authenticated', true);

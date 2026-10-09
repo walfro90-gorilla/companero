@@ -30,7 +30,8 @@ de remedio; **no se ejecutó** (prender RLS sin políticas tumbaría esa app). E
 ## Llaves
 - En Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (pública por diseño; la
   protección es la RLS), `ANTHROPIC_API_KEY` y `GROQ_API_KEY` (secretas; las captura Wal).
-- `SUPABASE_SECRET_KEY` **nunca** va a Vercel: solo la usan los scripts locales (sembrar) y la app la
+- **Cambio del 9-oct (ADR 0014):** `SUPABASE_SECRET_KEY` **sí va a Vercel** (sensitive), solo para el servidor: acceso
+  por número de reloj y alta de empleados. Texto original: `SUPABASE_SECRET_KEY` **nunca** va a Vercel: solo la usan los scripts locales (sembrar) y la app la
   rechaza si se configura por error (`lib/config.ts`).
 
 ## Descartado

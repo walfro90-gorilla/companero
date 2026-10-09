@@ -3,7 +3,7 @@
 import { useActionState, useState } from 'react';
 import { slugDe } from '@/lib/texto';
 import { boton, campo, etiqueta } from '../_ui/estilos';
-import { crearEmpresa, unirseConCodigo, type EstadoForm } from './acciones';
+import { crearEmpresa, type EstadoForm } from './acciones';
 
 const GIROS = ['Comercio / tiendas', 'Maquila / manufactura', 'Restaurantes', 'Servicios', 'Salud', 'Logística', 'Otro'];
 
@@ -43,17 +43,6 @@ export function FormCrearEmpresa() {
       </div>
       {estado.error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{estado.error}</p>}
       <button type="submit" disabled={pendiente} className={`${boton} w-full`}>{pendiente ? 'Creando…' : 'Crear empresa'}</button>
-    </form>
-  );
-}
-
-export function FormUnirse() {
-  const [estado, accion, pendiente] = useActionState<EstadoForm, FormData>(unirseConCodigo, {});
-  return (
-    <form action={accion} className="space-y-3">
-      <input name="codigo" required className={`${campo} text-center uppercase tracking-widest`} placeholder="CÓDIGO" maxLength={12} />
-      {estado.error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{estado.error}</p>}
-      <button type="submit" disabled={pendiente} className={`${boton} w-full`}>{pendiente ? 'Entrando…' : 'Unirme'}</button>
     </form>
   );
 }

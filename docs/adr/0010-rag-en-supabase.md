@@ -45,6 +45,8 @@ el texto exacto y el documento original en su página.
 Peso por rareza (IDF) y prefijo de raíz; vía aproximada solo sobre el título y con la mitad de peso; reescritura de
 la consulta con un modelo rápido y fusión con la búsqueda original; 12 secciones por consulta. Se mide con
 `npm run medir:busqueda` (18/18 con reescritura, 15/18 sin ella) y entra a `npm run validar`.
+La reescritura va con `temperature: 0` en Groq (Claude 5 no acepta el parámetro): sin eso el resultado variaba entre
+16 y 18 de 18 de una corrida a otra; con él, 18/18 en tres corridas seguidas y mejor orden (MRR de 0.54 a 0.65).
 
 ## Pendiente
 - Proveedor de embeddings (y permiso de Del Río para mandar su material a ese proveedor).

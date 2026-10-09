@@ -37,3 +37,9 @@ panel de RH dice qué falta documentar.
   aceptable; si un día cuenta para algo, se mueve la calificación a una función `security definer`.
 - El módulo sembrado de Del Río (`conocimiento/del-rio/modulo-induccion.json`) es de ejemplo y sirve de
   respaldo de la demo; con el material real se genera con IA desde la app.
+
+## Cambio del 9-oct (ADR 0014)
+Pedido de Wal: RH y admin **revisan y califican** (0–10 con comentario) las prácticas y los tests de cada empleado
+en el panel "Respuestas". El empleado ve su calificación y se le avisa que su instructor puede revisar sus
+respuestas. Es revisión humana para aprender, no una decisión automatizada (condición de la ficha). Las métricas
+agregadas y la ausencia de rankings entre personas se mantienen.

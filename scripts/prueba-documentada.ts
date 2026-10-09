@@ -1,4 +1,4 @@
-// `npm run prueba [-- --empresa tienda-escuela]`: corre pruebas/consultas.json contra el mismo cerebro que usa la
+// `npm run prueba [-- --empresa del-rio]`: corre pruebas/consultas.json contra el mismo cerebro que usa la
 // app (búsqueda en Supabase + cadena de IA) y escribe docs/prueba-documentada.md (docs/adr/0007 y 0013). Los
 // errores se reportan tal cual: es lo que pide Del Río. Usa la llave secreta de .env.local (solo para scripts).
 
@@ -63,7 +63,7 @@ function evaluar(c: Consulta, citadas: string[], invalidas: string[], canalizo: 
 }
 
 const i = process.argv.indexOf('--empresa');
-const slug = i > 0 ? process.argv[i + 1] : 'tienda-escuela';
+const slug = i > 0 ? process.argv[i + 1] : 'del-rio';
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const secreta = process.env.SUPABASE_SECRET_KEY;
 if (!url || !secreta) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SECRET_KEY en .env.local');
@@ -120,7 +120,7 @@ const md = [
   `Empresa: ${empresa.nombre} (\`${slug}\`). Material: ${(docs ?? []).map(d => `D${d.numero} "${d.titulo}" — ${d.fuente ?? ''}`).join('; ')}.`,
   `Hora simulada de la consulta (afecta promociones con horario): ${fechaHora(ahora)}.`,
   `Búsqueda (paso de recuperación del RAG): trajo una sección esperada en ${filas.filter(f => f.encontro).length} de ${filas.filter(f => f.encontro !== null).length} consultas cubiertas.`,
-  (docs ?? []).some(d => d.ejemplo) ? '\n> El material es **ficticio** (manual de Tienda Escuela entregado para el reto): no describe políticas reales de Del Río ni de Superette.\n' : '',
+  (docs ?? []).some(d => d.ejemplo) ? '\n> El material es **ficticio** (manual de Tienda Escuela entregado para el reto, cargado en la empresa Del Río de la demo): no describe políticas reales de Del Río ni de Superette.\n' : '',
   `**Resultado:** ${cuenta('✅ correcta')} correctas · ${cuenta('↪️ canalizada')} canalizadas correctamente · ${cuenta('❌ error')} errores, de ${filas.length} consultas ` +
     `(${filas.filter(f => f.tipo === 'cubierta').length} cubiertas por el material y ${filas.filter(f => f.tipo === 'sin_respuesta').length} sin respuesta disponible).`,
   '',

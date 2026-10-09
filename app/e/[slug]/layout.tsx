@@ -20,6 +20,7 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<'/
       ? ([
           { href: `${base}/admin/contenido`, texto: 'Contenido', icono: 'contenido' },
           { href: `${base}/admin/modulos`, texto: 'Módulos', icono: 'modulos' },
+          { href: `${base}/admin/respuestas`, texto: 'Respuestas', icono: 'respuestas' },
           { href: `${base}/admin/equipo`, texto: 'Equipo', icono: 'equipo' },
           { href: `${base}/admin/metricas`, texto: 'Métricas', icono: 'metricas' },
           { href: `${base}/admin/ajustes`, texto: 'Asistente', icono: 'ajustes' },
@@ -34,7 +35,7 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<'/
           <Link href="/inicio?elegir" className="min-w-0">
             <span className="block truncate font-semibold">{empresa.nombre}</span>
             <span className="block truncate text-xs text-stone-500">
-              {usuario.anonimo ? 'Invitado' : (miembro.nombre ?? usuario.email)} · {NOMBRE_ROL[miembro.rol]}
+              {miembro.numero_reloj ? `Núm. ${miembro.numero_reloj}${miembro.nombre ? ` · ${miembro.nombre}` : ''}` : (miembro.nombre ?? usuario.email)} · {NOMBRE_ROL[miembro.rol]}
               {miembro.puesto ? ` · ${miembro.puesto}` : ''}
             </span>
           </Link>

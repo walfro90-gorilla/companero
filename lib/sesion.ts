@@ -36,7 +36,7 @@ export type Contexto = {
   supabase: Cliente;
   usuario: Usuario;
   empresa: Empresa;
-  miembro: { rol: Rol; sucursal_id: string | null; puesto_id: string | null; nombre: string | null; puesto: string | null };
+  miembro: { rol: Rol; sucursal_id: string | null; puesto_id: string | null; nombre: string | null; puesto: string | null; numero_reloj: string | null };
   /** Admin o RH: contenido, módulos, equipo, métricas. */
   gestiona: boolean;
   /** Admin, RH o supervisor: avance del equipo y canalizaciones. */
@@ -45,12 +45,14 @@ export type Contexto = {
 
 /** Empresa + membresía de quien navega. Si no es miembro, 404 (no se revela que la empresa existe). */
 export const contextoEmpresa = cache(async (slug: string): Promise<Contexto> => {
-  const { supabase, usuario } = await requerirSesion(`/e/${slug}`);
+  const s = await sesion();
+  if (!s) redirect(`/acceso/${slug}`);
+  const { supabase, usuario } = s;
   const { data: empresa } = await supabase
     .from('empresas').select('id, slug, nombre, giro, avatar').eq('slug', slug).maybeSingle();
   if (!empresa) notFound();
   const { data: miembro } = await supabase
-    .from('miembros').select('rol, sucursal_id, puesto_id, nombre, puestos(nombre)')
+    .from('miembros').select('rol, sucursal_id, puesto_id, nombre, numero_reloj, puestos(nombre)')
     .eq('empresa_id', empresa.id).eq('usuario_id', usuario.id).maybeSingle();
   if (!miembro) notFound();
   const rol = miembro.rol;
@@ -59,7 +61,7 @@ export const contextoEmpresa = cache(async (slug: string): Promise<Contexto> => 
     usuario,
     empresa: { ...empresa, avatar: avatarDe(empresa.avatar) },
     miembro: {
-      rol, sucursal_id: miembro.sucursal_id, puesto_id: miembro.puesto_id, nombre: miembro.nombre,
+      rol, sucursal_id: miembro.sucursal_id, puesto_id: miembro.puesto_id, nombre: miembro.nombre, numero_reloj: miembro.numero_reloj,
       puesto: miembro.puestos?.nombre ?? null,
     },
     gestiona: rol === 'admin' || rol === 'rh',

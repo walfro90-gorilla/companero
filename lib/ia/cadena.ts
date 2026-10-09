@@ -125,7 +125,8 @@ export async function generarConRespaldo(
         instructions: peticion.instructions,
         messages: peticion.messages,
         maxOutputTokens: e.tokensSalida ?? peticion.maxOutputTokens,
-        temperature: peticion.temperature,
+        // Los modelos Claude 5 responden 400 si reciben temperature: solo se manda a los demás.
+        temperature: e.proveedor === 'anthropic' ? undefined : peticion.temperature,
         providerOptions: e.opciones,
         abortSignal: AbortSignal.timeout(plazo),
       });

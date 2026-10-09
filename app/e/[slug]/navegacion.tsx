@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, Bot, FileText, Home, Inbox, Settings, Users } from 'lucide-react';
+import { BarChart3, BookOpen, Bot, ClipboardCheck, FileText, Home, Inbox, Settings, Users } from 'lucide-react';
 
 const ICONOS = {
   inicio: Home, asistente: Bot, canalizaciones: Inbox, contenido: FileText,
-  modulos: BookOpen, equipo: Users, metricas: BarChart3, ajustes: Settings,
+  modulos: BookOpen, respuestas: ClipboardCheck, equipo: Users, metricas: BarChart3, ajustes: Settings,
 };
 
 export type Enlace = { href: string; texto: string; icono: keyof typeof ICONOS };

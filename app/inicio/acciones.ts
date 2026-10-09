@@ -3,12 +3,13 @@
 import { redirect } from 'next/navigation';
 import { requerirSesion } from '@/lib/sesion';
 import { slugDe } from '@/lib/texto';
+import { esCorreoDeEmpleado } from '@/lib/reloj';
 
 export type EstadoForm = { error?: string };
 
 export async function crearEmpresa(_: EstadoForm, datos: FormData): Promise<EstadoForm> {
   const { supabase, usuario } = await requerirSesion();
-  if (usuario.anonimo) return { error: 'Para crear una empresa entra con Google o con tu correo.' };
+  if (usuario.anonimo || esCorreoDeEmpleado(usuario.email)) return { error: 'Para registrar una empresa entra con una cuenta de administración (correo y contraseña).' };
   const nombre = String(datos.get('nombre') ?? '').trim();
   const slug = slugDe(String(datos.get('slug') ?? '') || nombre);
   if (nombre.length < 2) return { error: 'Escribe el nombre de la empresa.' };
@@ -26,13 +27,4 @@ export async function crearEmpresa(_: EstadoForm, datos: FormData): Promise<Esta
   }
   // Siguiente paso natural: subir el material de capacitación.
   redirect(`/e/${slug}/admin/contenido?nueva=1`);
-}
-
-export async function unirseConCodigo(_: EstadoForm, datos: FormData): Promise<EstadoForm> {
-  const { supabase } = await requerirSesion();
-  const codigo = String(datos.get('codigo') ?? '').trim();
-  if (!/^[a-z0-9]{6,12}$/i.test(codigo)) return { error: 'El código tiene 8 letras y números.' };
-  const { data, error } = await supabase.rpc('unirse_con_codigo', { p_codigo: codigo });
-  if (error || !data?.[0]) return { error: 'Ese código no es válido. Pídele a tu supervisor el de tu sucursal.' };
-  redirect(`/e/${data[0].slug}`);
 }

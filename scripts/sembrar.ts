@@ -1,16 +1,20 @@
 // `npm run sembrar`: crea las empresas de demostración con su material de EJEMPLO (docs/adr/0009).
-//   - tienda-escuela → el reto (cajeros) con el manual OFICIAL del reto: «Manual de procedimientos para cajeros —
-//                      Tienda Escuela», ficticio (docs/adr/0013). Se carga el PDF por el mismo camino que la app.
+//   - del-rio        → el reto (cajeros) con el manual OFICIAL del reto: «Manual de procedimientos para cajeros —
+//                      Tienda Escuela», ficticio (docs/adr/0013); Wal decidió que la empresa de la demo se llame
+//                      Del Río, con la franja de contenido ficticio. Se carga el PDF por el mismo camino que la app.
 //   - superette      → segunda empresa del mismo grupo (la ficha dice "Del Río y Superette"): prueba de que
 //                      cada empresa ve solo lo suyo y tiene su propio asistente.
 // Usa la llave SECRETA (solo en .env.local; la app nunca la usa) y es idempotente: lo que ya existe no se
 // duplica. Con `--reiniciar` borra y vuelve a crear esas dos empresas.
-// SEMBRAR_ADMIN_EMAIL=correo deja una invitación de admin: al entrar con ese correo, queda en ambas.
+// Admin: SEMBRAR_ADMIN_EMAIL + SEMBRAR_ADMIN_PASSWORD crea (o actualiza) la cuenta de admin con contraseña y la deja
+// como admin de las demos (docs/adr/0014). Solo con el correo, deja una invitación.
+// Empleados: los de `empleados` de cada demo entran con su número de reloj (Del Río: estudiantes 0001–0004).
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { extraer } from '../lib/ingesta/extraer.ts';
 import { guardarSecciones } from '../lib/ingesta/ingerir.ts';
+import { altaEmpleado, borrarEmpleados } from '../lib/empleados.ts';
 import { seccionarMarkdown, sinEncabezado } from '../lib/ingesta/seccionar.ts';
 import type { Database } from '../lib/supabase/tipos.ts';
 
@@ -23,17 +27,41 @@ if (!url || !secreta) {
 const supabase = createClient<Database>(url, secreta, { auth: { persistSession: false } });
 const reiniciar = process.argv.includes('--reiniciar');
 const adminEmail = process.env.SEMBRAR_ADMIN_EMAIL?.trim().toLowerCase();
+const adminPassword = process.env.SEMBRAR_ADMIN_PASSWORD;
+
+/** La cuenta de admin con contraseña (se crea o se le pone la contraseña si ya existía). */
+async function cuentaAdmin(): Promise<string | null> {
+  if (!adminEmail || !adminPassword) return null;
+  const c = await supabase.auth.admin.createUser({ email: adminEmail, password: adminPassword, email_confirm: true });
+  if (c.data.user) return c.data.user.id;
+  for (let pagina = 1; pagina < 50; pagina++) {
+    const { data } = await supabase.auth.admin.listUsers({ page: pagina, perPage: 200 });
+    const u = data.users.find(x => x.email?.toLowerCase() === adminEmail);
+    if (u) {
+      await supabase.auth.admin.updateUserById(u.id, { password: adminPassword });
+      return u.id;
+    }
+    if (data.users.length < 200) break;
+  }
+  throw new Error(`No se pudo crear ni encontrar la cuenta de admin: ${c.error?.message}`);
+}
+const adminId = await cuentaAdmin();
 
 type Demo = {
   slug: string; nombre: string; giro: string; sucursales: string[]; puestos: string[]; carpeta: string;
   avatar: Record<string, unknown>;
+  /** Empleados de la demo (número de reloj y nombre), en la primera sucursal y el primer puesto. */
+  empleados?: { numero: string; nombre: string }[];
 };
 
 const DEMOS: Demo[] = [
   {
-    slug: 'tienda-escuela', nombre: 'Tienda Escuela', giro: 'Comercio / tiendas', carpeta: 'conocimiento/tienda-escuela',
+    slug: 'del-rio', nombre: 'Del Río', giro: 'Comercio / tiendas', carpeta: 'conocimiento/del-rio',
     sucursales: ['Sucursal Centro', 'Sucursal Las Torres'], puestos: ['Cajero'],
-    // Escenario ficticio del reto; identidad provisional, sin marca de Del Río ni de Superette (docs/adr/0005 y 0013).
+    // Estudiantes para la demo (decisión de Wal, 9-oct): entran en /acceso/del-rio con su número.
+    empleados: [1, 2, 3, 4].map(n => ({ numero: `000${n}`, nombre: `Estudiante ${n}` })),
+    // Material ficticio del reto (manual de Tienda Escuela); identidad del asistente provisional, sin logotipo ni
+    // colores de Del Río hasta que los autorice (docs/adr/0005 y 0013).
     avatar: {
       nombre: 'Rosa', rol: 'tu compañera de capacitación',
       preguntas: ['¿Cómo hago una cancelación?', '¿Qué hago si un producto no tiene precio?', '¿Cómo aplico una promoción?',
@@ -56,6 +84,7 @@ const DEMOS: Demo[] = [
 async function sembrar(d: Demo) {
   const { data: existe } = await supabase.from('empresas').select('id').eq('slug', d.slug).maybeSingle();
   if (existe && reiniciar) {
+    await borrarEmpleados(supabase, existe.id);
     await supabase.from('empresas').delete().eq('id', existe.id);
     console.log(`↺ ${d.slug}: borrada`);
   } else if (existe) {
@@ -67,7 +96,15 @@ async function sembrar(d: Demo) {
   if (error || !empresa) throw new Error(`${d.slug}: ${error?.message}`);
   await supabase.from('sucursales').insert(d.sucursales.map(nombre => ({ empresa_id: empresa.id, nombre })));
   await supabase.from('puestos').insert(d.puestos.map(nombre => ({ empresa_id: empresa.id, nombre })));
-  if (adminEmail) await supabase.from('invitaciones').insert({ empresa_id: empresa.id, email: adminEmail, rol: 'admin' });
+  const { data: sucursales } = await supabase.from('sucursales').select('id').eq('empresa_id', empresa.id).order('creada_en');
+  const { data: puestos } = await supabase.from('puestos').select('id').eq('empresa_id', empresa.id);
+  if (adminId) await supabase.from('miembros').insert({ empresa_id: empresa.id, usuario_id: adminId, rol: 'admin', sucursal_id: sucursales?.[0]?.id ?? null });
+  else if (adminEmail) await supabase.from('invitaciones').insert({ empresa_id: empresa.id, email: adminEmail, rol: 'admin' });
+  for (const e of d.empleados ?? []) {
+    const r = await altaEmpleado(supabase, { empresaId: empresa.id, numero: e.numero, nombre: e.nombre, sucursalId: sucursales?.[0]?.id, puestoId: puestos?.[0]?.id });
+    if ('error' in r) throw new Error(`empleado ${e.numero}: ${r.error}`);
+  }
+  if (d.empleados?.length) console.log(`  empleados: ${d.empleados.map(e => e.numero).join(', ')} (entran en /acceso/${d.slug})`);
 
   for (const archivo of readdirSync(d.carpeta).filter(a => a.endsWith('.pdf')).sort()) await sembrarPdf(empresa.id, d.nombre, d.carpeta, archivo);
   for (const archivo of readdirSync(d.carpeta).filter(a => a.endsWith('.md')).sort()) {
@@ -144,4 +181,4 @@ async function sembrarModulo(empresaId: string, carpeta: string) {
 }
 
 for (const d of DEMOS) await sembrar(d);
-if (!adminEmail) console.log('\nTip: SEMBRAR_ADMIN_EMAIL=tu@correo npm run sembrar -- --reiniciar  → quedas como admin de las demos al entrar.');
+if (!adminId) console.log('\nTip: SEMBRAR_ADMIN_EMAIL y SEMBRAR_ADMIN_PASSWORD en el .env → cuenta de admin con contraseña en las demos.');

@@ -1,4 +1,4 @@
-// `npm run generar:modulo [-- --empresa tienda-escuela]`: genera con IA el módulo de inducción desde el material
+// `npm run generar:modulo [-- --empresa del-rio]`: genera con IA el módulo de inducción desde el material
 // publicado (lo mismo que el botón "Generar con IA" de la app) y lo escribe en conocimiento/<empresa>/modulo-induccion.json
 // para que el equipo lo REVISE y luego `npm run sembrar` lo cargue publicado (docs/adr/0011 y 0013).
 
@@ -10,7 +10,7 @@ import { peticionEscenarios, peticionLecciones, peticionTest, validarEscenarios,
 import type { Database } from '../lib/supabase/tipos.ts';
 
 const i = process.argv.indexOf('--empresa');
-const slug = i > 0 ? process.argv[i + 1] : 'tienda-escuela';
+const slug = i > 0 ? process.argv[i + 1] : 'del-rio';
 const supabase = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
 const { data: empresa } = await supabase.from('empresas').select('id, nombre').eq('slug', slug).single();
 if (!empresa) throw new Error(`No existe ${slug}`);

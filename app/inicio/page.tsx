@@ -5,14 +5,16 @@ import { PRODUCTO } from '@/lib/marca';
 import { NOMBRE_ROL, requerirSesion } from '@/lib/sesion';
 import { tarjeta } from '../_ui/estilos';
 import { BotonSalir } from '../_ui/salir';
-import { FormCrearEmpresa, FormUnirse } from './formularios';
+import { esCorreoDeEmpleado } from '@/lib/reloj';
+import { FormCrearEmpresa } from './formularios';
 
 export const metadata = { title: `Inicio · ${PRODUCTO.nombre}` };
 
 export default async function Inicio({ searchParams }: PageProps<'/inicio'>) {
   const { supabase, usuario } = await requerirSesion();
   // Las invitaciones a su correo se vuelven membresías al entrar.
-  if (!usuario.anonimo) await supabase.rpc('aceptar_invitaciones');
+  const empleado = esCorreoDeEmpleado(usuario.email);
+  if (!empleado) await supabase.rpc('aceptar_invitaciones');
   const { data } = await supabase
     .from('miembros').select('rol, empresas(slug, nombre, giro)').eq('usuario_id', usuario.id).order('creado_en');
   const empresas = (data ?? []).flatMap(m => (m.empresas ? [{ ...m.empresas, rol: m.rol }] : []));
@@ -24,7 +26,7 @@ export default async function Inicio({ searchParams }: PageProps<'/inicio'>) {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{PRODUCTO.nombre}</h1>
-          <p className="text-sm text-stone-500">{usuario.anonimo ? 'Invitado' : usuario.email}</p>
+          <p className="text-sm text-stone-500">{empleado ? 'Empleado' : usuario.email}</p>
         </div>
         <BotonSalir />
       </header>
@@ -45,20 +47,16 @@ export default async function Inicio({ searchParams }: PageProps<'/inicio'>) {
         </section>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className={tarjeta}>
-          <h2 className="mb-1 font-semibold">¿Eres parte de un equipo?</h2>
-          <p className="mb-4 text-sm text-stone-600">Escanea el QR de tu sucursal o escribe su código.</p>
-          <FormUnirse />
+      {!empleado && (
+        <section className={`${tarjeta} max-w-xl`}>
+          <h2 className="mb-1 font-semibold">Registra tu empresa</h2>
+          <p className="mb-4 text-sm text-stone-600">
+            Sube tus manuales y en minutos tu personal tiene un asistente de capacitación. Tus empleados entran con su número de reloj.
+          </p>
+          <FormCrearEmpresa />
         </section>
-        {!usuario.anonimo && (
-          <section className={tarjeta}>
-            <h2 className="mb-1 font-semibold">Registra tu empresa</h2>
-            <p className="mb-4 text-sm text-stone-600">Sube tus manuales y en minutos tu personal tiene un asistente de capacitación.</p>
-            <FormCrearEmpresa />
-          </section>
-        )}
-      </div>
+      )}
+      {empleado && empresas.length === 0 && <p className={`${tarjeta} text-sm text-stone-600`}>Tu número de reloj ya no está activo. Pide ayuda a RH.</p>}
     </main>
   );
 }

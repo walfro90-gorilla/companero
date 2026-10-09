@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import QRCode from 'qrcode';
 import { NOMBRE_ROL, requerirGestion } from '@/lib/sesion';
 import { tarjeta } from '@/app/_ui/estilos';
-import { FormInvitar, FormNombre, FilaMiembro } from './formularios';
+import { FormAltaEmpleados, FormInvitar, FormNombre, FilaMiembro } from './formularios';
 import { agregarPuesto, agregarSucursal } from './acciones';
 
 // Equipo (docs/adr/0009): sucursales con su QR de alta, puestos, miembros y sus roles, invitaciones.
@@ -12,7 +12,7 @@ export default async function Equipo({ params }: PageProps<'/e/[slug]/admin/equi
   const [{ data: sucursales }, { data: puestos }, { data: miembros }, { data: invitaciones }] = await Promise.all([
     supabase.from('sucursales').select('id, nombre, codigo_union, activa').eq('empresa_id', empresa.id).order('creada_en'),
     supabase.from('puestos').select('id, nombre').eq('empresa_id', empresa.id).order('nombre'),
-    supabase.from('miembros').select('usuario_id, rol, nombre, sucursal_id, puesto_id, ingreso').eq('empresa_id', empresa.id).order('creado_en'),
+    supabase.from('miembros').select('usuario_id, rol, nombre, numero_reloj, sucursal_id, puesto_id, ingreso').eq('empresa_id', empresa.id).order('numero_reloj', { nullsFirst: true }).order('creado_en'),
     supabase.from('invitaciones').select('id, email, rol, aceptada_en').eq('empresa_id', empresa.id).is('aceptada_en', null).order('creada_en'),
   ]);
   const h = await headers();
@@ -30,8 +30,9 @@ export default async function Equipo({ params }: PageProps<'/e/[slug]/admin/equi
       <section className="space-y-3">
         <h1 className="text-xl font-semibold">Sucursales y alta con QR</h1>
         <p className="text-sm text-stone-600">
-          Imprime el QR de cada sucursal y ponlo en el área de personal: quien lo escanee entra con su Gmail o su correo y queda como
-          colaborador de esa sucursal. Después le asignas su puesto aquí abajo.
+          Imprime el QR de cada sucursal y ponlo en el área de personal: quien lo escanee entra con su <strong>número de reloj</strong>;
+          si es nuevo, queda como colaborador de esa sucursal. Los empleados ya dados de alta también entran en
+          /acceso/{slug}.
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {qrs.map(s => (
@@ -68,8 +69,16 @@ export default async function Equipo({ params }: PageProps<'/e/[slug]/admin/equi
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Invitar por correo</h2>
-        <p className="text-sm text-stone-600">Para RH, supervisores o administradores. Cuando entren con ese correo, quedan con el rol que elijas.</p>
+        <h2 className="text-lg font-semibold">Alta de empleados por número de reloj</h2>
+        <p className="text-sm text-stone-600">Colaboradores y supervisores entran solo con su número de reloj: sin correo ni contraseña.</p>
+        <div className={`${tarjeta} max-w-xl`}>
+          <FormAltaEmpleados slug={slug} {...opciones} />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Invitar a administración o RH</h2>
+        <p className="text-sm text-stone-600">Entran con correo y contraseña: al crear su cuenta en /entrar con ese correo, quedan con el rol que elijas.</p>
         <div className={`${tarjeta} max-w-xl`}>
           <FormInvitar slug={slug} {...opciones} />
         </div>

@@ -5,7 +5,26 @@ export type Database = {
   
   "public": {
           Tables: {
-            "avances": {
+            "accesos_reloj": {
+                  Row: {
+                    "creado_en": string,"empresa_id": string | null,"exito": boolean,"id": number,"ip": string
+                  }
+                  Insert: {
+                    "creado_en"?: string,"empresa_id"?: string | null,"exito": boolean,"id"?: number,"ip": string
+                  }
+                  Update: {
+                    "creado_en"?: string,"empresa_id"?: string | null,"exito"?: boolean,"id"?: number,"ip"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "accesos_reloj_empresa_id_fkey"
+      columns: ["empresa_id"]
+isOneToOne: false
+      referencedRelation: "empresas"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"avances": {
                   Row: {
                     "completada_en": string,"empresa_id": string,"leccion_id": string,"modulo_id": string,"usuario_id": string
                   }
@@ -157,13 +176,13 @@ isOneToOne: false
                   ]
                 },"intentos": {
                   Row: {
-                    "aciertos": number,"creado_en": string,"empresa_id": string,"id": string,"modulo_id": string,"respuestas": NonNullable<Json>,"total": number,"usuario_id": string
+                    "aciertos": number,"calificacion": number | null,"comentario": string | null,"creado_en": string,"empresa_id": string,"id": string,"modulo_id": string,"respuestas": NonNullable<Json>,"revisado_en": string | null,"revisado_por": string | null,"total": number,"usuario_id": string
                   }
                   Insert: {
-                    "aciertos": number,"creado_en"?: string,"empresa_id": string,"id"?: string,"modulo_id": string,"respuestas": NonNullable<Json>,"total": number,"usuario_id": string
+                    "aciertos": number,"calificacion"?: number | null,"comentario"?: string | null,"creado_en"?: string,"empresa_id": string,"id"?: string,"modulo_id": string,"respuestas": NonNullable<Json>,"revisado_en"?: string | null,"revisado_por"?: string | null,"total": number,"usuario_id": string
                   }
                   Update: {
-                    "aciertos"?: number,"creado_en"?: string,"empresa_id"?: string,"id"?: string,"modulo_id"?: string,"respuestas"?: NonNullable<Json>,"total"?: number,"usuario_id"?: string
+                    "aciertos"?: number,"calificacion"?: number | null,"comentario"?: string | null,"creado_en"?: string,"empresa_id"?: string,"id"?: string,"modulo_id"?: string,"respuestas"?: NonNullable<Json>,"revisado_en"?: string | null,"revisado_por"?: string | null,"total"?: number,"usuario_id"?: string
                   }
                   Relationships: [
                     {
@@ -238,13 +257,13 @@ isOneToOne: false
                   ]
                 },"miembros": {
                   Row: {
-                    "creado_en": string,"empresa_id": string,"ingreso": string,"nombre": string | null,"puesto_id": string | null,"rol": Database["public"]['Enums']["rol_miembro"],"sucursal_id": string | null,"usuario_id": string
+                    "creado_en": string,"empresa_id": string,"ingreso": string,"nombre": string | null,"numero_reloj": string | null,"puesto_id": string | null,"rol": Database["public"]['Enums']["rol_miembro"],"sucursal_id": string | null,"usuario_id": string
                   }
                   Insert: {
-                    "creado_en"?: string,"empresa_id": string,"ingreso"?: string,"nombre"?: string | null,"puesto_id"?: string | null,"rol"?: Database["public"]['Enums']["rol_miembro"],"sucursal_id"?: string | null,"usuario_id": string
+                    "creado_en"?: string,"empresa_id": string,"ingreso"?: string,"nombre"?: string | null,"numero_reloj"?: string | null,"puesto_id"?: string | null,"rol"?: Database["public"]['Enums']["rol_miembro"],"sucursal_id"?: string | null,"usuario_id": string
                   }
                   Update: {
-                    "creado_en"?: string,"empresa_id"?: string,"ingreso"?: string,"nombre"?: string | null,"puesto_id"?: string | null,"rol"?: Database["public"]['Enums']["rol_miembro"],"sucursal_id"?: string | null,"usuario_id"?: string
+                    "creado_en"?: string,"empresa_id"?: string,"ingreso"?: string,"nombre"?: string | null,"numero_reloj"?: string | null,"puesto_id"?: string | null,"rol"?: Database["public"]['Enums']["rol_miembro"],"sucursal_id"?: string | null,"usuario_id"?: string
                   }
                   Relationships: [
                     {
@@ -294,13 +313,13 @@ isOneToOne: false
                   ]
                 },"practicas": {
                   Row: {
-                    "completada_en": string,"empresa_id": string,"escenario_id": string,"id": string,"modulo_id": string,"usuario_id": string
+                    "calificacion": number | null,"comentario": string | null,"completada_en": string,"empresa_id": string,"escenario_id": string,"id": string,"modulo_id": string,"retroalimentacion": string | null,"revisado_en": string | null,"revisado_por": string | null,"transcripcion": NonNullable<Json>,"usuario_id": string
                   }
                   Insert: {
-                    "completada_en"?: string,"empresa_id": string,"escenario_id": string,"id"?: string,"modulo_id": string,"usuario_id": string
+                    "calificacion"?: number | null,"comentario"?: string | null,"completada_en"?: string,"empresa_id": string,"escenario_id": string,"id"?: string,"modulo_id": string,"retroalimentacion"?: string | null,"revisado_en"?: string | null,"revisado_por"?: string | null,"transcripcion"?: NonNullable<Json>,"usuario_id": string
                   }
                   Update: {
-                    "completada_en"?: string,"empresa_id"?: string,"escenario_id"?: string,"id"?: string,"modulo_id"?: string,"usuario_id"?: string
+                    "calificacion"?: number | null,"comentario"?: string | null,"completada_en"?: string,"empresa_id"?: string,"escenario_id"?: string,"id"?: string,"modulo_id"?: string,"retroalimentacion"?: string | null,"revisado_en"?: string | null,"revisado_por"?: string | null,"transcripcion"?: NonNullable<Json>,"usuario_id"?: string
                   }
                   Relationships: [
                     {

@@ -12,38 +12,69 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
 
 ---
 
-## Estado actual (actualizar conforme avance)
+## Estado actual (actualizar conforme avance) — viernes 9-oct, tarde
 
-- **Reto elegido:** **Del Río — "Tu compañero Del Río": avatar de IA para la inducción de cajeros** (área usuaria: RH). Detalle completo y entregables en [ADR 0001](docs/adr/0001-reto-y-alcance.md); criterios de evaluación y orden de trabajo en [ADR 0008](docs/adr/0008-criterios-de-evaluacion.md).
-- **Siguiente prioridad (ADR 0008):** módulo guiado por lecciones + test ≥5 + situaciones prácticas (criterio "Utilidad para la inducción", 25 %, el hueco más grande). En cuanto haya llaves: `npm run probar:cadena` y `npm run prueba` (criterio "Exactitud", 30 %).
+- **Reto elegido:** **Del Río — "Tu compañero Del Río": avatar de IA para la inducción de cajeros** (área usuaria: RH).
+  - Detalle completo y entregables: [ADR 0001](docs/adr/0001-reto-y-alcance.md).
+  - Criterios de evaluación (30/25/20/15/10): [ADR 0008](docs/adr/0008-criterios-de-evaluacion.md).
+- **En línea: https://companero-ten.vercel.app**
+  - **Vercel:** proyecto `companero`; **cada push a `main` despliega a producción**.
+  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Tiene 8 migraciones aplicadas por MCP y el historial alineado con los archivos, así que `supabase db push` sirve para las siguientes; la próxima migración es la `120700` o mayor. El aislamiento dio 25/25 también en la nube.
+  - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`). Si `git push` por SSH se cuelga (por `gcr-ssh-agent`), usar HTTPS con `gh`; el comando está al final de `docs/despliegue.md`.
+  - **Detalle:** [ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md) y [`docs/despliegue.md`](docs/despliegue.md).
+  - ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que sea el correcto.
+- **Pendiente de Wal para que producción funcione de punta a punta** (`docs/despliegue.md`):
+  1. `GROQ_API_KEY` en Vercel (§4) y **volver a desplegar** (las variables solo aplican a despliegues nuevos). Sin ella fallan el chat, la reescritura de la consulta y la voz.
+  2. Login en el panel de Supabase (§3): Site URL y Redirect URLs, **Anonymous OFF y Google OFF**, contraseña mínima de 8 y la plantilla del código de 6 dígitos.
+  2b. **`SUPABASE_SECRET_KEY` en Vercel** (sensitive; ADR 0014) y la migración `20261009120700` en la nube.
+  3. `npm run sembrar:nube` con `.env.nube` (§5), que también lleva `SEMBRAR_ADMIN_EMAIL` y `SEMBRAR_ADMIN_PASSWORD`. La nube todavía no tiene empresas.
 - **Equipo / nombre del equipo:** _pendiente_
 - **Problema:** la capacitación de cajeros nuevos consume tiempo operativo y hay mucha rotación; cada ingreso repite las mismas explicaciones.
-- **Solución (desde el 9-oct, [ADR 0009](docs/adr/0009-plataforma-multiempresa.md)):** **"Compañero"**, plataforma **multiempresa y multisucursal** "en blanco" para inducción y refuerzos de personal con IA. Del Río es el primer cliente; **Superette** la segunda empresa de demo. Cada empresa sube su material desde la app; un asistente con avatar responde **citando documento y sección** (RAG, [ADR 0010](docs/adr/0010-rag-en-supabase.md)), arma módulos con test y práctica, es **gamificable** sin rankings entre personas y **canaliza en vivo** al supervisor o a RH ([ADR 0011](docs/adr/0011-aprendizaje-gamificacion-y-canalizaciones.md)).
-- **Stack:** Next.js 16 + React 19 + Tailwind 4 + Vercel AI SDK 7 (Anthropic → Groq) + **Supabase (Postgres con RLS, Auth sin contraseñas, Storage, Realtime)** + Vercel ([ADR 0002](docs/adr/0002-stack.md)).
-- **Hecho (9-oct, madrugada):** base multiempresa con RLS, login con Google/código/invitado, alta por QR, ingesta de PDF/Word/texto con Contextual Retrieval, búsqueda híbrida, chat con citas verificables, canalizaciones en vivo, **módulos generados con IA** (lecciones, test, práctica con cliente simulado) con revisión de RH, **gamificación** (puntos, niveles, insignias, racha, festejo; reto por sucursal sin rankings), métricas agregadas, equipo/roles/QR, identidad del asistente, demos sembradas con un módulo de ejemplo. Evidencia: `npm run validar` → `docs/validacion.md` (44 lógica · 25 SQL · 8/8 búsqueda · 23 punta a punta · prueba documentada 10/10 con Groq).
-- **IA probada con Groq (9-oct):** prueba documentada 10/10 (8 correctas + 2 canalizadas), generación de módulo en ~20 s (6 lecciones, 6 preguntas, 3 prácticas, todo citado), simulador de práctica con retroalimentación citada.
-- **Despliegue ([ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md), runbook [`docs/despliegue.md`](docs/despliegue.md)):** **en línea desde el 9-oct, 14:47.** Supabase **`del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`** (`us-east-1`, propio): 8 migraciones aplicadas por MCP, historial alineado con los archivos (`supabase db push` sirve para las siguientes), aislamiento 25/25 en la nube. Vercel **`companero`** (equipo `wals-projects-a7eafbb2`, `iad1`) conectado a `main`: cada push despliega a producción. ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que esté vacío.
-- **Llaves (9-oct):** `GROQ_API_KEY` ya está en `.env.local`; `ANTHROPIC_API_KEY` vacía.
-- **Falta:** de Wal (detalle en `docs/despliegue.md`): `GROQ_API_KEY` en Vercel (obligatoria: chat, reescritura y voz) y volver a desplegar, Auth en el panel de Supabase (Site URL, redirects, anónimos ON, plantilla de código) y `npm run sembrar:nube`; llave de Anthropic (eslabón principal) y repetir la prueba documentada con ella; credenciales de Google (opcional); embeddings (opcional).
-- **Material del reto (9-oct, 11:30) → [ADR 0013](docs/adr/0013-material-del-reto-tienda-escuela.md):** "Manual de procedimientos para cajeros — Tienda Escuela", **ficticio**, 15 secciones. Reemplaza nuestro contenido de ejemplo de Del Río. Implicaciones:
-  - Citar como "**sección N, Subtítulo**".
-  - Partir el PDF por títulos y subtítulos (19 pt y 12.5 pt).
-  - Darle fecha y hora al asistente, porque hay promociones con horario del 8 al 10 de octubre.
-  - Nueva prueba documentada contra el manual.
-  - Decidido por Wal: la empresa demo pasa a ser **"Tienda Escuela"** y Superette se queda con una franja visible de contenido ficticio.
-  - **Hecho (9-oct, tarde):**
-    - El manual quedó en 96 secciones citables.
-    - Citas como «sección N, Subtítulo».
-    - Fecha y hora en el prompt.
-    - Búsqueda 18/18 con reescritura de la consulta.
-    - Red de seguridad de canalización.
-    - Prueba documentada 10/10 dos veces.
-    - Módulo de inducción generado con IA y revisado; la revisión encontró un cálculo equivocado de la IA, que ya se corrigió.
-    - `npm run validar`: las 5 suites en verde.
-  - **Pulsar para hablar en el chat:** Whisper en Groq; el audio no se guarda y se filtran las frases fantasma (ADR 0005).
-- **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`) · **Demo:** https://companero-ten.vercel.app · Si `git push` por SSH se cuelga (gcr-ssh-agent), ver el final de `docs/despliegue.md`.
-- **Pendiente de Del Río:** la identidad visual del avatar y quién es su **enlace de RH u Operación**. El material ya llegó: es el manual de Tienda Escuela, y el permiso para usarlo con IA lo da la organización (ADR 0013).
+- **Solución ([ADR 0009](docs/adr/0009-plataforma-multiempresa.md)):** **"Compañero"**, plataforma **multiempresa y multisucursal** "en blanco" para inducción y refuerzos de personal con IA.
+  - **Empresas de la demo:**
+    - **Del Río** (`/e/del-rio`), con el manual oficial del reto ([ADR 0013](docs/adr/0013-material-del-reto-tienda-escuela.md)). Wal decidió el nombre; el manual es de "Tienda Escuela", ficticio, y por eso la franja dice que no describe políticas reales de Del Río.
+    - **Superette (demo)**, con contenido de ejemplo nuestro.
 
+    Las dos llevan una franja de contenido ficticio.
+  - **Asistente con avatar:** responde **citando como pide el manual («sección N, Subtítulo»)** (RAG, [ADR 0010](docs/adr/0010-rag-en-supabase.md)).
+  - **Aprendizaje:** arma módulos con test y práctica; es **gamificable** sin rankings entre personas; **canaliza en vivo** al supervisor o a RH ([ADR 0011](docs/adr/0011-aprendizaje-gamificacion-y-canalizaciones.md)).
+  - **Voz:** se le puede preguntar **pulsando para hablar** ([ADR 0005](docs/adr/0005-avatar.md)).
+  - **Acceso ([ADR 0014](docs/adr/0014-acceso-por-numero-de-reloj-y-revision.md)):**
+    - **Empleados** (colaborador y supervisor): **solo con su número de reloj**, en `/acceso/{empresa}` o con el QR de su sucursal. Un número nuevo por QR queda dado de alta.
+    - **Admin y RH:** correo y contraseña en `/entrar`.
+    - **Sin Google ni modo invitado.**
+    - **Estudiantes de la demo:** **0001–0004** en Del Río.
+  - **Respuestas:** panel donde admin y RH **revisan y califican** (0–10 con comentario) las prácticas y los tests. El empleado ve su calificación y el aviso de que su instructor revisa.
+- **Material del reto:** "Manual de procedimientos para cajeros — Tienda Escuela", **ficticio**, 15 secciones, en `conocimiento/del-rio/`.
+  - Pide citar "sección N, Subtítulo".
+  - Tiene promociones con fecha y horario (8 al 10 de octubre, COMBO42 de 08:00 a 10:30).
+  - Tiene una tabla de lo que no define y a quién se canaliza.
+- **Stack:** Next.js 16 + React 19 + Tailwind 4 + Vercel AI SDK 7 (Anthropic → Groq; `gpt-oss-20b` para tareas rápidas; Whisper para la voz) + **Supabase (Postgres con RLS, Auth sin contraseñas, Storage, Realtime)** + Vercel ([ADR 0002](docs/adr/0002-stack.md)).
+- **Hecho:**
+  - Base multiempresa con RLS; login con Google, código o invitado; alta por QR; equipo y roles; identidad del asistente.
+  - **RAG:**
+    - Ingesta de PDF por títulos y subtítulos (el manual quedó en 96 secciones citables) con Contextual Retrieval.
+    - Búsqueda en Postgres con IDF y prefijo de raíz, más **reescritura de la consulta** y fusión: 18/18 en `pruebas/busqueda.json`.
+    - Fecha y hora en el prompt.
+    - Citas verificables que abren el PDF original en su página.
+    - Red de seguridad de canalización.
+  - **Módulos generados con IA y revisados** (lecciones, test y práctica con cliente simulado), gamificación (puntos, niveles, insignias, racha, festejo; reto por sucursal sin rankings), métricas agregadas y canalizaciones en vivo.
+  - **Pulsar para hablar** (Whisper en Groq, sin guardar audio, filtro de frases fantasma).
+  - **Evidencia para el jurado:** `npm run validar` → `docs/validacion.md`:
+    - Lógica: 61.
+    - Aislamiento SQL: 25.
+    - Búsqueda: 18/18 (15/18 sin reescritura).
+    - Punta a punta: con voz.
+    - Prueba documentada: **10/10 con Groq en dos corridas**.
+- **Llaves:**
+  - **En local** (`.env.local`): `GROQ_API_KEY` sí; `ANTHROPIC_API_KEY` vacía.
+  - **En Vercel:** solo las públicas de Supabase (falta `GROQ_API_KEY`).
+- **Falta (además de lo de Wal):**
+  - Llave de Anthropic y repetir la prueba documentada con Claude como eslabón principal.
+  - Pitch y video de respaldo de la demo.
+  - Prueba en el celular con la URL de producción.
+  - Opcionales: Google, embeddings, pulsar para hablar también en la práctica.
+- **Pendiente de Del Río:** la identidad visual del avatar y quién es su **enlace de RH u Operación**. El material ya llegó (ADR 0013).
 ---
 
 ## Reto Del Río (el nuestro)
@@ -89,10 +120,10 @@ pregunta ─► app/api/chat ─► buscar_secciones (Postgres: texto + aproxima
 respuesta en streaming con [D1-3] y [CANALIZAR:…] ─► UI valida contra lo consultado · consultas + canalizaciones (Realtime)
 ```
 
-- **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue · 0013 material del reto (Tienda Escuela)**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
+- **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue · 0013 material del reto (Tienda Escuela) · 0014 acceso por número de reloj y revisión**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
 - **Datos y permisos:** `supabase/migrations/` (Postgres con RLS en TODAS las tablas; helpers `mis_empresas()`, `gestiono()`, `superviso()`, `atiendo()`). La autorización la decide la base, no el código. `lib/sesion.ts` = capa de acceso (`contextoEmpresa(slug)`, `requerirGestion`). Tipos: `npm run tipos`.
-- **Rutas:** `/` landing · `/entrar` · `/inicio` (mis empresas, crear, unirse) · `/unirse/{codigo}` (QR) · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,equipo,metricas,ajustes}` · APIs `/api/chat`, `/api/practica` y `/api/transcribir` (voz).
-- **Contenido:** `conocimiento/tienda-escuela/` tiene el manual OFICIAL del reto (PDF, ficticio) y su módulo revisado; `conocimiento/superette/` tiene contenido de ejemplo escrito por el equipo. `npm run sembrar` los carga; la UI pone una franja de contenido ficticio en ambas empresas.
+- **Rutas:** `/` landing · `/entrar` (admin/RH: correo y contraseña) · `/acceso/{empresa}` (empleados: número de reloj) · `/unirse/{codigo}` (QR de sucursal: número de reloj, alta) · `/inicio` (admin: mis empresas, registrar empresa) · `/restablecer` · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,respuestas,equipo,metricas,ajustes}` · APIs `/api/chat`, `/api/practica`, `/api/transcribir` (voz) y `/api/acceso-reloj`.
+- **Contenido:** `conocimiento/del-rio/` tiene el manual OFICIAL del reto (PDF, ficticio) y su módulo revisado; `conocimiento/superette/` tiene contenido de ejemplo escrito por el equipo. `npm run sembrar` los carga; la UI pone una franja de contenido ficticio en ambas empresas.
 - **IA:** `lib/ia/` reutiliza la cadena de brotes (Anthropic → Groq, espera el primer fragmento antes de comprometerse con un proveedor). Los modelos se cambian con `IA_MODELO_ANTHROPIC` e `IA_MODELO_GROQ`, sin tocar código.
 
 ## Comandos
@@ -100,18 +131,18 @@ respuesta en streaming con [D1-3] y [CANALIZAR:…] ─► UI valida contra lo c
 ```bash
 supabase start -x edge-runtime,logflare,vector,imgproxy,supavisor   # Supabase local (Docker); Mailpit en :54324
 supabase db reset      # reaplica migraciones (borra datos locales)
-npm run sembrar        # demos del-rio y superette (SEMBRAR_ADMIN_EMAIL=correo para quedar como admin; -- --reiniciar)
+npm run sembrar        # demos del-rio (manual oficial) y superette (SEMBRAR_ADMIN_EMAIL=correo para quedar como admin; -- --reiniciar)
 npm run sembrar:nube   # lo mismo contra la nube, con .env.nube (lo corre Wal; docs/despliegue.md)
 npm run dev            # http://localhost:3000
 npm test               # pruebas de lógica pura (node --test)
 npm run test:sql       # aislamiento multiempresa y búsqueda (Supabase local)
-npm run humo           # punta a punta con login por código (HUMO_EMAIL=correo; requiere dev + sembrar)
+npm run humo           # punta a punta: admin con contraseña y estudiante 0001 con número de reloj (requiere dev + sembrar)
 npm run lint
 npm run build
 npm run tipos          # regenera lib/supabase/tipos.ts desde el esquema local
 npm run probar:cadena  # ping a cada proveedor de IA (requiere llaves en .env.local)
-npm run prueba         # prueba documentada → docs/prueba-documentada.md (-- --empresa del-rio)
-npm run validar        # corre TODO y escribe docs/validacion.md (evidencia para el jurado; HUMO_EMAIL=correo)
+npm run prueba         # prueba documentada → docs/prueba-documentada.md (por omisión del-rio; -- --empresa <slug>)
+npm run validar        # corre TODO y escribe docs/validacion.md (evidencia para el jurado)
 npm run medir:busqueda # banco de 18 preguntas: recall de la búsqueda con y sin reescritura
 npm run generar:modulo # genera con IA el módulo desde el material → conocimiento/<empresa>/modulo-induccion.json (se REVISA antes de sembrar)
 ```

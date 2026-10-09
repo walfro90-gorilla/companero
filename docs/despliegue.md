@@ -37,15 +37,14 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
 - [ ] **URL Configuration** → Site URL = `https://companero-ten.vercel.app`. Redirect URLs:
       `https://companero-ten.vercel.app/**`, `https://*-wals-projects-a7eafbb2.vercel.app/**` (previews) y
       `http://localhost:3000/**`.
-- [ ] **Sign In / Providers** → **Anonymous sign-ins: ON** (modo invitado por QR para jueces).
+- [ ] **Sign In / Providers** → **Anonymous sign-ins: OFF** y **Google: OFF** (ADR 0014: los empleados entran con su número
+      de reloj; admin y RH con correo y contraseña). **Email**: contraseña mínima de 8 caracteres.
 - [ ] **Email Templates** → en *Confirm signup* y en *Magic Link* pegar el contenido de
       `supabase/templates/codigo.html` (asunto: "Tu código para entrar"). Así llega el **código de 6
       dígitos** (`{{ .Token }}`) en vez de un enlace.
-- [ ] El correo integrado de Supabase manda muy pocos por hora: para la demo los jueces entran con Google o
-      como invitados. Si se necesitan muchos correos: **SMTP propio** (p. ej. Resend) en *SMTP Settings*.
-- [ ] (Opcional) **Google**: en Google Cloud Console crear un *OAuth client* (Web) con redirect URI
-      `https://bavkhusmzyyswtfksosk.supabase.co/auth/v1/callback`; pegar Client ID y Secret en
-      *Providers → Google*.
+- [ ] El correo integrado de Supabase manda muy pocos por hora. Con ADR 0014 casi no se usa: los empleados (y los
+      jueces, por el QR) entran con su número de reloj; solo admin y RH reciben correos (confirmar cuenta, recuperar
+      contraseña). Si hiciera falta: **SMTP propio** (p. ej. Resend) en *SMTP Settings*.
 
 ## 4. Vercel
 - [x] Proyecto `companero` creado y vinculado (`vercel link`), repo de GitHub conectado (rama `main`).
@@ -58,17 +57,24 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `grep '^GROQ_API_KEY=' .env.local | cut -d= -f2- | tr -d '\n' | vercel env add GROQ_API_KEY production --sensitive --yes`
       (repetir con `preview`). Después, volver a desplegar (las variables solo aplican a despliegues nuevos).
 - [ ] `ANTHROPIC_API_KEY` (opcional, eslabón principal cuando exista), igual que la de Groq.
-- **No** poner `SUPABASE_SECRET_KEY` en Vercel.
+- [ ] **`SUPABASE_SECRET_KEY` (obligatoria desde el ADR 0014: acceso por número de reloj y alta de empleados)**, como
+      *sensitive*, en Production y Preview, igual que la de Groq (desde `.env.nube`, sin imprimirla). La usa solo el
+      servidor (`lib/supabase/admin.ts`).
 
 ## 5. Datos de demo en la nube (Wal, desde su laptop) — pendiente
 - [ ] Crear `.env.nube` (lo ignora git) con `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
       `SUPABASE_SECRET_KEY` (Settings → API Keys de `bavkhusmzyyswtfksosk`) y `GROQ_API_KEY`.
-- [ ] `SEMBRAR_ADMIN_EMAIL=<tu correo> npm run sembrar:nube` → crea **Tienda Escuela** (sube el PDF del manual a
-      Storage, 96 secciones con contexto de IA y el módulo revisado) y **Superette (demo)**, y te deja como admin.
+- [ ] Agregar a `.env.nube`: `SEMBRAR_ADMIN_EMAIL` y `SEMBRAR_ADMIN_PASSWORD` (la contraseña de tu cuenta de admin en
+      producción; mínimo 8).
+- [ ] Aplicar la migración `20261009120700_reloj_y_revision.sql` (número de reloj, límite de intentos y revisión).
+- [ ] `npm run sembrar:nube` → crea **Del Río** (`del-rio`, con el manual del reto; sube el PDF a Storage, 96 secciones con
+      contexto de IA y el módulo revisado), los **estudiantes 0001–0004** (entran en `/acceso/del-rio`) y
+      **Superette (demo)**, y tu cuenta de admin con contraseña.
 
 ## 6. Verificación antes de la demo
-- [ ] Entrar con Google o con código en la URL de Vercel, en incógnito y en el celular.
-- [ ] Escanear el QR de una sucursal desde otro teléfono y entrar como invitado.
+- [ ] Entrar como admin (correo y contraseña) en `/entrar` y como estudiante 0001 en `/acceso/del-rio`, en incógnito y en el celular.
+- [ ] Escanear el QR de una sucursal desde otro teléfono y entrar con un número de reloj nuevo (queda dado de alta).
+- [ ] Hacer una práctica como estudiante y calificarla como admin en Respuestas; el estudiante ve la calificación.
 - [ ] Preguntar a la asistente: una pregunta cubierta (con cita) y una que canalice; ver la canalización
       llegar en vivo a "Dudas del equipo".
 - [ ] `npm run validar` en local y adjuntar `docs/validacion.md` y `docs/prueba-documentada.md` a la entrega.

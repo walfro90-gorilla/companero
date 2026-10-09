@@ -15,7 +15,7 @@ export default async function InicioEmpresa({ params }: PageProps<'/e/[slug]'>) 
   const { supabase, empresa, miembro, usuario, gestiona } = await contextoEmpresa(slug);
   const base = `/e/${slug}`;
 
-  const [{ data: modulos }, { data: avances }, { data: dudas }, progreso] = await Promise.all([
+  const [{ data: modulos }, { data: avances }, { data: dudas }, progreso, { data: revPracticas }, { data: revTests }] = await Promise.all([
     supabase
       .from('modulos').select('id, titulo, descripcion, tipo, puesto_id, lecciones(id)')
       .eq('empresa_id', empresa.id).eq('estado', 'autorizado').order('tipo').order('orden'),
@@ -24,7 +24,15 @@ export default async function InicioEmpresa({ params }: PageProps<'/e/[slug]'>) 
       .from('canalizaciones').select('id, pregunta, destino, estado, respuesta, creada_en')
       .eq('usuario_id', usuario.id).eq('empresa_id', empresa.id).order('creada_en', { ascending: false }).limit(5),
     progresoDe(supabase, empresa.id, usuario.id),
+    supabase.from('practicas').select('id, calificacion, comentario, revisado_en, escenarios(titulo)')
+      .eq('usuario_id', usuario.id).eq('empresa_id', empresa.id).not('calificacion', 'is', null).order('revisado_en', { ascending: false }).limit(5),
+    supabase.from('intentos').select('id, calificacion, comentario, revisado_en, modulos(titulo)')
+      .eq('usuario_id', usuario.id).eq('empresa_id', empresa.id).not('calificacion', 'is', null).order('revisado_en', { ascending: false }).limit(5),
   ]);
+  const revisiones = [
+    ...(revPracticas ?? []).map(r => ({ ...r, id: `p-${r.id}`, que: `Práctica: ${r.escenarios?.titulo ?? ''}` })),
+    ...(revTests ?? []).map(r => ({ ...r, id: `t-${r.id}`, que: `Test: ${r.modulos?.titulo ?? ''}` })),
+  ].sort((a, b) => (b.revisado_en ?? '').localeCompare(a.revisado_en ?? '')).slice(0, 5);
   const hechas = new Set((avances ?? []).map(a => a.leccion_id));
   // Quien entró por QR aún no tiene puesto: ve todos los módulos hasta que RH se lo asigne.
   const mios = (modulos ?? []).filter(m => !m.puesto_id || !miembro.puesto_id || m.puesto_id === miembro.puesto_id);
@@ -87,6 +95,21 @@ export default async function InicioEmpresa({ params }: PageProps<'/e/[slug]'>) 
           );
         })}
       </section>
+
+      {revisiones.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 font-semibold"><Award className="size-5" /> Retroalimentación de tu instructor</h2>
+          {revisiones.map(r => (
+            <div key={r.id} className={`${tarjeta} flex items-start gap-3`}>
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--marca-suave)] text-lg font-bold text-[var(--marca)]">{r.calificacion}</span>
+              <div>
+                <p className="font-medium">{r.que}</p>
+                {r.comentario && <p className="text-sm text-stone-700">{r.comentario}</p>}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {(dudas ?? []).length > 0 && (
         <section className="space-y-3">

@@ -46,9 +46,14 @@ modelo de IA **nunca** recibe quién pregunta. Lo que ve RH de las consultas es 
 - Los archivos suben del navegador directo a Storage (Vercel limita el cuerpo de una función a 4.5 MB).
 
 ## Empresas de la demo (9-oct, ADR 0013; decisión de Wal)
-**"Tienda Escuela"** (`tienda-escuela`), con el manual oficial del reto, en lugar de "Del Río (demo)". La segunda
+**"Del Río"** (`del-rio`), con el manual oficial del reto (ficticio, de "Tienda Escuela") y la franja de contenido ficticio.
+Primero se llamó "Tienda Escuela"; Wal decidió volver a "Del Río" el 9-oct en la tarde. La segunda
 empresa sigue siendo **"Superette (demo)"**, con una franja visible de contenido ficticio en todas sus pantallas.
 
 ## Descartado
 - Subdominio por empresa (estampida): DNS/certificados por inquilino no aportan a la demo; `/e/{slug}` basta.
 - Tabla pública de posiciones entre personas (ver ADR 0011).
+
+## Cambio del 9-oct (ADR 0014)
+Los empleados ya no entran con Google, código por correo ni como invitados: **solo con su número de reloj** (en
+`/acceso/{empresa}` o con el QR de su sucursal). Admin y RH entran con correo y contraseña. Detalle en el ADR 0014.

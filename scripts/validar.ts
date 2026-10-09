@@ -3,7 +3,7 @@
 // qué se prueba, por qué importa y el resultado real de esta corrida, con fecha. Nada se escribe a mano.
 //
 // Requiere el entorno local: `supabase start` + `npm run sembrar`; para la prueba de punta a punta también
-// `npm run dev` y HUMO_EMAIL (el mismo correo de SEMBRAR_ADMIN_EMAIL).
+// `npm run dev` y la cuenta de admin de las demos en .env.local (SEMBRAR_ADMIN_EMAIL y SEMBRAR_ADMIN_PASSWORD).
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -95,22 +95,22 @@ const resumen: { suite: string; resultado: string; ok: boolean | null }[] = [];
   );
 }
 
-// 4) Punta a punta (login real con código, pantallas, QR, permisos desde HTTP).
+// 4) Punta a punta (admin con contraseña, estudiante con número de reloj, QR, revisión, permisos desde HTTP).
 {
-  const email = process.env.HUMO_EMAIL ?? process.env.SEMBRAR_ADMIN_EMAIL;
+  const email = process.env.HUMO_EMAIL || process.env.SEMBRAR_ADMIN_EMAIL;
   const arriba = correr('curl', ['-s', '-o', '/dev/null', '-w', '%{http_code}', 'http://localhost:3000/']).salida.trim() === '200';
   if (!email || !arriba) {
     resumen.push({ suite: 'Punta a punta (login, pantallas, QR, permisos)', resultado: 'no se corrió', ok: null });
-    md.push('## 4. Punta a punta', '', `_No se corrió: ${!arriba ? 'la app no está arriba (`npm run dev`)' : 'falta HUMO_EMAIL'}._`, '');
+    md.push('## 4. Punta a punta', '', `_No se corrió: ${!arriba ? 'la app no está arriba (`npm run dev`)' : 'falta SEMBRAR_ADMIN_EMAIL en .env.local'}._`, '');
   } else {
-    const r = correr('node', ['--env-file-if-exists=.env.local', 'scripts/humo.ts'], { HUMO_EMAIL: email });
+    const r = correr('node', ['--env-file-if-exists=.env.local', 'scripts/humo.ts']);
     const lineas = [...r.salida.matchAll(/^([✓✗]) (.+)$/gm)].map(m => ({ ok: m[1] === '✓', texto: m[2].replace(email, '(correo de prueba)') }));
     const bien = lineas.filter(l => l.ok).length;
     resumen.push({ suite: 'Punta a punta (login, pantallas, QR, permisos)', resultado: `${bien} de ${lineas.length}`, ok: r.ok });
     md.push(
       '## 4. Punta a punta',
       '',
-      'Un script usa la app como lo haría una persona: entra con el código que llega por correo (al buzón de pruebas local), recorre las pantallas, se une a una empresa con el QR de una sucursal y comprueba desde la web que un colaborador no puede entrar a la gestión ni a otra empresa.',
+      'Un script usa la app como lo haría una persona: el admin entra con correo y contraseña; el estudiante 0001 entra solo con su número de reloj; un empleado nuevo se da de alta con el QR de una sucursal; el estudiante deja un test, el admin lo califica en Respuestas y el estudiante ve su calificación. Comprueba desde la web que un empleado no entra a la gestión ni a otra empresa, que un número no registrado no entra sin QR y que no hay Google ni modo invitado.',
       '',
       `**Resultado:** ${bien} de ${lineas.length}.`,
       '',
@@ -162,7 +162,7 @@ const total = [
   '|---|---|---|',
   ...resumen.map(r => `| ${r.suite} | ${r.resultado} | ${r.ok === null ? '⏳' : r.ok ? '✅' : '❌'} |`),
   '',
-  '> Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.',
+  '> Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos, cargado en la empresa «Del Río» de la demo; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.',
   '',
   ...md,
 ].join('\n');

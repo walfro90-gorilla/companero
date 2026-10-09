@@ -7,7 +7,7 @@ import { buscar } from '../lib/ia/asistente.ts';
 import type { Database } from '../lib/supabase/tipos.ts';
 
 const supabase = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
-const { data: empresa } = await supabase.from('empresas').select('id, giro').eq('slug', 'tienda-escuela').single();
+const { data: empresa } = await supabase.from('empresas').select('id, giro').eq('slug', 'del-rio').single();
 const { preguntas } = JSON.parse(readFileSync('pruebas/busqueda.json', 'utf8')) as { preguntas: { pregunta: string; esperadas: string[] }[] };
 const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 const empata = (r: string, e: string) => norm(r) === norm(e) || (!e.includes(',') && norm(r).startsWith(`${norm(e)},`));

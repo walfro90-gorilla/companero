@@ -1,7 +1,8 @@
 /**
  * Proxy de Next 16 (antes "middleware"), docs/adr/0009. Patrón de brotes/ketzal-OS:
  *   - Refresca la sesión de Supabase en cada petición (el JWT caduca cada hora).
- *   - /inicio y /e/* exigen sesión: sin ella → /entrar?next=…
+ *   - /inicio y /e/* exigen sesión. Sin ella: /e/{empresa}/… → /acceso/{empresa} (número de reloj, ADR 0014);
+ *     /inicio → /entrar (correo y contraseña de administración).
  *   - Lo demás (landing, /entrar, /auth/*, /unirse/*, /api/*) pasa; las APIs responden 401 por su cuenta.
  * La autorización por empresa y rol NO vive aquí: la decide la RLS de Postgres y lib/sesion.ts.
  */
@@ -47,7 +48,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (privada && !data?.claims) {
     const url = request.nextUrl.clone();
-    url.pathname = '/entrar';
+    const empresa = /^\/e\/([a-z0-9-]{3,40})(\/|$)/.exec(pathname)?.[1];
+    url.pathname = empresa ? `/acceso/${empresa}` : '/entrar';
     url.search = '';
     url.searchParams.set('next', pathname + search);
     return llevarCookies(respuesta, NextResponse.redirect(url));

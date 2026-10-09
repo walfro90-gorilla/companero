@@ -8,7 +8,7 @@ import { analizar } from '@/lib/conocimiento/citas';
 import { boton, botonSecundario, campo, tarjeta } from '@/app/_ui/estilos';
 import { Festejo } from '@/app/_ui/festejo';
 import { ChipCita, ConNegritas, PanelSeccion, TextoConCitas } from '@/app/_ui/fuentes';
-import { completarPractica, enviarTest, marcarLeccion, type Calificacion } from './acciones';
+import { completarPractica, enviarTest, marcarLeccion, type Calificacion, type Turno as TurnoPractica } from './acciones';
 
 type Leccion = { id: string; orden: number; titulo: string; objetivo: string | null; contenido: string };
 type Pregunta = { id: string; orden: number; enunciado: string; opciones: string[] };
@@ -26,6 +26,8 @@ export function Recorrido(p: {
   mejorTest: { aciertos: number; total: number } | null;
   practicadas: string[];
   progresoInicial: Progreso;
+  revisionTest: { calificacion: number | null; comentario: string | null } | null;
+  revisionesPractica: Record<string, { calificacion: number; comentario: string | null }>;
 }) {
   const [vistas, setVistas] = useState(new Set(p.vistas));
   const [aprobado, setAprobado] = useState(Boolean(p.mejorTest && p.mejorTest.aciertos / p.mejorTest.total >= 0.8));
@@ -60,6 +62,7 @@ export function Recorrido(p: {
         <p className="text-sm text-stone-500">{p.modulo.tipo === 'induccion' ? 'Inducción' : 'Refuerzo'}</p>
         <h1 className="text-2xl font-semibold">{p.modulo.titulo}</h1>
         {p.modulo.descripcion && <p className="text-stone-600">{p.modulo.descripcion}</p>}
+        <p className="text-xs text-stone-500">{AVISO_REVISION}</p>
         <BarraNivel progreso={progreso} ganados={ganados} />
       </header>
 
@@ -93,6 +96,7 @@ export function Recorrido(p: {
         <Test
           slug={p.slug}
           moduloId={p.modulo.id}
+          revision={p.revisionTest}
           preguntas={p.preguntas}
           onCalificado={c => {
             if (c.aprobado) setAprobado(true);
@@ -103,10 +107,11 @@ export function Recorrido(p: {
       {paso === 'practica' && (
         <Practica
           slug={p.slug}
+          revisiones={p.revisionesPractica}
           escenarios={p.escenarios}
           practicadas={practicadas}
-          onCompletada={async id => {
-            const nuevo = await completarPractica(p.slug, p.modulo.id, id);
+          onCompletada={async (id, turnos, retro) => {
+            const nuevo = await completarPractica(p.slug, p.modulo.id, id, turnos, retro);
             setPracticadas(new Set(practicadas).add(id));
             avanzar(nuevo, false);
           }}
@@ -191,13 +196,29 @@ function Lecciones({ slug, lecciones, vistas, onVista }: { slug: string; leccion
   );
 }
 
-function Test({ slug, moduloId, preguntas, onCalificado }: { slug: string; moduloId: string; preguntas: Pregunta[]; onCalificado: (c: Calificacion) => void }) {
+function Revision({ calificacion, comentario }: { calificacion: number | null; comentario: string | null }) {
+  if (calificacion === null) return null;
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-[var(--marca-suave)] p-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-base font-bold text-[var(--marca)]">{calificacion}</span>
+      <div className="text-sm">
+        <p className="font-medium">Tu instructor te calificó</p>
+        {comentario && <p className="text-stone-700">{comentario}</p>}
+      </div>
+    </div>
+  );
+}
+
+const AVISO_REVISION = 'Tu instructor puede revisar tus respuestas para darte retroalimentación. Es para que aprendas, no una evaluación de tu desempeño.';
+
+function Test({ slug, moduloId, preguntas, onCalificado, revision }: { slug: string; moduloId: string; preguntas: Pregunta[]; onCalificado: (c: Calificacion) => void; revision: { calificacion: number | null; comentario: string | null } | null }) {
   const [respuestas, setRespuestas] = useState<Record<string, number>>({});
   const [resultado, setResultado] = useState<Calificacion | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const porId = new Map(resultado?.detalle.map(d => [d.pregunta_id, d]));
   return (
     <section className="space-y-3">
+      {revision && <Revision {...revision} />}
       {resultado && (
         <div className={`rounded-2xl p-4 ${resultado.aprobado ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900'}`}>
           <p className="text-lg font-semibold">{resultado.aciertos} de {resultado.total} correctas</p>
@@ -254,7 +275,9 @@ function Test({ slug, moduloId, preguntas, onCalificado }: { slug: string; modul
 
 type Turno = { rol: 'usuario' | 'avatar'; texto: string };
 
-function Practica({ slug, escenarios, practicadas, onCompletada }: { slug: string; escenarios: Escenario[]; practicadas: Set<string>; onCompletada: (id: string) => Promise<void> }) {
+type AlCompletar = (id: string, turnos: TurnoPractica[], retroalimentacion: string) => Promise<void>;
+
+function Practica({ slug, escenarios, practicadas, onCompletada, revisiones }: { slug: string; escenarios: Escenario[]; practicadas: Set<string>; onCompletada: AlCompletar; revisiones: Record<string, { calificacion: number; comentario: string | null }> }) {
   const [activo, setActivo] = useState<Escenario | null>(null);
   if (!activo) {
     return (
@@ -266,6 +289,11 @@ function Practica({ slug, escenarios, practicadas, onCompletada }: { slug: strin
             <span className="flex-1">
               <span className="block font-medium">{e.titulo}</span>
               <span className="text-sm text-stone-500">{e.situacion}</span>
+              {revisiones[e.id] && (
+                <span className="mt-1 block text-sm text-[var(--marca)]">
+                  Tu instructor: {revisiones[e.id].calificacion}/10{revisiones[e.id].comentario ? ` · ${revisiones[e.id].comentario}` : ''}
+                </span>
+              )}
             </span>
             <ChevronRight className="size-5 text-stone-400" />
           </button>
@@ -289,7 +317,7 @@ async function leerFlujo(res: Response, alRecibir: (texto: string) => void) {
   return todo;
 }
 
-function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; escenario: Escenario; onSalir: () => void; onCompletada: (id: string) => Promise<void> }) {
+function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; escenario: Escenario; onSalir: () => void; onCompletada: AlCompletar }) {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [entrada, setEntrada] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -308,8 +336,8 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
       if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? 'No pude responder.');
       if (evaluar) {
         const validas = new Set((res.headers.get('x-secciones') ?? '').split(',').filter(Boolean));
-        await leerFlujo(res, t => setRetro({ texto: t, validas }));
-        await onCompletada(escenario.id);
+        const texto = await leerFlujo(res, t => setRetro({ texto: t, validas }));
+        await onCompletada(escenario.id, historial, texto);
       } else {
         setTurnos([...historial, { rol: 'avatar', texto: '' }]);
         await leerFlujo(res, t => setTurnos([...historial, { rol: 'avatar', texto: t }]));

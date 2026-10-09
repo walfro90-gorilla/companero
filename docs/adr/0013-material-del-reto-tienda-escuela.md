@@ -1,6 +1,8 @@
 # ADR 0013 — Material del reto: "Manual de procedimientos para cajeros — Tienda Escuela"
 
-- Estado: **aceptado (2026-10-09)**. Decisiones de Wal (9-oct): empresa principal de la demo **"Tienda Escuela"**; la
+- Estado: **aceptado (2026-10-09)**. **Cambio del 9-oct en la tarde (decisión de Wal):** la empresa principal de la demo
+  vuelve a llamarse **"Del Río"** (`del-rio`) con el manual de Tienda Escuela cargado y la franja de contenido ficticio
+  en todas sus pantallas ("no describe políticas… reales de Del Río"). Decisión previa (9-oct): empresa principal **"Tienda Escuela"**; la
   segunda se queda como **"Superette (demo)" con una franja muy visible** de contenido ficticio.
 - Fuente: `~/Downloads/Manual_cajeros_Tienda_Escuela_Hack_Knights (1).pdf` (34 páginas, 15 secciones), recibido el
   viernes 9-oct a las 11:30. Es **el material oficial del reto**, el que entregó la organización a los equipos.
@@ -32,7 +34,7 @@
 | Cálculos | No había | El manual define cómo se calculan promociones, cupón (con redondeo), cambio, pagos mixtos, reembolsos (primero a tarjeta) y el efectivo esperado del corte, con ejemplos numéricos. El asistente debe calcular **siguiendo el procedimiento citado** y mostrar el desglose; la prueba documentada incluye al menos un cálculo | 0007 |
 | Prueba documentada | 10 consultas contra el contenido de ejemplo | Se reescribe contra el manual: las 5 preguntas de la ficha, 3 más con casos especiales o cálculo, y **2 sin respuesta**, tomadas de "Lo que este manual no define" (una a RH y otra al supervisor) | 0007 |
 | Módulo, test y prácticas | Módulo de ejemplo escrito a mano | Se **genera con IA desde el manual** y el equipo lo revisa; el test fijo cita "sección N, Subtítulo". El manual trae casos ideales para practicar: pago mixto incierto, terminal sin respuesta, fila larga, devolución fuera de plazo y cupón que deja de aplicar | 0007, 0011 |
-| Empresa de la demo **[decidido: Tienda Escuela]** | "Del Río (demo)" | **Se renombra a "Tienda Escuela"** (slug `tienda-escuela`). El manual insiste en que no son políticas de Del Río; presentarlo bajo la marca de Del Río frente a su gente las contradice. El reto sigue siendo "Tu compañero Del Río"; la tienda es el escenario | 0009 |
+| Empresa de la demo **[decidido primero: Tienda Escuela; después: Del Río con franja]** | "Del Río (demo)" | **Se renombra a "Tienda Escuela"** (slug `tienda-escuela`). El manual insiste en que no son políticas de Del Río; presentarlo bajo la marca de Del Río frente a su gente las contradice. El reto sigue siendo "Tu compañero Del Río"; la tienda es el escenario | 0009 |
 | Segunda empresa **[decidido: Superette con franja]** | "Superette (demo)" con un manual que escribimos nosotros | Se queda, con una **franja en todas sus pantallas**: contenido ficticio que no describe políticas reales. La misma franja aparece en Tienda Escuela, como pide el manual | 0009 |
 | Identidad del asistente | Provisional, sin marca | Igual: sin logotipo ni colores de Del Río/Superette. Para Tienda Escuela se usa la identidad provisional | 0005 |
 
@@ -72,10 +74,10 @@
   - Se mandan 12 secciones. Resultado: **18/18 con reescritura y 15/18 sin ella** (`npm run medir:busqueda`).
 - **Red de seguridad de la canalización** (`lib/ia/canalizacion.ts`): si la respuesta manda al supervisor sin la marca y la persona está atendiendo algo en ese momento, una verificación corta con IA agrega la canalización. Lo usan el chat y la prueba.
 - **Prueba documentada** contra el manual: **10/10 en dos corridas seguidas** con Groq (8 correctas, incluido el cálculo de $160.50 a las 9:00, y 2 canalizadas). Unos 3 s por respuesta.
-- **Módulo de inducción** generado con IA (`npm run generar:modulo`) y **revisado por el equipo** (`conocimiento/tienda-escuela/modulo-induccion.json`). La revisión encontró:
+- **Módulo de inducción** generado con IA (`npm run generar:modulo`) y **revisado por el equipo** (`conocimiento/del-rio/modulo-induccion.json`). La revisión encontró:
   - Un **cálculo equivocado de la IA**: aplicó DESC10 sin revisar el mínimo de $150.
   - Opciones repetidas.
   - Personajes de práctica que eran el propio cajero.
 
   Se corrigió el contenido y se endureció el generador: descarta opciones repetidas, quita la numeración y exige que el personaje sea la otra persona. Es la evidencia de que **la IA propone y RH valida**.
-- Empresa demo **Tienda Escuela** (`tienda-escuela`) con el PDF original en Storage para "ver en el documento original". Hay una franja de contenido ficticio en todas las pantallas de Tienda Escuela y de Superette.
+- Empresa demo **Del Río** (`del-rio`; antes `tienda-escuela`) con el PDF original en Storage para "ver en el documento original". Hay una franja de contenido ficticio en todas las pantallas de Tienda Escuela y de Superette.
