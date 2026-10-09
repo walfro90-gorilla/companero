@@ -15,7 +15,8 @@
     "tipos": "supabase gen types typescript --local --schema public > lib/supabase/tipos.ts",
     "test:sql": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -q -v ON_ERROR_STOP=1 -f supabase/tests/aislamiento.test.sql",
     "humo": "node --env-file-if-exists=.env.local scripts/humo.ts",
-    "validar": "node --env-file-if-exists=.env.local scripts/validar.ts"
+    "validar": "node --env-file-if-exists=.env.local scripts/validar.ts",
+    "sembrar:nube": "node --conditions=react-server --env-file=.env.nube scripts/sembrar.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.78",

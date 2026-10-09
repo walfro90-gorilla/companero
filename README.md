@@ -41,7 +41,13 @@ npm run dev                    # http://localhost:3000 → Entrar con tu correo 
 4. **Modelos**: Claude (`claude-opus-5-5`) con Groq (`gpt-oss-120b`) de respaldo automático.
 5. **Canalización** en vivo a la bandeja del supervisor (Realtime).
 
-Decisiones y su porqué: [`docs/adr/`](docs/adr/).
+Decisiones y su porqué: [`docs/adr/`](docs/adr/). Despliegue (Supabase + Vercel): [`docs/despliegue.md`](docs/despliegue.md).
+
+## Validación
+
+`npm run validar` corre todas las pruebas y genera [`docs/validacion.md`](docs/validacion.md): lógica,
+aislamiento entre empresas en Postgres, búsqueda del RAG, recorrido de punta a punta y la
+[prueba documentada](docs/prueba-documentada.md) con IA (10 de 10 con Groq sobre el material de ejemplo).
 
 ## Limitaciones conocidas
 
