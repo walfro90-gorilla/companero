@@ -1,6 +1,9 @@
 # ADR 0012 — Despliegue: proyecto de Supabase propio + Vercel
 
 - Estado: **aceptado (2026-10-09)**. Pasos concretos en [`docs/despliegue.md`](../despliegue.md).
+- **En línea desde el 9-oct (14:47):** Supabase `del_rio_hackathon` (ref `bavkhusmzyyswtfksosk`, `us-east-1`)
+  con las 8 migraciones y la prueba de aislamiento 25/25 en la nube; Vercel `companero` →
+  https://companero-ten.vercel.app (`iad1`), conectado a `main`.
 
 ## Decisión
 1. **Compañero vive en un proyecto de Supabase propio, nuevo y vacío**, en `us-east-1` (la misma zona que la
