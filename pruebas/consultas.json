@@ -1,0 +1,15 @@
+{
+  "nota": "Prueba documentada (docs/adr/0007). Las 'esperadas' apuntan al contenido de EJEMPLO: al llegar el módulo de Del Río se reescriben contra sus secciones. 'canaliza': 'supervisor' | 'rh' = debe canalizar; 'opcional' = puede o no.",
+  "consultas": [
+    { "id": 1, "tipo": "cubierta", "pregunta": "¿Cómo hago una cancelación?", "esperadas": ["D1-5"], "canaliza": "opcional" },
+    { "id": 2, "tipo": "cubierta", "pregunta": "¿Qué hago si un producto no tiene precio?", "esperadas": ["D1-3"], "canaliza": "opcional" },
+    { "id": 3, "tipo": "cubierta", "pregunta": "¿Cómo aplico una promoción?", "esperadas": ["D1-4"], "canaliza": "opcional" },
+    { "id": 4, "tipo": "cubierta", "pregunta": "¿Qué debo revisar al cerrar caja?", "esperadas": ["D1-6"], "canaliza": "opcional" },
+    { "id": 5, "tipo": "cubierta", "pregunta": "¿Cuándo debo llamar al supervisor?", "esperadas": ["D1-7"], "canaliza": "opcional" },
+    { "id": 6, "tipo": "cubierta", "pregunta": "Al hacer mi corte me faltan 50 pesos, ¿qué hago?", "esperadas": ["D1-6", "D1-7"], "canaliza": "supervisor" },
+    { "id": 7, "tipo": "cubierta", "pregunta": "¿Cómo cobro si el cliente paga con tarjeta?", "esperadas": ["D1-2"] },
+    { "id": 8, "tipo": "cubierta", "pregunta": "¿Le puedo pasar mi contraseña de la terminal a una compañera para que me cubra?", "esperadas": ["D2-4", "D1-1"] },
+    { "id": 9, "tipo": "sin_respuesta", "pregunta": "¿Cómo acepto un pago con vales de despensa?", "canaliza": "supervisor" },
+    { "id": 10, "tipo": "sin_respuesta", "pregunta": "¿Cuántos días de vacaciones me tocan al año?", "canaliza": "rh" }
+  ]
+}

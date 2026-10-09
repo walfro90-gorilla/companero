@@ -1,0 +1,48 @@
+{
+  "name": "companero",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "node --test \"lib/**/*.test.ts\"",
+    "probar:cadena": "node --conditions=react-server --env-file-if-exists=.env.local scripts/probar-cadena.ts",
+    "prueba": "node --conditions=react-server --env-file-if-exists=.env.local scripts/prueba-documentada.ts",
+    "sembrar": "node --conditions=react-server --env-file-if-exists=.env.local scripts/sembrar.ts",
+    "tipos": "supabase gen types typescript --local --schema public > lib/supabase/tipos.ts",
+    "test:sql": "psql \"postgresql://postgres:postgres@127.0.0.1:54322/postgres\" -q -v ON_ERROR_STOP=1 -f supabase/tests/aislamiento.test.sql",
+    "humo": "node --env-file-if-exists=.env.local scripts/humo.ts",
+    "validar": "node --env-file-if-exists=.env.local scripts/validar.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.78",
+    "@ai-sdk/groq": "^4.0.59",
+    "@ai-sdk/react": "^4.0.138",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
+    "ai": "^7.0.135",
+    "lucide-react": "^1.53.0",
+    "mammoth": "^1.13.0",
+    "next": "16.4.0",
+    "qrcode": "^1.5.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "unpdf": "^1.8.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,49 @@
+import 'server-only';
+import { anthropic } from '@ai-sdk/anthropic';
+import { groq } from '@ai-sdk/groq';
+import { ordenar, type Eslabon } from './cadena.ts';
+
+// La cadena (docs/adr/0003): Anthropic primero, Groq de respaldo. Un proveedor sin llave se SALTA (no es un
+// fallo). `IA_ORDEN` ("groq,anthropic") cambia el orden. Los ids de modelo caducan: se cambian con
+// IA_MODELO_* y se verifican con `npm run probar:cadena`.
+
+export type ProveedorIA = Eslabon & { nombre: string; variable: string };
+
+const m = {
+  anthropic: process.env.IA_MODELO_ANTHROPIC || 'claude-opus-5-5',
+  // En claude-opus-5-5 el thinking siempre es adaptativo: el esfuerzo es el control de latencia del avatar.
+  esfuerzo: process.env.IA_ESFUERZO_ANTHROPIC || 'low',
+  groq: process.env.IA_MODELO_GROQ || 'openai/gpt-oss-120b',
+};
+
+export const CADENA: ProveedorIA[] = [
+  {
+    proveedor: 'anthropic', nombre: 'Anthropic', variable: 'ANTHROPIC_API_KEY', modelo: m.anthropic,
+    crear: () => anthropic(m.anthropic),
+    // fallbacks 'default': si un clasificador de seguridad rechaza el turno, la API lo reintenta sola con el
+    // modelo que recomienda Anthropic (falsos positivos en un chat de capacitación serían raros, pero gratis).
+    opciones: { anthropic: { effort: m.esfuerzo, fallbacks: 'default' } },
+  },
+  {
+    proveedor: 'groq', nombre: 'Groq', variable: 'GROQ_API_KEY', modelo: m.groq,
+    crear: () => groq(m.groq),
+    // gpt-oss razona antes de escribir: con esfuerzo bajo y tope amplio, el razonamiento no se come la
+    // respuesta (en clawbot-orion dio 233 de 233 respuestas vacías por eso).
+    opciones: { groq: { reasoningEffort: 'low' } },
+    tokensSalida: 4000,
+  },
+];
+
+/** Proveedores con llave, en orden. */
+export function configurados(): ProveedorIA[] {
+  return ordenar(CADENA.filter(p => Boolean(process.env[p.variable])), process.env.IA_ORDEN);
+}
+
+/** Quién tiene llave y con qué modelo (nunca la llave). */
+export function estadoProveedores() {
+  const activos = configurados().map(p => p.proveedor);
+  return CADENA.map(p => ({
+    proveedor: p.proveedor, nombre: p.nombre, modelo: p.modelo, variable: p.variable,
+    configurado: Boolean(process.env[p.variable]), posicion: activos.indexOf(p.proveedor) + 1,
+  }));
+}
