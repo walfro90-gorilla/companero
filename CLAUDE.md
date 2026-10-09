@@ -103,7 +103,7 @@ Todo cambio se justifica contra una fila de esta tabla. Voz, animación, cápsul
 
 **Condiciones (no negociables):** solo materiales autorizados; sin datos personales, contraseñas ni credenciales; **no inventar políticas** ni ejecutar operaciones de caja; la evaluación es de aprendizaje, sin decisiones automatizadas sobre personas. Ver [ADR 0006](docs/adr/0006-guardarrailes-y-condiciones.md).
 
-**Preguntas de la demo:** "¿Cómo hago una cancelación?", "¿Qué hago si un producto no tiene precio?", "¿Cómo aplico una promoción?", "¿Qué debo revisar al cerrar caja?", "¿Cuándo debo llamar al supervisor?" (esta última debe canalizar).
+**Preguntas de la demo:** "¿Cómo hago una cancelación?", "¿Qué hago si un producto no tiene precio?", "¿Cómo aplico una promoción?", "¿Qué debo revisar al cerrar caja?", "¿Cuándo debo llamar al supervisor?". Con el manual oficial, esta última **está cubierta** (sección «Cuándo llamar al supervisor», 17 situaciones; ADR 0013): se responde con la lista y la cita, y canalizar es opcional (`pruebas/consultas.json`, id 5). Lo que debe canalizar es lo que el manual no define.
 
 El otro reto (**Mechatronics AI**: detección de objetos en tiempo real, patrocinador BLAK) también lo hace el equipo, en el proyecto hermano **`../hackKnights-vision`** (Python + YOLO, independiente: no compartir código ni dependencias).
 
