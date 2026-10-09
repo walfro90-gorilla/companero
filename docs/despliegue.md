@@ -53,12 +53,12 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 - [x] Primer despliegue a producción (9-oct, 14:47; build de 38 s) desde una copia limpia del commit `3825193`
       (`git archive`, sin `.env.local`). Prueba de humo: `/` 200, `/entrar` 200, `POST /api/transcribir` 401.
-- [ ] **`GROQ_API_KEY` (obligatoria: chat, reescritura de consulta y voz) — la captura Wal.** Desde
+- [x] **`GROQ_API_KEY` (obligatoria: chat, reescritura de consulta y voz) — la captura Wal.** Desde
       `../hackKnights`, sin imprimir la llave:
       `grep '^GROQ_API_KEY=' .env.local | cut -d= -f2- | tr -d '\n' | vercel env add GROQ_API_KEY production --sensitive --yes`
       (repetir con `preview`). Después, volver a desplegar (las variables solo aplican a despliegues nuevos).
 - [ ] `ANTHROPIC_API_KEY` (opcional, eslabón principal cuando exista), igual que la de Groq.
-- [ ] **`SUPABASE_SECRET_KEY` (obligatoria desde el ADR 0014: acceso por número de reloj y alta de empleados)**, como
+- [x] **`SUPABASE_SECRET_KEY` (obligatoria desde el ADR 0014: acceso por número de reloj y alta de empleados)**, como
       *sensitive*, en Production y Preview, igual que la de Groq (desde `.env.nube`, sin imprimirla). La usa solo el
       servidor (`lib/supabase/admin.ts`).
 
@@ -68,9 +68,10 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
 - [ ] Agregar a `.env.nube`: `SEMBRAR_ADMIN_EMAIL` y `SEMBRAR_ADMIN_PASSWORD` (la contraseña de tu cuenta de admin en
       producción; mínimo 8).
 - [x] Migración `20261009120700_reloj_y_revision.sql` (número de reloj, límite de intentos y revisión), aplicada el 9-oct.
-- [ ] Migración `20261009120800_endurecer_acceso_y_revision.sql` (límite de altas por QR, sucursal y puesto de la misma
-      empresa, práctica guardada por el servidor, sin `unirse_con_codigo`). La aplica Bart por MCP antes del push.
-- [ ] `npm run sembrar:nube` → crea **Del Río** (`del-rio`, con el manual del reto; sube el PDF a Storage, 96 secciones con
+- [x] Migración `20261009120800_endurecer_acceso_y_revision.sql` (límite de altas por QR, sucursal y puesto de la misma
+      empresa, práctica guardada por el servidor, sin `unirse_con_codigo`). La aplicó Bart por MCP el 9-oct, antes del
+      push de `bb839d7`; historial alineado.
+- [x] `npm run sembrar:nube` (9-oct, con el código de `bb839d7`) → crea **Del Río** (`del-rio`, con el manual del reto; sube el PDF a Storage, 96 secciones con
       contexto de IA y el módulo revisado), los **estudiantes 0001–0004** (entran en `/acceso/del-rio`) y
       **Superette (demo)**, y tu cuenta de admin con contraseña.
 

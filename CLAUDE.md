@@ -19,15 +19,14 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - Criterios de evaluación (30/25/20/15/10): [ADR 0008](docs/adr/0008-criterios-de-evaluacion.md).
 - **En línea: https://companero-ten.vercel.app**
   - **Vercel:** proyecto `companero`; **cada push a `main` despliega a producción**.
-  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120700`, con el historial alineado con los archivos. La `120800` (endurecimiento tras la revisión de Bart) va **antes** de empujar el código que la usa; la siguiente nueva es `120900` o mayor. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
+  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120800` (endurecimiento; la aplicó Bart el 9-oct antes del push de `bb839d7`), con el historial alineado con los archivos. La siguiente nueva es `120900` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
   - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`). Si `git push` por SSH se cuelga (por `gcr-ssh-agent`), usar HTTPS con `gh`; el comando está al final de `docs/despliegue.md`.
   - **Detalle:** [ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md) y [`docs/despliegue.md`](docs/despliegue.md).
   - ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que sea el correcto.
 - **Pendiente de Wal para que producción funcione de punta a punta** (`docs/despliegue.md`):
-  1. `GROQ_API_KEY` en Vercel (§4) y **volver a desplegar** (las variables solo aplican a despliegues nuevos). Sin ella fallan el chat, la reescritura de la consulta y la voz.
-  2. Login en el panel de Supabase (§3): Site URL y Redirect URLs, **Anonymous OFF y Google OFF**, contraseña mínima de 8 y la plantilla del código de 6 dígitos.
-  2b. **`SUPABASE_SECRET_KEY` en Vercel** (sensitive; ADR 0014). La migración `120700` ya está en la nube; la `120800` la aplica Bart antes del push.
-  3. `npm run sembrar:nube` con `.env.nube` (§5), que también lleva `SEMBRAR_ADMIN_EMAIL` y `SEMBRAR_ADMIN_PASSWORD`. La nube todavía no tiene empresas.
+  - Login en el panel de Supabase (§3): Site URL y Redirect URLs, **Anonymous OFF y Google OFF**, contraseña mínima de 8 y la plantilla del código de 6 dígitos.
+  - Ya hecho (9-oct): `GROQ_API_KEY` y `SUPABASE_SECRET_KEY` en Vercel; nube sembrada (Del Río con 96 secciones, el módulo, 0001–0004 y Wal como admin; Superette).
+  - Falta: *leaked password protection* (si el plan lo permite) y la prueba de punta a punta en producción (la hace Bart).
 - **Equipo / nombre del equipo:** _pendiente_
 - **Problema:** la capacitación de cajeros nuevos consume tiempo operativo y hay mucha rotación; cada ingreso repite las mismas explicaciones.
 - **Solución ([ADR 0009](docs/adr/0009-plataforma-multiempresa.md)):** **"Compañero"**, plataforma **multiempresa y multisucursal** "en blanco" para inducción y refuerzos de personal con IA.
@@ -68,7 +67,7 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
     - Prueba documentada: **10/10 con Groq**.
 - **Llaves:**
   - **En local** (`.env.local`): `GROQ_API_KEY` sí; `ANTHROPIC_API_KEY` vacía.
-  - **En Vercel:** solo las públicas de Supabase (falta `GROQ_API_KEY`).
+  - **En Vercel:** las públicas de Supabase, `GROQ_API_KEY` y `SUPABASE_SECRET_KEY` (sensitive). Falta `ANTHROPIC_API_KEY`.
 - **Falta (además de lo de Wal):**
   - Llave de Anthropic y repetir la prueba documentada con Claude como eslabón principal.
   - Pitch y video de respaldo de la demo.
