@@ -130,15 +130,24 @@ const resumen: { suite: string; resultado: string; ok: boolean | null }[] = [];
 // 5) Prueba documentada con IA (el entregable de Del Río): se corre aparte porque gasta llamadas a la IA.
 {
   let estado = '_Pendiente: requiere las llaves de IA en `.env.local`; se genera con `npm run prueba`._';
+  let resultado = 'pendiente';
+  let ok: boolean | null = null;
   try {
     const doc = readFileSync('docs/prueba-documentada.md', 'utf8');
     const linea = /\*\*Resultado:\*\*.+/.exec(doc)?.[0];
     const fecha = /Generada por .+? el (.+?) \(hora/.exec(doc)?.[1];
-    if (linea) estado = `${linea} (corrida del ${fecha ?? '—'}; detalle en [prueba-documentada.md](prueba-documentada.md)).`;
+    const n = (re: RegExp) => Number(re.exec(linea ?? '')?.[1] ?? 0);
+    const [bien, canalizadas, errores] = [n(/(\d+) correctas/), n(/(\d+) canalizadas/), n(/(\d+) errores/)];
+    const proveedores = [...new Set([...doc.matchAll(/\| (anthropic|groq)( \(respaldo\))? \|/g)].map(m => m[1]))].join(' y ');
+    if (linea) {
+      estado = `${linea} Respondió: ${proveedores || '—'}. Corrida del ${fecha ?? '—'}; respuestas completas en [prueba-documentada.md](prueba-documentada.md).`;
+      resultado = `${bien + canalizadas} de ${bien + canalizadas + errores} (${proveedores || '—'})`;
+      ok = errores === 0;
+    }
   } catch {
     /* todavía no existe */
   }
-  resumen.push({ suite: 'Prueba documentada con IA (≥10 consultas)', resultado: estado.startsWith('_Pendiente') ? 'pendiente' : 'ver detalle', ok: null });
+  resumen.push({ suite: 'Prueba documentada con IA (≥10 consultas)', resultado, ok });
   md.push(
     '## 5. Prueba documentada con IA (entregable de Del Río)',
     '',

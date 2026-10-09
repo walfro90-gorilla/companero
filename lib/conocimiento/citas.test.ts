@@ -35,3 +35,16 @@ test('detecta la canalización y la quita del texto', () => {
 test('el texto para la voz va sin marcas ni markdown', () => {
   assert.equal(textoPlano('**Primero** cuenta el fondo [D1-1].\n[CANALIZAR:rh]'), 'Primero cuenta el fondo .');
 });
+
+test('tolera espacios dentro de los corchetes (lo hace gpt-oss en Groq)', () => {
+  const a = analizar('Avisa a tu supervisor.\n\n[ D1-6, D1-7 ]\n[ CANALIZAR:supervisor ]', id => ['D1-6', 'D1-7'].includes(id));
+  assert.deepEqual(a.citas, ['D1-6', 'D1-7']);
+  assert.equal(a.canalizar, 'supervisor');
+  assert.equal(textoPlano('Hazlo así [ D1-7 ].'), 'Hazlo así .');
+});
+
+test('acepta los corchetes 【】 de gpt-oss', () => {
+  const a = analizar('Revisa la línea del descuento【D1-4】.\n【CANALIZAR:supervisor】', id => id === 'D1-4');
+  assert.deepEqual(a.citas, ['D1-4']);
+  assert.equal(a.canalizar, 'supervisor');
+});

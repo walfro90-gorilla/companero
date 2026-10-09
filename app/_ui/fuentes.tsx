@@ -7,12 +7,13 @@ import { leerSecciones, type SeccionVisible } from '@/app/e/[slug]/asistente/acc
 // Citas verificables (docs/adr/0004): un [D1-3] se ve como referencia que abre el texto exacto de la sección
 // y, si existe, el documento original en su página. Lo usan el chat, las lecciones y el test.
 
-const MARCA = /(\[(?:D\d+-\d+\s*,\s*)*D\d+-\d+\])/g;
+const MARCA = /([\[【]\s*(?:D\d+-\d+\s*,\s*)*D\d+-\d+\s*[\]】])/g;
 
 /** Negritas mínimas (**así**); el resto se respeta tal cual con whitespace-pre-wrap. */
 export function ConNegritas({ texto }: { texto: string }) {
   return texto.split(/(\*\*[^*]+\*\*)/g).map((t, i) =>
-    t.startsWith('**') && t.endsWith('**') ? <strong key={i}>{t.slice(2, -2)}</strong> : <span key={i}>{t}</span>,
+    // Un * suelto (los modelos a veces escriben *“cita”*) se quita para que no se vea como basura.
+    t.startsWith('**') && t.endsWith('**') ? <strong key={i}>{t.slice(2, -2)}</strong> : <span key={i}>{t.replace(/\*/g, '')}</span>,
   );
 }
 
@@ -38,7 +39,7 @@ export function TextoConCitas({ slug, texto }: { slug: string; texto: string }) 
         {/* split con grupo de captura: las posiciones impares son las citas. */}
         {texto.split(MARCA).map((t, i) =>
           i % 2 === 1 ? (
-            t.slice(1, -1).split(',').map(c => <ChipCita key={`${i}-${c}`} codigo={c.trim()} onAbrir={setAbierta} />)
+            t.slice(1, -1).split(',').map(c => c.trim()).map(c => <ChipCita key={`${i}-${c}`} codigo={c} onAbrir={setAbierta} />)
           ) : (
             <ConNegritas key={i} texto={t} />
           ),

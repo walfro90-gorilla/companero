@@ -18,7 +18,9 @@ export type Analisis = {
   canalizar: Destino | null;
 };
 
-const MARCA = /\[((?:D\d+-\d+\s*,\s*)*D\d+-\d+)\]|\[CANALIZAR:\s*(supervisor|rh)\s*\]/gi;
+// Tolera espacios dentro de los corchetes ("[ D1-7 ]") y los corchetes 【】 que usa gpt-oss en Groq (prueba
+// documentada del 9-oct): el contenido era correcto y la cita no se reconocía.
+const MARCA = /[\[【]\s*((?:D\d+-\d+\s*,\s*)*D\d+-\d+)\s*[\]】]|[\[【]\s*CANALIZAR:\s*(supervisor|rh)\s*[\]】]/gi;
 
 export function analizar(texto: string, existe: (id: string) => boolean): Analisis {
   const trozos: Trozo[] = [];

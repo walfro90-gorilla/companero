@@ -14,6 +14,9 @@ const m = {
   // En claude-opus-5-5 el thinking siempre es adaptativo: el esfuerzo es el control de latencia del avatar.
   esfuerzo: process.env.IA_ESFUERZO_ANTHROPIC || 'low',
   groq: process.env.IA_MODELO_GROQ || 'openai/gpt-oss-120b',
+  // medium: con low, gpt-oss no levantaba la canalización de un faltante en el corte (prueba documentada del
+  // 9-oct: 9/10 → 10/10, de 0.6 a 0.8 s en promedio). Con el tope de 4000 tokens el razonamiento no se come la respuesta.
+  esfuerzoGroq: process.env.IA_ESFUERZO_GROQ || 'medium',
 };
 
 export const CADENA: ProveedorIA[] = [
@@ -29,7 +32,7 @@ export const CADENA: ProveedorIA[] = [
     crear: () => groq(m.groq),
     // gpt-oss razona antes de escribir: con esfuerzo bajo y tope amplio, el razonamiento no se come la
     // respuesta (en clawbot-orion dio 233 de 233 respuestas vacías por eso).
-    opciones: { groq: { reasoningEffort: 'low' } },
+    opciones: { groq: { reasoningEffort: m.esfuerzoGroq } },
     tokensSalida: 4000,
   },
 ];

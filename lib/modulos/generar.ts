@@ -73,7 +73,7 @@ Propón 3 situaciones prácticas realistas del día a día del puesto en las que
 
 // ─────────────────── Validación de lo que devuelve el modelo ───────────────────
 
-const CITA = /\[(?:D\d+-\d+\s*,\s*)*D\d+-\d+\]/g;
+const CITA = /[\[【]\s*(?:D\d+-\d+\s*,\s*)*D\d+-\d+\s*[\]】]/g;
 const codigosEn = (t: string) => [...t.matchAll(CITA)].flatMap(m => m[0].slice(1, -1).split(',').map(x => x.trim()));
 
 const Leccion = z.object({

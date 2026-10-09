@@ -9,7 +9,7 @@
 | Eslabón | Modelo | Ajustes | Para qué |
 |---|---|---|---|
 | 1 · Anthropic | `claude-opus-5-5` | `effort: 'low'` (el thinking siempre es adaptativo y no se puede apagar; el esfuerzo es el control de latencia), `fallbacks: 'default'` (si el clasificador de seguridad rechaza, la API reintenta sola con el modelo de respaldo que recomienda Anthropic) y caché del corpus | Chat del avatar, explicaciones, retroalimentación del test |
-| 2 · Groq | `openai/gpt-oss-120b` | `reasoningEffort: 'low'`, tope de 4000 tokens (lección de clawbot-orion: con poco tope, el razonamiento se come la respuesta) | Respaldo si Anthropic falla o se tarda |
+| 2 · Groq | `openai/gpt-oss-120b` | `reasoningEffort: 'medium'` (`IA_ESFUERZO_GROQ`), tope de 4000 tokens (lección de clawbot-orion: con poco tope, el razonamiento se come la respuesta) | Respaldo si Anthropic falla o se tarda |
 
 - `IA_MODELO_ANTHROPIC` e `IA_MODELO_GROQ` cambian el modelo sin tocar código. Si en el ensayo la latencia del
   avatar no convence, se puede probar `claude-sonnet-5-5` o `claude-haiku-5-5` por variable. **La decisión
@@ -43,3 +43,12 @@ irrelevante; lo que importa es la **latencia** (el avatar tiene que contestar r�
   tiene, así que el esquema propio `[D1-3]` (ADR 0004) se queda para los dos; las nativas son una mejora posible
   solo para el eslabón de Anthropic (`docs/investigacion.md`).
 - **Gemini gratis / DeepSeek**: entrenan o retienen datos; los materiales de Del Río no van ahí.
+
+## Ajuste del 9-oct (prueba documentada con Groq, material de ejemplo)
+- Con `low`, gpt-oss acertó el contenido pero falló en la forma: escribía citas con espacios (`[ D1-7 ]`) o con
+  corchetes `【D1-4】`, y no levantaba la canalización de un faltante en el corte. Resultado: 8/10.
+- Arreglos: el lector de citas tolera espacios y `【】` (`lib/conocimiento/citas.ts`, con prueba); la regla de
+  canalización distingue "me está pasando ahora" (canaliza) de "pregunta general" (no canaliza), con un ejemplo
+  genérico distinto de las preguntas de la prueba.
+- Con `medium`: **10/10 en dos corridas seguidas**, latencia promedio de 0.6 a 0.8 s. Queda `medium` por omisión.
+- Falta correr la prueba con Anthropic como eslabón principal en cuanto haya llave.

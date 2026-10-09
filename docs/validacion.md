@@ -1,14 +1,14 @@
 # Validación técnica
 
-Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 1:32 a.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
+Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 2:02 a.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
 
 | Qué se prueba | Resultado | |
 |---|---|---|
-| Lógica de la aplicación | 42 de 42 | ✅ |
+| Lógica de la aplicación | 44 de 44 | ✅ |
 | Aislamiento entre empresas, roles y privacidad | 25 comprobaciones | ✅ |
 | Búsqueda del RAG (encuentra la sección correcta) | 8 de 8 | ✅ |
 | Punta a punta (login, pantallas, QR, permisos) | 23 de 23 | ✅ |
-| Prueba documentada con IA (≥10 consultas) | pendiente | ⏳ |
+| Prueba documentada con IA (≥10 consultas) | 10 de 10 (groq) | ✅ |
 
 > El material de las empresas de demo es **de ejemplo**, escrito por el equipo: no es de Del Río ni de Superette.
 
@@ -16,7 +16,7 @@ Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 1:
 
 Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se parte un documento en secciones citables, cómo se detectan y validan las citas `[D1-3]` y las canalizaciones, el paso de búsqueda del RAG, el respaldo entre proveedores de IA (si Anthropic falla, responde Groq sin que se note) y las reglas de la gamificación.
 
-**Resultado:** 42 pasan, 0 fallan.
+**Resultado:** 44 pasan, 0 fallan.
 
 <details><summary>Ver cada caso</summary>
 
@@ -24,6 +24,8 @@ Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se part
 - ✅ una cita a una sección inexistente nunca se muestra como fuente
 - ✅ detecta la canalización y la quita del texto
 - ✅ el texto para la voz va sin marcas ni markdown
+- ✅ tolera espacios dentro de los corchetes (lo hace gpt-oss en Groq)
+- ✅ acepta los corchetes 【】 de gpt-oss
 - ✅ responde el primero si funciona
 - ✅ una llave muerta pasa al siguiente y queda registrada como "clave"
 - ✅ una respuesta vacía también es fallo (el caso de gpt-oss sin tokens)
@@ -107,14 +109,14 @@ Antes de responder, el asistente busca en el material publicado de la empresa (t
 
 | # | Consulta | Sección esperada | Secciones que trajo (en orden) | ¿La encontró? |
 |---|---|---|---|---|
-| 1 | ¿Cómo hago una cancelación? | D1-5 | D1-5 | ✅ (posición 1) |
-| 2 | ¿Qué hago si un producto no tiene precio? | D1-3 | D1-3, D1-4, D1-7, D2-3, D2-1, D1-2, D1-1, D1-6 | ✅ (posición 1) |
-| 3 | ¿Cómo aplico una promoción? | D1-4 | D1-4, D1-7, D2-1 | ✅ (posición 1) |
-| 4 | ¿Qué debo revisar al cerrar caja? | D1-6 | D1-1, D1-6, D1-5, D1-4, D2-1, D1-7, D1-2, D2-2 | ✅ (posición 2) |
-| 5 | ¿Cuándo debo llamar al supervisor? | D1-7 | D1-7, D1-1, D1-5, D1-6, D2-1, D1-4, D1-3, D2-3 | ✅ (posición 1) |
-| 6 | Al hacer mi corte me faltan 50 pesos, ¿qué hago? | D1-6, D1-7 | D1-6, D2-1, D1-7, D2-2 | ✅ (posición 1) |
-| 7 | ¿Cómo cobro si el cliente paga con tarjeta? | D1-2 | D1-2, D2-3, D1-3, D2-4, D1-4, D1-1, D1-6, D2-2 | ✅ (posición 1) |
-| 8 | ¿Le puedo pasar mi contraseña de la terminal a una compañera para que me cubra? | D2-4, D1-1 | D2-4, D1-7, D1-6, D1-5, D1-1, D1-2 | ✅ (posición 1) |
+| 1 | ¿Cómo hago una cancelación? | D1-5 | D1-5, D1-6, D1-7, D1-1, D1-2, D1-4, D2-1, D2-3 | ✅ (posición 1) |
+| 2 | ¿Qué hago si un producto no tiene precio? | D1-3 | D1-3, D2-1, D2-3, D1-7, D1-4, D1-1, D1-6, D1-2 | ✅ (posición 1) |
+| 3 | ¿Cómo aplico una promoción? | D1-4 | D1-4, D2-1, D1-7 | ✅ (posición 1) |
+| 4 | ¿Qué debo revisar al cerrar caja? | D1-6 | D2-1, D1-4, D1-6, D1-1, D1-5, D1-7, D2-2, D2-3 | ✅ (posición 3) |
+| 5 | ¿Cuándo debo llamar al supervisor? | D1-7 | D1-7, D2-3, D1-6, D2-2, D2-1, D1-3, D1-1, D2-4 | ✅ (posición 1) |
+| 6 | Al hacer mi corte me faltan 50 pesos, ¿qué hago? | D1-6, D1-7 | D1-6, D1-4, D2-1, D1-5, D1-7, D2-3, D1-1, D1-2 | ✅ (posición 1) |
+| 7 | ¿Cómo cobro si el cliente paga con tarjeta? | D1-2 | D1-2, D1-3, D1-4, D2-3, D1-7, D2-2, D2-4, D2-1 | ✅ (posición 1) |
+| 8 | ¿Le puedo pasar mi contraseña de la terminal a una compañera para que me cubra? | D2-4, D1-1 | D2-4, D1-5, D1-6, D1-7, D1-1, D1-3, D1-2, D2-2 | ✅ (posición 1) |
 | 9 | ¿Cómo acepto un pago con vales de despensa? | no está en el material | D1-2, D2-1 | — |
 | 10 | ¿Cuántos días de vacaciones me tocan al año? | no está en el material | (nada) | — |
 
@@ -142,16 +144,16 @@ Un script usa la app como lo haría una persona: entra con el código que llega 
 | el cajero abre el módulo | ✅ |
 | la página del test NO trae las respuestas ni sus explicaciones | ✅ |
 | un cajero NO entra a la gestión de módulos (404) | ✅ |
-| el QR de Superette está en Equipo (28981796) | ✅ |
+| el QR de Superette está en Equipo (E8DAF643) | ✅ |
 | el QR lo une a Superette y lo manda a su inicio | ✅ |
 | el colaborador ve el inicio de Superette | ✅ |
 | un colaborador NO entra a Contenido (404) | ✅ |
 | ni a otra empresa (404) | ✅ |
-| chat sin llaves de IA: 502 con mensaje claro | ✅ |
+| chat responde con citas ([{"codigo":"D1-2","documento":"Manual del colaborador de tienda (EJEMPLO)","titu…) | ✅ |
 | el chat no responde con el material de otra empresa (404) | ✅ |
 
 ## 5. Prueba documentada con IA (entregable de Del Río)
 
 Diez consultas o más contra el asistente completo (búsqueda + modelo de IA): ocho cubiertas por el material y dos sin respuesta, que deben canalizarse a supervisor o a RH sin inventar. Se reportan las respuestas correctas, los errores y las canalizaciones tal cual.
 
-_Pendiente: requiere las llaves de IA en `.env.local`; se genera con `npm run prueba`._
+**Resultado:** 8 correctas · 2 canalizadas correctamente · 0 errores, de 10 consultas (8 cubiertas por el material y 2 sin respuesta disponible). Respondió: groq. Corrida del 9/10/2026, 2:01:43 a.m.; respuestas completas en [prueba-documentada.md](prueba-documentada.md).
