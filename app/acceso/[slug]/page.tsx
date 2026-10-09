@@ -1,10 +1,12 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { avatarDe } from '@/lib/avatar';
 import { accesoRelojDisponible, clienteAdmin } from '@/lib/supabase/admin';
 import { Avatar } from '@/app/_ui/avatar';
 import { AccesoEmpleado } from '@/app/_ui/acceso-empleado';
 
-// Página de acceso de los empleados de una empresa (docs/adr/0014): solo el número de reloj.
+// Página de acceso de los empleados de una empresa (docs/adr/0014 y 0015): solo el número de reloj. Sin liga a la
+// entrada de administración: los empleados nunca la ven.
 export default async function Acceso({ params, searchParams }: PageProps<'/acceso/[slug]'>) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -24,6 +26,7 @@ export default async function Acceso({ params, searchParams }: PageProps<'/acces
         <div className="text-left">
           <AccesoEmpleado empresa={slug} next={typeof sp.next === 'string' ? sp.next : undefined} />
         </div>
+        <Link href="/acceso" className="block text-sm text-stone-500 hover:text-stone-800">← Elegir otra empresa</Link>
       </div>
     </main>
   );

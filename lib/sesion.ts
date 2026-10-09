@@ -24,9 +24,16 @@ export const sesion = cache(async (): Promise<{ supabase: Cliente; usuario: Usua
   };
 });
 
+/** La empresa de un empleado (número de reloj): para mandarlo a SU app o a SU entrada, nunca a la de administración. */
+export async function empresaDelEmpleado(s: { supabase: Cliente; usuario: Usuario }): Promise<string | null> {
+  if (!s.usuario.email?.endsWith('@reloj.companero.invalid')) return null;
+  const { data } = await s.supabase.from('miembros').select('empresas(slug)').eq('usuario_id', s.usuario.id).limit(1).maybeSingle();
+  return data?.empresas?.slug ?? null;
+}
+
 export async function requerirSesion(next = '/inicio') {
   const s = await sesion();
-  if (!s) redirect(`/entrar?next=${encodeURIComponent(next)}`);
+  if (!s) redirect(`/entrar/admin?next=${encodeURIComponent(next)}`);
   return s;
 }
 

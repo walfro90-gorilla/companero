@@ -182,6 +182,29 @@ do $$ begin
   perform count(*) from public.accesos_reloj;
   raise exception 'FALLÓ: un usuario leyó accesos_reloj';
 exception when insufficient_privilege then raise notice 'ok: nadie con sesión lee los intentos de acceso por número de reloj'; end $$;
+-- Las cuentas de Auth (correos internos de empleados, contraseñas de admin con hash) no se leen ni se cambian con una
+-- sesión: solo el servidor con la llave secreta.
+do $$ begin
+  perform count(*) from auth.users;
+  raise exception 'FALLÓ: un usuario con sesión leyó auth.users';
+exception when insufficient_privilege then raise notice 'ok: nadie con sesión lee auth.users'; end $$;
+do $$ begin
+  update auth.users set encrypted_password = 'x' where email = 'caro@uno.mx';
+  raise exception 'FALLÓ: un usuario con sesión cambió la cuenta de otro';
+exception when insufficient_privilege then raise notice 'ok: ni cambia la cuenta de nadie'; end $$;
+
+-- La lista de "Soy empleado" la arma el servidor (ADR 0015): sin sesión no se lee la tabla de empresas.
+select pg_temp.root();
+select set_config('role', 'anon', true);
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+do $$
+declare n bigint;
+begin
+  select count(*) into n from public.empresas;
+  if n > 0 then raise exception 'FALLÓ: un anónimo leyó % empresas', n; end if;
+  raise notice 'ok: sin sesión no se lee la tabla de empresas';
+exception when insufficient_privilege then raise notice 'ok: sin sesión no se lee la tabla de empresas';
+end $$;
 
 -- Un usuario anónimo (modo invitado) no puede crear empresas.
 select pg_temp.root();

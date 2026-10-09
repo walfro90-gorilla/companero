@@ -28,8 +28,8 @@ la configuración de Auth en el panel (paso 3) y sembrar los datos de demo (paso
       **25/25**; la base quedó en 0 usuarios y 0 empresas.
 - [x] Llave publicable: `sb_publishable_0yIhQ3WBZAs-o9AiwTrFWA_ouXuOnPE` (pública por diseño; protege la RLS).
 
-Después: la `120700` ya está aplicada (9-oct). La `20261009120800_endurecer_acceso_y_revision` se aplica **antes** de
-empujar el código que la usa. Las siguientes, `120900` o mayor; aplicarlas por MCP (`apply_migration` con el mismo
+Aplicadas hasta la `120900` (9-oct). Las siguientes, `121000` o mayor, se aplican **antes** de empujar el código que
+las usa; aplicarlas por MCP (`apply_migration` con el mismo
 nombre y luego alinear la versión) o por CLI: `! supabase login`, `supabase link --project-ref bavkhusmzyyswtfksosk`,
 `supabase db push`.
 
@@ -40,6 +40,9 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `http://localhost:3000/**`.
 - [ ] **Sign In / Providers** → **Anonymous sign-ins: OFF** y **Google: OFF** (ADR 0014: los empleados entran con su número
       de reloj; admin y RH con correo y contraseña). **Email**: contraseña mínima de 8 caracteres.
+- [ ] **Rate Limits** → subir *token verifications* (por omisión unas 30 cada 5 min por IP) a 300 o más: la sesión de
+      cada empleado la abre el servidor (`verifyOtp`) y para Supabase todas vienen de la IP de Vercel (ADR 0015). Si se
+      llena, el empleado ve «Hay muchas entradas en este momento» y no cuenta como intento fallido.
 - [ ] **Email Templates** → en *Confirm signup* y en *Magic Link* pegar el contenido de
       `supabase/templates/codigo.html` (asunto: "Tu código para entrar"). Así llega el **código de 6
       dígitos** (`{{ .Token }}`) en vez de un enlace.
@@ -71,12 +74,15 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
 - [x] Migración `20261009120800_endurecer_acceso_y_revision.sql` (límite de altas por QR, sucursal y puesto de la misma
       empresa, práctica guardada por el servidor, sin `unirse_con_codigo`). La aplicó Bart por MCP el 9-oct, antes del
       push de `bb839d7`; historial alineado.
+- [x] Migración `20261009120900_nip_y_entrada.sql`, aplicada por Bart el 9-oct. Su nombre viene del NIP, que se descartó
+      (ADR 0015). Quedan `empresas.en_lista_acceso` (lista de «Soy empleado») y `accesos_reloj.numero` (auditoría).
 - [x] `npm run sembrar:nube` (9-oct, con el código de `bb839d7`) → crea **Del Río** (`del-rio`, con el manual del reto; sube el PDF a Storage, 96 secciones con
       contexto de IA y el módulo revisado), los **estudiantes 0001–0004** (entran en `/acceso/del-rio`) y
       **Superette (demo)**, y tu cuenta de admin con contraseña.
 
 ## 6. Verificación antes de la demo
-- [ ] Entrar como admin (correo y contraseña) en `/entrar` y como estudiante 0001 en `/acceso/del-rio`, en incógnito y en el celular.
+- [ ] `/entrar` → «Administración» (correo y contraseña) y «Soy empleado» → Del Río → 0001 (solo el número), en
+      incógnito y en el celular. Ninguna pantalla de empleado debe mostrar la entrada de administración.
 - [ ] Escanear el QR de una sucursal desde otro teléfono y entrar con un número de reloj nuevo (queda dado de alta).
 - [ ] Hacer una práctica como estudiante y calificarla como admin en Respuestas; el estudiante ve la calificación.
 - [ ] Preguntar a la asistente: una pregunta cubierta (con cita) y una que canalice; ver la canalización

@@ -20,3 +20,10 @@ export async function guardarAvatar(slug: string, _: EstadoAjustes, d: FormData)
   revalidatePath(`/e/${slug}`, 'layout');
   return { ok: true };
 }
+
+/** ¿La empresa sale en la lista de "Soy empleado" (/acceso)? Si no, sus empleados entran por el QR o /acceso/{empresa}. */
+export async function guardarListado(slug: string, d: FormData) {
+  const { supabase, empresa } = await requerirGestion(slug);
+  await supabase.from('empresas').update({ en_lista_acceso: d.get('en_lista') === 'on' }).eq('id', empresa.id);
+  revalidatePath(`/e/${slug}/admin/ajustes`);
+}

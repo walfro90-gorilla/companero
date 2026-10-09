@@ -7,13 +7,13 @@ export type Database = {
           Tables: {
             "accesos_reloj": {
                   Row: {
-                    "alta": boolean,"creado_en": string,"empresa_id": string | null,"exito": boolean,"id": number,"ip": string
+                    "alta": boolean,"creado_en": string,"empresa_id": string | null,"exito": boolean,"id": number,"ip": string,"numero": string | null
                   }
                   Insert: {
-                    "alta"?: boolean,"creado_en"?: string,"empresa_id"?: string | null,"exito": boolean,"id"?: number,"ip": string
+                    "alta"?: boolean,"creado_en"?: string,"empresa_id"?: string | null,"exito": boolean,"id"?: number,"ip": string,"numero"?: string | null
                   }
                   Update: {
-                    "alta"?: boolean,"creado_en"?: string,"empresa_id"?: string | null,"exito"?: boolean,"id"?: number,"ip"?: string
+                    "alta"?: boolean,"creado_en"?: string,"empresa_id"?: string | null,"exito"?: boolean,"id"?: number,"ip"?: string,"numero"?: string | null
                   }
                   Relationships: [
                     {
@@ -138,13 +138,13 @@ isOneToOne: false
                   ]
                 },"empresas": {
                   Row: {
-                    "avatar": NonNullable<Json>,"creada_en": string,"creada_por": string | null,"giro": string | null,"id": string,"nombre": string,"slug": string
+                    "avatar": NonNullable<Json>,"creada_en": string,"creada_por": string | null,"en_lista_acceso": boolean,"giro": string | null,"id": string,"nombre": string,"slug": string
                   }
                   Insert: {
-                    "avatar"?: NonNullable<Json>,"creada_en"?: string,"creada_por"?: string | null,"giro"?: string | null,"id"?: string,"nombre": string,"slug": string
+                    "avatar"?: NonNullable<Json>,"creada_en"?: string,"creada_por"?: string | null,"en_lista_acceso"?: boolean,"giro"?: string | null,"id"?: string,"nombre": string,"slug": string
                   }
                   Update: {
-                    "avatar"?: NonNullable<Json>,"creada_en"?: string,"creada_por"?: string | null,"giro"?: string | null,"id"?: string,"nombre"?: string,"slug"?: string
+                    "avatar"?: NonNullable<Json>,"creada_en"?: string,"creada_por"?: string | null,"en_lista_acceso"?: boolean,"giro"?: string | null,"id"?: string,"nombre"?: string,"slug"?: string
                   }
                   Relationships: [
                     

@@ -46,13 +46,24 @@ async function sesionReloj(cuerpo: { numero: string; empresa?: string; codigo?: 
 const pedir = (ruta: string, cookie: string, init: RequestInit = {}) =>
   fetch(`${SITIO}${ruta}`, { ...init, redirect: 'manual', headers: { cookie, ...(init.headers ?? {}) } });
 
-// 0) Sin sesión: las pantallas de una empresa mandan al acceso por número de reloj; no hay Google ni invitado.
+// 0) Sin sesión: las pantallas de una empresa mandan a la entrada de empleados (número de reloj, sin contraseña);
+// /entrar es el selector y la entrada de administración no tiene Google ni invitado (ADR 0015). Las páginas de
+// empleados no llevan a la de administración.
 let r = await pedir('/e/del-rio', '');
 revisar(r.status === 307 && (r.headers.get('location') ?? '').includes('/acceso/del-rio'), 'sin sesión, /e/del-rio manda a /acceso/del-rio (número de reloj)');
 let html = await (await pedir('/entrar', '')).text();
-revisar(html.includes('Contraseña') && !html.includes('Google') && !html.includes('invitado'), '/entrar es correo y contraseña, sin Google ni invitado');
+revisar(html.includes('Soy empleado') && html.includes('href="/entrar/admin"') && !html.includes('Contraseña'), '/entrar es el selector: «Soy empleado» y «Administración»');
+html = await (await pedir('/entrar/admin', '')).text();
+revisar(html.includes('Contraseña') && !html.includes('Google') && !html.includes('invitado'), '/entrar/admin es correo y contraseña, sin Google ni invitado');
+html = await (await pedir('/acceso', '')).text();
+revisar(html.includes('href="/acceso/del-rio"') && html.includes('href="/acceso/superette"') && !html.includes('Comercio') && !/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-/.test(html),
+  '«Soy empleado» lista las empresas solo con nombre y slug');
+/** Ni liga a la entrada de administración ni su formulario (correo y contraseña). */
+const sinAdmin = (h: string) => !h.includes('/entrar') && !h.includes('Administración') && !h.includes('type="email"') && !h.includes('type="password"');
+const sinAdminLista = sinAdmin(html);
 html = await (await pedir('/acceso/del-rio', '')).text();
-revisar(html.includes('número de reloj'), '/acceso/del-rio pide el número de reloj');
+revisar(html.includes('número de reloj') && !html.includes('type="password"'), '/acceso/del-rio pide solo el número de reloj, sin contraseña');
+revisar(sinAdmin(html) && sinAdminLista, 'la entrada de empleados NO lleva a la de administración');
 
 // 1) Admin con correo y contraseña.
 const admin = await sesionAdmin(email, password);
@@ -86,7 +97,10 @@ revisar(['0001', '0002', '0003', '0004'].every(n => html.includes(n)), 'Equipo m
 let acceso = await sesionReloj({ empresa: 'del-rio', numero: '0001' });
 const cajero = acceso.cookie;
 revisar(acceso.status === 200 && acceso.json?.destino === '/e/del-rio' && Boolean(cajero), 'el estudiante 0001 entra con su número de reloj');
+r = await pedir('/entrar/admin', cajero);
+revisar(r.status === 307 && (r.headers.get('location') ?? '').endsWith('/e/del-rio'), 'si el estudiante abre la entrada de administración, regresa a su empresa');
 html = await (await pedir('/e/del-rio', cajero)).text();
+revisar(sinAdmin(html), 'las pantallas del estudiante no llevan a la entrada de administración');
 revisar(html.includes('Núm. 0001') && html.includes('Inducción del cajero: un turno completo') && html.includes('Nuevo ingreso'), 'el estudiante ve su número, su ruta de capacitación y su nivel');
 r = await pedir(`/e/del-rio/modulos/${moduloId}`, cajero);
 html = await r.text();
@@ -155,6 +169,7 @@ const qr = /\/unirse\/([A-Z0-9]{8})/.exec(await (await pedir('/e/superette/admin
 revisar(Boolean(qr), `el QR de Superette está en Equipo (${qr})`);
 html = await (await pedir(`/unirse/${qr}`, '')).text();
 revisar(html.includes('Superette (demo)') && html.includes('número de reloj'), 'la página del QR pide el número de reloj (sin sesión)');
+revisar(sinAdmin(html), 'la página del QR NO lleva a la entrada de administración');
 const numeroNuevo = `H${Date.now().toString().slice(-8)}`;
 acceso = await sesionReloj({ codigo: qr!, numero: numeroNuevo });
 const colaborador = acceso.cookie;
@@ -190,6 +205,13 @@ r = await pedir('/api/chat', colaborador, {
   body: JSON.stringify({ empresa: 'del-rio', mensajes: [{ rol: 'usuario', texto: '¿Cómo hago una cancelación?' }] }),
 });
 revisar(r.status === 404, `el chat no responde con el material de otra empresa (${r.status})`);
+
+// Al salir, el empleado regresa a la entrada de SU empresa (no al selector) y solo se cierra esa sesión (ADR 0015).
+acceso = await sesionReloj({ codigo: qr!, numero: numeroNuevo });
+r = await fetch(`${SITIO}/auth/salir`, { method: 'POST', redirect: 'manual', headers: { cookie: acceso.cookie } });
+revisar(r.status === 303 && (r.headers.get('location') ?? '').endsWith('/acceso/superette'), 'al salir, el empleado regresa a la entrada de SU empresa');
+r = await pedir('/e/superette', colaborador);
+revisar(r.status === 200, 'y su otra sesión sigue abierta (salir no saca a quien comparte el número)');
 
 // 4) Pulsar para hablar: el audio llega a Whisper (Groq) y se protege igual que el chat.
 function wavTono(segundos: number): Blob {

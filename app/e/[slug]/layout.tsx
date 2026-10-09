@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import { esCorreoDeEmpleado } from '@/lib/reloj';
 import { NOMBRE_ROL, contextoEmpresa } from '@/lib/sesion';
 import { BotonSalir } from '@/app/_ui/salir';
 import { Navegacion, type Enlace } from './navegacion';
@@ -12,6 +13,7 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<'/
   const { count: ficticios } = await supabase
     .from('documentos').select('id', { count: 'exact', head: true }).eq('empresa_id', empresa.id).eq('ejemplo', true).neq('estado', 'archivado');
   const base = `/e/${slug}`;
+  const empleado = esCorreoDeEmpleado(usuario.email);
   const enlaces: Enlace[] = [
     { href: base, texto: 'Inicio', icono: 'inicio' },
     { href: `${base}/asistente`, texto: empresa.avatar.nombre, icono: 'asistente' },
@@ -32,7 +34,7 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<'/
     <div className="flex flex-1 flex-col" style={estilo}>
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 pt-3 md:px-6">
-          <Link href="/inicio?elegir" className="min-w-0">
+          <Link href={empleado ? base : '/inicio?elegir'} className="min-w-0">
             <span className="block truncate font-semibold">{empresa.nombre}</span>
             <span className="block truncate text-xs text-stone-500">
               {miembro.numero_reloj ? `Núm. ${miembro.numero_reloj}${miembro.nombre ? ` · ${miembro.nombre}` : ''}` : (miembro.nombre ?? usuario.email)} · {NOMBRE_ROL[miembro.rol]}

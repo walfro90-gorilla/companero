@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     empresa = e;
   }
   const fallo = async (mensaje: string, status: number) => {
-    await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa?.id ?? null, exito: false });
+    await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa?.id ?? null, numero, exito: false });
     return error(mensaje, status);
   };
   if (!empresa) return fallo('No encontré tu empresa. Usa el QR de tu sucursal.', 404);
@@ -70,8 +70,10 @@ export async function POST(request: Request) {
     nuevo = alta.nuevo;
   }
 
-  if (!(await abrirSesion(admin, usuarioId))) return error('No se pudo abrir la sesión. Intenta de nuevo.', 500);
-  await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa.id, exito: true, alta: nuevo });
+  const sesion = await abrirSesion(admin, usuarioId);
+  if (sesion === 'saturado') return error('Hay muchas entradas en este momento. Intenta de nuevo en un minuto.', 503);
+  if (sesion === 'error') return error('No se pudo abrir la sesión. Intenta de nuevo.', 500);
+  await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa.id, numero, exito: true, alta: nuevo });
   const base = `/e/${empresa.slug}`;
   const next = rutaSegura(datos.data.next, base);
   return Response.json({ destino: next.startsWith(base) ? next : base });

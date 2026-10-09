@@ -27,7 +27,7 @@ npm run dev                    # http://localhost:3000 → Entrar con tu correo 
 |---|---|
 | `npm test` | Pruebas de lógica (secciones, búsqueda, citas, cadena de proveedores) |
 | `npm run test:sql` | Aislamiento entre empresas, roles y búsqueda en Postgres |
-| `npm run humo` | Punta a punta: login por código, pantallas, QR, permisos |
+| `npm run humo` | Punta a punta: entrada (selector, número de reloj, admin con contraseña), pantallas, QR, permisos |
 | `npm run prueba` | Prueba documentada (≥10 consultas) → `docs/prueba-documentada.md` |
 
 ## Arquitectura

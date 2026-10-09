@@ -19,14 +19,14 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - Criterios de evaluación (30/25/20/15/10): [ADR 0008](docs/adr/0008-criterios-de-evaluacion.md).
 - **En línea: https://companero-ten.vercel.app**
   - **Vercel:** proyecto `companero`; **cada push a `main` despliega a producción**.
-  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120800` (endurecimiento; la aplicó Bart el 9-oct antes del push de `bb839d7`), con el historial alineado con los archivos. La siguiente nueva es `120900` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
+  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120900` (la aplicó Bart el 9-oct), con el historial alineado con los archivos. La siguiente nueva es `121000` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
   - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`). Si `git push` por SSH se cuelga (por `gcr-ssh-agent`), usar HTTPS con `gh`; el comando está al final de `docs/despliegue.md`.
   - **Detalle:** [ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md) y [`docs/despliegue.md`](docs/despliegue.md).
   - ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que sea el correcto.
 - **Pendiente de Wal para que producción funcione de punta a punta** (`docs/despliegue.md`):
-  - Login en el panel de Supabase (§3): Site URL y Redirect URLs, **Anonymous OFF y Google OFF**, contraseña mínima de 8 y la plantilla del código de 6 dígitos.
+  - Login en el panel de Supabase (§3): Site URL y Redirect URLs, **Anonymous OFF y Google OFF**, contraseña mínima de 8, **subir el rate limit de *token verifications*** (la sesión del empleado la abre el servidor) y la plantilla del código de 6 dígitos.
   - Ya hecho (9-oct): `GROQ_API_KEY` y `SUPABASE_SECRET_KEY` en Vercel; nube sembrada (Del Río con 96 secciones, el módulo, 0001–0004 y Wal como admin; Superette).
-  - Falta: *leaked password protection* (si el plan lo permite) y la prueba de punta a punta en producción (la hace Bart).
+  - Falta: la prueba de punta a punta en producción de la entrada separada (ADR 0015; la hace Bart). *Leaked password protection* es opcional.
 - **Equipo / nombre del equipo:** _pendiente_
 - **Problema:** la capacitación de cajeros nuevos consume tiempo operativo y hay mucha rotación; cada ingreso repite las mismas explicaciones.
 - **Solución ([ADR 0009](docs/adr/0009-plataforma-multiempresa.md)):** **"Compañero"**, plataforma **multiempresa y multisucursal** "en blanco" para inducción y refuerzos de personal con IA.
@@ -38,9 +38,10 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - **Asistente con avatar:** responde **citando como pide el manual («sección N, Subtítulo»)** (RAG, [ADR 0010](docs/adr/0010-rag-en-supabase.md)).
   - **Aprendizaje:** arma módulos con test y práctica; es **gamificable** sin rankings entre personas; **canaliza en vivo** al supervisor o a RH ([ADR 0011](docs/adr/0011-aprendizaje-gamificacion-y-canalizaciones.md)).
   - **Voz:** se le puede preguntar **pulsando para hablar** ([ADR 0005](docs/adr/0005-avatar.md)).
-  - **Acceso ([ADR 0014](docs/adr/0014-acceso-por-numero-de-reloj-y-revision.md)):**
-    - **Empleados** (colaborador y supervisor): **solo con su número de reloj**, en `/acceso/{empresa}` o con el QR de su sucursal. Un número nuevo por QR queda dado de alta.
-    - **Admin y RH:** correo y contraseña en `/entrar`.
+  - **Acceso ([ADR 0014](docs/adr/0014-acceso-por-numero-de-reloj-y-revision.md) y [ADR 0015](docs/adr/0015-entrada-separada-sin-contrasena.md)):**
+    - **`/entrar`** es un selector: «Soy empleado» (grande) o «Administración» (discreto). Los empleados nunca ven la entrada de administración.
+    - **Empleados** (colaborador y supervisor): **solo con su número de reloj, sin contraseña** (lo pide la ficha; el NIP se probó y se descartó), en `/acceso` (lista de empresas) → `/acceso/{empresa}` o con el QR de su sucursal. Un número nuevo por QR queda dado de alta.
+    - **Admin y RH:** correo y contraseña en `/entrar/admin`.
     - **Sin Google ni modo invitado.**
     - **Estudiantes de la demo:** **0001–0004** en Del Río.
   - **Respuestas:** panel donde admin y RH **revisan y califican** (0–10 con comentario) las prácticas y los tests. El empleado ve su calificación y el aviso de que su instructor revisa.
@@ -61,9 +62,9 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - **Pulsar para hablar** (Whisper en Groq, sin guardar audio, filtro de frases fantasma).
   - **Evidencia para el jurado:** `npm run validar` → `docs/validacion.md`:
     - Lógica: 64.
-    - Aislamiento SQL: 37 (incluye número de reloj, revisión y el endurecimiento de la `120800`).
+    - Aislamiento SQL: 40 (incluye número de reloj, revisión, el endurecimiento de la `120800` y que la tabla de empresas y `auth.users` no se leen).
     - Búsqueda: 18/18 (16/18 sin reescritura).
-    - Punta a punta: 48 (login por número de reloj, QR, límite de altas, revisión, práctica guardada por el servidor, voz).
+    - Punta a punta: 56 (selector de entrada, empleados sin liga a administración, login por número de reloj, QR, límite de altas, revisión, práctica guardada por el servidor, salir, voz).
     - Prueba documentada: **10/10 con Groq**.
 - **Llaves:**
   - **En local** (`.env.local`): `GROQ_API_KEY` sí; `ANTHROPIC_API_KEY` vacía.
@@ -119,9 +120,9 @@ pregunta ─► app/api/chat ─► buscar_secciones (Postgres: texto + aproxima
 respuesta en streaming con [D1-3] y [CANALIZAR:…] ─► UI valida contra lo consultado · consultas + canalizaciones (Realtime)
 ```
 
-- **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue · 0013 material del reto (Tienda Escuela) · 0014 acceso por número de reloj y revisión**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
+- **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue · 0013 material del reto (Tienda Escuela) · 0014 acceso por número de reloj y revisión · 0015 entrada separada, sin contraseña para empleados**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
 - **Datos y permisos:** `supabase/migrations/` (Postgres con RLS en TODAS las tablas; helpers `mis_empresas()`, `gestiono()`, `superviso()`, `atiendo()`). La autorización la decide la base, no el código. `lib/sesion.ts` = capa de acceso (`contextoEmpresa(slug)`, `requerirGestion`). Tipos: `npm run tipos`.
-- **Rutas:** `/` landing · `/entrar` (admin/RH: correo y contraseña) · `/acceso/{empresa}` (empleados: número de reloj) · `/unirse/{codigo}` (QR de sucursal: número de reloj, alta) · `/inicio` (admin: mis empresas, registrar empresa) · `/restablecer` · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,respuestas,equipo,metricas,ajustes}` · APIs `/api/chat`, `/api/practica`, `/api/transcribir` (voz) y `/api/acceso-reloj`.
+- **Rutas:** `/` landing · `/entrar` (selector) · `/entrar/admin` (admin/RH: correo y contraseña) · `/acceso` (lista de empresas) · `/acceso/{empresa}` (empleados: número de reloj) · `/unirse/{codigo}` (QR de sucursal: número de reloj, alta) · `/inicio` (admin: mis empresas, registrar empresa) · `/restablecer` · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,respuestas,equipo,metricas,ajustes}` · APIs `/api/chat`, `/api/practica`, `/api/transcribir` (voz) y `/api/acceso-reloj`.
 - **Contenido:** `conocimiento/del-rio/` tiene el manual OFICIAL del reto (PDF, ficticio) y su módulo revisado; `conocimiento/superette/` tiene contenido de ejemplo escrito por el equipo. `npm run sembrar` los carga; la UI pone una franja de contenido ficticio en ambas empresas.
 - **IA:** `lib/ia/` reutiliza la cadena de brotes (Anthropic → Groq, espera el primer fragmento antes de comprometerse con un proveedor). Los modelos se cambian con `IA_MODELO_ANTHROPIC` e `IA_MODELO_GROQ`, sin tocar código.
 

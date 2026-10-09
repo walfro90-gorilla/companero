@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { BadgeCheck, LogIn } from 'lucide-react';
 import { boton, campo, etiqueta } from './estilos';
 
-// Entrada del empleado (docs/adr/0014): solo su número de reloj. Con `codigo` (QR de sucursal), un número nuevo
-// queda dado de alta en esa sucursal.
+// Entrada del empleado (docs/adr/0014): solo su número de reloj, sin contraseña (la ficha pide acceso sin contraseña;
+// ADR 0015). Con `codigo` (QR de sucursal), un número nuevo queda dado de alta en esa sucursal.
+// A propósito NO hay liga a la entrada de administración: los empleados nunca la ven (decisión de Wal, ADR 0015).
 export function AccesoEmpleado({ empresa, codigo, next }: { empresa?: string; codigo?: string; next?: string }) {
   const router = useRouter();
   const [numero, setNumero] = useState('');
@@ -51,9 +51,6 @@ export function AccesoEmpleado({ empresa, codigo, next }: { empresa?: string; co
         </p>
       )}
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-      <p className="pt-2 text-center text-xs text-stone-500">
-        ¿Eres de administración o RH? <Link href="/entrar" className="underline">Entra con tu correo</Link>
-      </p>
     </form>
   );
 }

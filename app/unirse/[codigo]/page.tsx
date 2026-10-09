@@ -4,8 +4,8 @@ import { accesoRelojDisponible, clienteAdmin } from '@/lib/supabase/admin';
 import { Avatar } from '@/app/_ui/avatar';
 import { AccesoEmpleado } from '@/app/_ui/acceso-empleado';
 
-// Destino del QR de una sucursal (docs/adr/0014): el empleado escribe su número de reloj; si es nuevo, queda dado de
-// alta como colaborador de esta sucursal.
+// Destino del QR de una sucursal (docs/adr/0014 y 0015): el empleado escribe su número de reloj; si es nuevo, queda dado
+// de alta como colaborador de esta sucursal. Sin liga a la entrada de administración.
 export default async function Unirse({ params }: PageProps<'/unirse/[codigo]'>) {
   const { codigo } = await params;
   const { data: s } = accesoRelojDisponible()
@@ -17,7 +17,7 @@ export default async function Unirse({ params }: PageProps<'/unirse/[codigo]'>) 
       <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <h1 className="text-xl font-semibold">Ese código no es válido</h1>
         <p className="text-stone-600">Pídele a tu supervisor el QR de tu sucursal.</p>
-        <Link href="/" className="underline">Ir al inicio</Link>
+        <Link href="/acceso" className="underline">Elegir mi empresa</Link>
       </main>
     );
   }

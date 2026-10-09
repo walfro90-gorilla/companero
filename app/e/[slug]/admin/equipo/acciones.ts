@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { altaEmpleado, type RolEmpleado } from '@/lib/empleados';
 import { leerLista } from '@/lib/reloj';
 import { requerirGestion, type Rol } from '@/lib/sesion';
@@ -10,7 +11,7 @@ const ROLES: Rol[] = ['admin', 'rh', 'supervisor', 'colaborador'];
 const texto = (d: FormData, k: string) => String(d.get(k) ?? '').trim();
 const opcional = (d: FormData, k: string) => texto(d, k) || null;
 
-export type EstadoEquipo = { error?: string; ok?: string };
+export type EstadoEquipo = { error?: string; ok?: string; liga?: string };
 
 export async function agregarSucursal(slug: string, _: EstadoEquipo, d: FormData): Promise<EstadoEquipo> {
   const { supabase, empresa } = await requerirGestion(slug);
@@ -44,7 +45,11 @@ export async function invitar(slug: string, _: EstadoEquipo, d: FormData): Promi
   );
   if (error) return { error: 'No se pudo guardar la invitación.' };
   revalidatePath(`/e/${slug}/admin/equipo`);
-  return { ok: `Listo: cuando ${email} cree su cuenta (correo y contraseña) en /entrar, quedará en el equipo.` };
+  // No se manda correo (el SMTP integrado manda muy pocos; ADR 0015): RH comparte la liga y, al crear su cuenta con
+  // ese correo, la persona queda en el equipo con el rol elegido (aceptar_invitaciones).
+  const h = await headers();
+  const liga = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('host')}/entrar/admin?modo=crear`;
+  return { ok: `Invitación guardada. No se manda correo: comparte esta liga con ${email}. Al crear su cuenta con ese correo, quedará en el equipo.`, liga };
 }
 
 export async function actualizarMiembro(slug: string, usuarioId: string, d: FormData) {

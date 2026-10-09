@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { KeyRound, LogIn, UserPlus } from 'lucide-react';
 import { clienteNavegador } from '@/lib/supabase/navegador';
-import { boton, botonSecundario, campo, etiqueta } from '../_ui/estilos';
+import { boton, botonSecundario, campo, etiqueta } from '@/app/_ui/estilos';
 
 // Entrada de administración y RH (docs/adr/0014): correo y contraseña. Los empleados entran con su número de
 // reloj desde la página de su empresa o el QR de su sucursal. Sin Google ni modo invitado.
 
 type Modo = 'entrar' | 'crear' | 'recuperar' | 'confirmar';
 
-export function FormularioEntrar({ next }: { next: string }) {
+export function FormularioEntrar({ next, crear = false }: { next: string; crear?: boolean }) {
   const router = useRouter();
-  const [modo, setModo] = useState<Modo>('entrar');
+  const [modo, setModo] = useState<Modo>(crear ? 'crear' : 'entrar');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [codigo, setCodigo] = useState('');

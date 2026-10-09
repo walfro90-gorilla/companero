@@ -5,6 +5,7 @@
   - "crea 4 usuarios: 0001, 0002, 0003 y 0004 para acceder como empleados estudiantes".
   - "el admin panel debe tener un contenedor de las respuestas para revisar y calificar".
 - Cambia el ADR 0009 (login), el 0011 (privacidad del test) y el 0012 (la llave secreta ahora va al servidor en Vercel).
+- **Complementado por el ADR 0015 (9-oct, noche):** la entrada de administración está separada (`/entrar` es un selector y `/entrar/admin` la de correo y contraseña), y los empleados nunca la ven. Los empleados siguen entrando solo con su número de reloj: el NIP se probó y se descartó porque la ficha pide acceso sin contraseña.
 
 ## Acceso
 | Quién | Cómo entra | Dónde |
@@ -65,5 +66,5 @@ La otra sesión de Wal (Bart) revisó el commit y encontró cuatro huecos. Wal a
 Pendiente de Wal (panel de Supabase): *leaked password protection* para las contraseñas de admin y RH, si el plan lo permite.
 
 ## Descartado
-- **PIN o contraseña para empleados:** Wal pidió solo el número de reloj; queda como mejora para el piloto.
+- **PIN o contraseña para empleados:** Wal pidió solo el número de reloj; queda como mejora para el piloto. Se construyó y se descartó el 9-oct porque la ficha pide acceso sin contraseña; ver ADR 0015, incluido el cuidado que necesitaría en un piloto.
 - **Sesión anónima ligada al número:** cada entrada crearía otro usuario y se perdería el avance.

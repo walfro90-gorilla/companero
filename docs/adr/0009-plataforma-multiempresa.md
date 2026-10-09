@@ -58,3 +58,5 @@ empresa sigue siendo **"Superette (demo)"**, con una franja visible de contenido
 ## Cambio del 9-oct (ADR 0014)
 Los empleados ya no entran con Google, código por correo ni como invitados: **solo con su número de reloj** (en
 `/acceso/{empresa}` o con el QR de su sucursal). Admin y RH entran con correo y contraseña. Detalle en el ADR 0014.
+Desde el ADR 0015 la entrada de administración está separada (`/entrar` → «Soy empleado» o «Administración»), y los
+empleados siguen sin contraseña.

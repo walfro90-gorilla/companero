@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
+import { Copy } from 'lucide-react';
 import { NOMBRE_ROL, type Rol } from '@/lib/roles';
 import { boton, campo, etiqueta } from '@/app/_ui/estilos';
 import { actualizarMiembro, altaEmpleados, invitar, type EstadoEquipo } from './acciones';
@@ -10,8 +11,31 @@ const ROLES: Rol[] = ['colaborador', 'supervisor', 'rh', 'admin'];
 
 function Aviso({ estado }: { estado: EstadoEquipo }) {
   if (estado.error) return <p className="text-sm text-red-700">{estado.error}</p>;
-  if (estado.ok) return <p className="text-sm text-emerald-700">{estado.ok}</p>;
+  if (estado.ok) {
+    return (
+      <>
+        <p className="text-sm text-emerald-700">{estado.ok}</p>
+        {estado.liga && <Liga liga={estado.liga} />}
+      </>
+    );
+  }
   return null;
+}
+
+/** La liga para que la persona invitada cree su cuenta (no se manda correo), con botón para copiarla. */
+function Liga({ liga }: { liga: string }) {
+  const [copiada, setCopiada] = useState(false);
+  return (
+    <div className="mt-2 flex items-center gap-2 rounded-xl bg-stone-50 p-2 text-sm ring-1 ring-stone-200">
+      <code className="min-w-0 flex-1 truncate">{liga}</code>
+      <button
+        type="button" className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-stone-300 bg-white px-2 py-1 hover:bg-stone-50"
+        onClick={() => navigator.clipboard?.writeText(liga).then(() => setCopiada(true), () => {})}
+      >
+        <Copy className="size-4" /> {copiada ? 'Copiada' : 'Copiar'}
+      </button>
+    </div>
+  );
 }
 
 export function FormNombre({ accion, etiqueta: titulo, placeholder }: { accion: (e: EstadoEquipo, d: FormData) => Promise<EstadoEquipo>; etiqueta: string; placeholder: string }) {

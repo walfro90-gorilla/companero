@@ -13,5 +13,5 @@ export async function GET(request: Request) {
     if (!error) return NextResponse.redirect(`${origin}${next}`);
     console.error('[auth] no se pudo cambiar el código por sesión:', error.message);
   }
-  return NextResponse.redirect(`${origin}/entrar?error=auth&next=${encodeURIComponent(next)}`);
+  return NextResponse.redirect(`${origin}/entrar/admin?error=auth&next=${encodeURIComponent(next)}`);
 }
