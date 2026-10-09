@@ -56,35 +56,37 @@ const admin = await sesionPorCodigo(email);
 revisar(Boolean(admin), `entra ${email} con código por correo`);
 let r = await pedir('/inicio', admin);
 let html = await r.text();
-revisar(r.status === 200 && html.includes('Del Río (demo)') && html.includes('Superette (demo)'), '/inicio acepta las invitaciones y lista las 2 empresas');
-for (const ruta of ['/e/del-rio', '/e/del-rio/asistente', '/e/del-rio/admin/contenido', '/e/del-rio/admin/equipo', '/e/del-rio/admin/ajustes', '/e/del-rio/canalizaciones']) {
+revisar(r.status === 200 && html.includes('Tienda Escuela') && html.includes('Superette (demo)'), '/inicio acepta las invitaciones y lista las 2 empresas');
+for (const ruta of ['/e/tienda-escuela', '/e/tienda-escuela/asistente', '/e/tienda-escuela/admin/contenido', '/e/tienda-escuela/admin/equipo', '/e/tienda-escuela/admin/ajustes', '/e/tienda-escuela/canalizaciones']) {
   r = await pedir(ruta, admin);
   revisar(r.status === 200, `${ruta} → ${r.status}`);
 }
-html = await (await pedir('/e/del-rio/admin/contenido', admin)).text();
-revisar(html.includes('Manual de operación de caja') && !html.includes('Manual del colaborador de tienda'), 'Contenido de Del Río no mezcla el material de Superette');
+html = await (await pedir('/e/tienda-escuela/admin/contenido', admin)).text();
+revisar(html.includes('Manual de procedimientos para cajeros') && !html.includes('Manual del colaborador de tienda'), 'Contenido de Tienda Escuela no mezcla el material de Superette');
+revisar(html.includes('sección 5, Si la segunda parte queda incierta'), 'el manual del reto quedó partido como lo cita el documento («sección 5, Si la segunda parte queda incierta»)');
+revisar(html.includes('Contenido ficticio con fines de demostración'), 'la franja de contenido ficticio se ve en Tienda Escuela');
 
 // Módulos y métricas (gestión).
-html = await (await pedir('/e/del-rio/admin/modulos', admin)).text();
-const moduloId = /\/e\/del-rio\/admin\/modulos\/([0-9a-f-]{36})/.exec(html)?.[1];
-revisar(html.includes('Inducción al puesto de cajero') && Boolean(moduloId), 'Módulos lista el módulo de inducción');
-r = await pedir(`/e/del-rio/admin/modulos/${moduloId}`, admin);
+html = await (await pedir('/e/tienda-escuela/admin/modulos', admin)).text();
+const moduloId = /\/e\/tienda-escuela\/admin\/modulos\/([0-9a-f-]{36})/.exec(html)?.[1];
+revisar(html.includes("Inducción del cajero: un turno completo") && Boolean(moduloId), 'Módulos lista el módulo de inducción');
+r = await pedir(`/e/tienda-escuela/admin/modulos/${moduloId}`, admin);
 html = await r.text();
 revisar(r.status === 200 && html.includes('Cancelaciones') && html.includes('Situaciones prácticas'), 'la revisión del módulo muestra lecciones, test y prácticas');
-r = await pedir('/e/del-rio/admin/metricas', admin);
-revisar(r.status === 200, `/e/del-rio/admin/metricas → ${r.status}`);
+r = await pedir('/e/tienda-escuela/admin/metricas', admin);
+revisar(r.status === 200, `/e/tienda-escuela/admin/metricas → ${r.status}`);
 
-// 1b) Un cajero nuevo de Del Río: ve su ruta, su nivel y el módulo, sin las respuestas del test.
+// 1b) Un cajero nuevo de Tienda Escuela: ve su ruta, su nivel y el módulo, sin las respuestas del test.
 const cajero = await sesionPorCodigo(`humo+cajero${Date.now()}@ejemplo.mx`);
-const qrDelRio = /\/unirse\/([A-Z0-9]{8})/.exec(await (await pedir('/e/del-rio/admin/equipo', admin)).text())?.[1];
-await pedir(`/unirse/${qrDelRio}`, cajero);
-html = await (await pedir('/e/del-rio', cajero)).text();
-revisar(html.includes('Inducción al puesto de cajero') && html.includes('Nuevo ingreso'), 'el cajero ve su ruta de capacitación y su nivel');
-r = await pedir(`/e/del-rio/modulos/${moduloId}`, cajero);
+const qrTienda = /\/unirse\/([A-Z0-9]{8})/.exec(await (await pedir('/e/tienda-escuela/admin/equipo', admin)).text())?.[1];
+await pedir(`/unirse/${qrTienda}`, cajero);
+html = await (await pedir('/e/tienda-escuela', cajero)).text();
+revisar(html.includes("Inducción del cajero: un turno completo") && html.includes('Nuevo ingreso'), 'el cajero ve su ruta de capacitación y su nivel');
+r = await pedir(`/e/tienda-escuela/modulos/${moduloId}`, cajero);
 html = await r.text();
-revisar(r.status === 200 && html.includes('Tu papel y la apertura de caja'), 'el cajero abre el módulo');
-revisar(!html.includes('no abres la caja: avisas a tu supervisor antes de cobrar'), 'la página del test NO trae las respuestas ni sus explicaciones');
-r = await pedir('/e/del-rio/admin/modulos', cajero);
+revisar(r.status === 200 && html.includes("Conoce tu rol y reglas básicas"), 'el cajero abre el módulo');
+revisar(!html.includes("Si el fondo contado no coincide, debes volver"), 'la página del test NO trae las respuestas ni sus explicaciones');
+r = await pedir('/e/tienda-escuela/admin/modulos', cajero);
 revisar(r.status === 404, `un cajero NO entra a la gestión de módulos (${r.status})`);
 
 // 2) Una persona nueva que entra con el QR de una sucursal de Superette.
@@ -98,7 +100,7 @@ r = await pedir('/e/superette', colaborador);
 revisar(r.status === 200, 'el colaborador ve el inicio de Superette');
 r = await pedir('/e/superette/admin/contenido', colaborador);
 revisar(r.status === 404, `un colaborador NO entra a Contenido (${r.status})`);
-r = await pedir('/e/del-rio', colaborador);
+r = await pedir('/e/tienda-escuela', colaborador);
 revisar(r.status === 404, `ni a otra empresa (${r.status})`);
 
 // 3) El chat: sin llaves de IA responde 502 con mensaje claro; con llaves, texto con citas.
@@ -112,9 +114,35 @@ if (r.status === 502) revisar(cuerpo.includes('No pude responder'), 'chat sin ll
 else revisar(r.status === 200 && /\[D\d+-\d+\]/.test(cuerpo) && Boolean(consultadas), `chat responde con citas (${consultadas ? decodeURIComponent(consultadas).slice(0, 80) : ''}…)`);
 r = await pedir('/api/chat', colaborador, {
   method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ empresa: 'del-rio', mensajes: [{ rol: 'usuario', texto: '¿Cómo hago una cancelación?' }] }),
+  body: JSON.stringify({ empresa: 'tienda-escuela', mensajes: [{ rol: 'usuario', texto: '¿Cómo hago una cancelación?' }] }),
 });
 revisar(r.status === 404, `el chat no responde con el material de otra empresa (${r.status})`);
+
+// 4) Pulsar para hablar: el audio llega a Whisper (Groq) y se protege igual que el chat.
+function wavTono(segundos: number): Blob {
+  const tasa = 16_000;
+  const n = Math.floor(tasa * segundos);
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const ascii = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  ascii(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); ascii(8, 'WAVE'); ascii(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, tasa, true);
+  v.setUint32(28, tasa * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); ascii(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.round(Math.sin((2 * Math.PI * 440 * i) / tasa) * 3000), true);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+const voz = (cookie: string, audio?: Blob) => {
+  const d = new FormData();
+  if (audio) d.append('audio', audio, 'pregunta.wav');
+  d.append('empresa', 'tienda-escuela');
+  return fetch(`${SITIO}/api/transcribir`, { method: 'POST', body: d, headers: cookie ? { cookie } : {} });
+};
+r = await voz('', wavTono(1));
+revisar(r.status === 401, `voz sin sesión → 401 (${r.status})`);
+r = await voz(admin);
+revisar(r.status === 400, `voz sin audio → 400 (${r.status})`);
+r = await voz(admin, wavTono(1.5));
+revisar(r.status === 422, `un ruido sin voz llega a Whisper y NO se manda como pregunta (${r.status}: 422 "no te escuché")`);
 
 console.log(fallas ? `\n${fallas} fallas` : '\nTodo bien.');
 process.exitCode = fallas ? 1 : 0;

@@ -4,7 +4,8 @@
 // respeta la estructura del original: los encabezados de Markdown/Word, o las páginas de un PDF (así la cita
 // apunta a la página que se puede revisar). Las secciones demasiado largas se parten por párrafos.
 
-export type SeccionCruda = { titulo: string; texto: string; pagina?: number };
+/** `referencia`: cómo la cita el propio documento (p. ej. «sección 5, Si la segunda parte queda incierta»), si se sabe. */
+export type SeccionCruda = { titulo: string; texto: string; pagina?: number; referencia?: string };
 
 export const MAX_PALABRAS = 700;
 

@@ -55,3 +55,12 @@ test('la petición de lecciones lleva el material con sus ids', () => {
   assert.match(String(p.messages[0].content), /\[D1-1\] Manual › Apertura/);
   assert.match(String(p.instructions), /Cajero/);
 });
+
+test('descarta preguntas con opciones repetidas y quita la numeración de las lecciones', () => {
+  const r = rev();
+  const ps = validarPreguntas({ preguntas: [{ enunciado: '¿Total con cupón?', opciones: ['$70.50', '$71.00', '$70.50', '$71.00'], correcta: 0, explicacion: 'Cálculo [D1-1].', seccion: 'D1-1' }] }, validos, r);
+  assert.equal(ps.length, 0);
+  assert.match(r.descartadas[0], /opciones repetidas/);
+  const l = validarLecciones({ titulo: 'Módulo', lecciones: [{ titulo: '1. Apertura', contenido: 'Cuenta el fondo con tu supervisor [D1-1].' }] }, validos, rev());
+  assert.equal(l?.lecciones[0].titulo, 'Apertura');
+});

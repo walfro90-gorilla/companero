@@ -41,6 +41,11 @@ el texto exacto y el documento original en su página.
 - **Fecha y hora** de Cd. Juárez en la parte del prompt que no va a caché: hay promociones con vigencia y
   horario, y "la hora aplicable es la de inicio del cobro".
 
+## Precisión de la búsqueda (9-oct, ADR 0013)
+Peso por rareza (IDF) y prefijo de raíz; vía aproximada solo sobre el título y con la mitad de peso; reescritura de
+la consulta con un modelo rápido y fusión con la búsqueda original; 12 secciones por consulta. Se mide con
+`npm run medir:busqueda` (18/18 con reescritura, 15/18 sin ella) y entra a `npm run validar`.
+
 ## Pendiente
 - Proveedor de embeddings (y permiso de Del Río para mandar su material a ese proveedor).
 - Si un PDF es escaneado (sin texto), hoy se pide la versión con texto; OCR con la visión de Claude es mejora.

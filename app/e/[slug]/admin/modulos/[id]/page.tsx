@@ -2,7 +2,9 @@ import { notFound } from 'next/navigation';
 import { AlertTriangle, CheckCircle2, MessagesSquare } from 'lucide-react';
 import { requerirGestion } from '@/lib/sesion';
 import { tarjeta } from '@/app/_ui/estilos';
-import { TextoConCitas } from '@/app/_ui/fuentes';
+import { ProveedorEtiquetas, TextoConCitas } from '@/app/_ui/fuentes';
+import { analizar } from '@/lib/conocimiento/citas';
+import { etiquetasDe } from '../../../asistente/acciones';
 import { AccionesModulo, BorrarElemento, EditarLeccion } from './controles';
 
 // Revisión de un módulo antes de publicarlo (docs/adr/0011): RH ve cada lección, pregunta y situación con sus
@@ -18,8 +20,11 @@ export default async function RevisarModulo({ params, searchParams }: PageProps<
   const sp = await searchParams;
   const descartadas = typeof sp.descartadas === 'string' ? sp.descartadas.split('|') : [];
   const orden = <T extends { orden: number }>(xs: T[]) => [...xs].sort((a, b) => a.orden - b.orden);
+  const etiquetas = await etiquetasDe(slug, [m.lecciones.map(l => l.contenido), m.preguntas.map(p => p.explicacion), m.escenarios.map(e => e.objetivo)]
+    .flat().flatMap(t => analizar(t, () => true).citas));
 
   return (
+    <ProveedorEtiquetas etiquetas={etiquetas}>
     <main className="mx-auto w-full max-w-4xl flex-1 space-y-6 p-4 md:p-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -89,5 +94,6 @@ export default async function RevisarModulo({ params, searchParams }: PageProps<
         ))}
       </section>
     </main>
+    </ProveedorEtiquetas>
   );
 }

@@ -1,11 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 import { ExternalLink, X } from 'lucide-react';
+import { citaCorta } from '@/lib/rag/material';
 import { leerSecciones, type SeccionVisible } from '@/app/e/[slug]/asistente/acciones';
 
 // Citas verificables (docs/adr/0004): un [D1-3] se ve como referencia que abre el texto exacto de la sección
 // y, si existe, el documento original en su página. Lo usan el chat, las lecciones y el test.
+
+/** Código → referencia del documento para todas las citas de una página (lo arma el servidor). */
+const Etiquetas = createContext<Record<string, string>>({});
+
+export function ProveedorEtiquetas({ etiquetas, children }: { etiquetas: Record<string, string>; children: ReactNode }) {
+  return <Etiquetas value={etiquetas}>{children}</Etiquetas>;
+}
 
 const MARCA = /([\[【]\s*(?:D\d+-\d+\s*,\s*)*D\d+-\d+\s*[\]】])/g;
 
@@ -17,7 +25,11 @@ export function ConNegritas({ texto }: { texto: string }) {
   );
 }
 
-export function ChipCita({ codigo, onAbrir, titulo }: { codigo: string; onAbrir: (c: string) => void; titulo?: string }) {
+/** `etiqueta`: lo que se ve en el chip («sección 5»); si no hay, el código. */
+export function ChipCita({ codigo, onAbrir, titulo, etiqueta }: { codigo: string; onAbrir: (c: string) => void; titulo?: string; etiqueta?: string }) {
+  const delContexto = use(Etiquetas)[codigo];
+  titulo ??= delContexto;
+  etiqueta ??= citaCorta(delContexto, codigo);
   return (
     <button
       type="button"
@@ -25,13 +37,15 @@ export function ChipCita({ codigo, onAbrir, titulo }: { codigo: string; onAbrir:
       title={titulo}
       className="mx-0.5 inline-flex translate-y-[-1px] items-center rounded-md bg-white px-1.5 py-0.5 align-baseline text-xs font-semibold text-[var(--marca)] ring-1 ring-[var(--marca)]/30 hover:bg-[var(--marca-suave)]"
     >
-      {codigo}
+      {etiqueta ?? codigo}
     </button>
   );
 }
 
 /** Texto con citas ya validadas (lecciones, explicaciones del test): cada cita abre su sección. */
-export function TextoConCitas({ slug, texto }: { slug: string; texto: string }) {
+/** `etiquetas`: código → referencia del documento («sección 5, Si la segunda parte…»), para que el chip la muestre. */
+export function TextoConCitas({ slug, texto, etiquetas: propias = {} }: { slug: string; texto: string; etiquetas?: Record<string, string> }) {
+  const etiquetas = { ...use(Etiquetas), ...propias };
   const [abierta, setAbierta] = useState<string | null>(null);
   return (
     <>
@@ -39,7 +53,7 @@ export function TextoConCitas({ slug, texto }: { slug: string; texto: string }) 
         {/* split con grupo de captura: las posiciones impares son las citas. */}
         {texto.split(MARCA).map((t, i) =>
           i % 2 === 1 ? (
-            t.slice(1, -1).split(',').map(c => c.trim()).map(c => <ChipCita key={`${i}-${c}`} codigo={c} onAbrir={setAbierta} />)
+            t.slice(1, -1).split(',').map(c => c.trim()).map(c => <ChipCita key={`${i}-${c}`} codigo={c} onAbrir={setAbierta} titulo={etiquetas[c]} etiqueta={citaCorta(etiquetas[c], c)} />)
           ) : (
             <ConNegritas key={i} texto={t} />
           ),
@@ -79,7 +93,7 @@ export function PanelSeccion({ slug, codigo, seccion: dada, onCerrar }: { slug: 
         <header className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-medium text-stone-500">
-              {seccion ? `${seccion.documento} · ${codigo}${seccion.pagina ? ` · pág. ${seccion.pagina}` : ''}` : codigo}
+              {seccion ? `${seccion.documento} · ${seccion.referencia ?? codigo}${seccion.pagina ? ` · pág. ${seccion.pagina}` : ''}` : codigo}
             </p>
             <h2 id="titulo-seccion" className="text-lg font-semibold">{seccion?.titulo ?? 'Cargando…'}</h2>
           </div>

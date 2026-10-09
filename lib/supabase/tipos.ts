@@ -369,13 +369,13 @@ isOneToOne: false
                   ]
                 },"secciones": {
                   Row: {
-                    "busqueda": unknown,"contexto": string | null,"documento_id": string,"embedding": string | null,"empresa_id": string,"id": string,"orden": number,"pagina": number | null,"texto": string,"titulo": string
+                    "busqueda": unknown,"contexto": string | null,"documento_id": string,"embedding": string | null,"empresa_id": string,"id": string,"orden": number,"pagina": number | null,"referencia": string | null,"texto": string,"titulo": string
                   }
                   Insert: {
-                    "busqueda"?: never,"contexto"?: string | null,"documento_id": string,"embedding"?: string | null,"empresa_id": string,"id"?: string,"orden": number,"pagina"?: number | null,"texto": string,"titulo": string
+                    "busqueda"?: never,"contexto"?: string | null,"documento_id": string,"embedding"?: string | null,"empresa_id": string,"id"?: string,"orden": number,"pagina"?: number | null,"referencia"?: string | null,"texto": string,"titulo": string
                   }
                   Update: {
-                    "busqueda"?: never,"contexto"?: string | null,"documento_id"?: string,"embedding"?: string | null,"empresa_id"?: string,"id"?: string,"orden"?: number,"pagina"?: number | null,"texto"?: string,"titulo"?: string
+                    "busqueda"?: never,"contexto"?: string | null,"documento_id"?: string,"embedding"?: string | null,"empresa_id"?: string,"id"?: string,"orden"?: number,"pagina"?: number | null,"referencia"?: string | null,"texto"?: string,"titulo"?: string
                   }
                   Relationships: [
                     {
@@ -433,7 +433,7 @@ isOneToOne: false
                            },
 "buscar_secciones":
 { Args: { "p_borradores"?: boolean,"p_consulta": string,"p_embedding"?: string,"p_empresa": string,"p_limite"?: number }; Returns: {
-              "codigo": string,"documento": string,"fuente": string,"pagina": number,"puntaje": number,"seccion_id": string,"texto": string,"titulo": string,"vias": string
+              "codigo": string,"documento": string,"fuente": string,"pagina": number,"puntaje": number,"referencia": string,"seccion_id": string,"texto": string,"titulo": string,"vias": string
             }[]
                            },
 "crear_empresa":

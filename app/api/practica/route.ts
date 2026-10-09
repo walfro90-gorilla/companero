@@ -38,12 +38,12 @@ export async function POST(request: Request) {
   if (datos.data.evaluar) {
     const pares = esc.secciones.map(c => CODIGO.exec(c)).filter((m): m is RegExpExecArray => Boolean(m));
     const { data: filas } = await supabase
-      .from('secciones').select('orden, titulo, texto, pagina, documentos!inner(numero, titulo, fuente)')
+      .from('secciones').select('orden, titulo, texto, pagina, referencia, documentos!inner(numero, titulo, fuente)')
       .eq('empresa_id', empresa.id).in('documentos.numero', [...new Set(pares.map(m => Number(m[1])))]);
     const quiero = new Set(esc.secciones);
     material = materialParaPrompt((filas ?? []).filter(f => quiero.has(`D${f.documentos.numero}-${f.orden}`)).map(f => ({
       codigo: `D${f.documentos.numero}-${f.orden}`, documento: f.documentos.titulo, fuente: f.documentos.fuente,
-      titulo: f.titulo, texto: f.texto, pagina: f.pagina, puntaje: 0, vias: '',
+      titulo: f.titulo, texto: f.texto, pagina: f.pagina, referencia: f.referencia, puntaje: 0, vias: '',
     })));
   }
   const escena = { empresa: empresa.nombre, personaje: esc.personaje, situacion: esc.situacion, objetivo: esc.objetivo, material };

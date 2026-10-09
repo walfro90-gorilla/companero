@@ -1,0 +1,23 @@
+{
+  "nota": "Banco de preguntas para medir el paso de búsqueda del RAG contra el manual del reto (Tienda Escuela). 'esperadas': referencias («sección N, Subtítulo» o «sección N»); acierta si alguna aparece entre las primeras 10. No usa IA: es reproducible y gratis.",
+  "preguntas": [
+    { "pregunta": "¿Cómo hago una cancelación?", "esperadas": ["sección 8"] },
+    { "pregunta": "¿Qué hago si un producto no tiene precio?", "esperadas": ["sección 3, Producto sin precio o diferencia con la etiqueta"] },
+    { "pregunta": "¿Cómo aplico una promoción?", "esperadas": ["sección 6", "sección 7"] },
+    { "pregunta": "¿Qué debo revisar al cerrar caja?", "esperadas": ["sección 12"] },
+    { "pregunta": "¿Cuándo debo llamar al supervisor?", "esperadas": ["Referencia rápida, Cuándo llamar al supervisor"] },
+    { "pregunta": "Un cliente lleva cuatro aguas, un café, un pan, una botana y unas galletas, y trae el cupón DESC10. ¿Cuánto le cobro?", "esperadas": ["sección 7, Ejemplo con varias promociones"] },
+    { "pregunta": "El cliente me pagó $70 en efectivo y la terminal se quedó sin respuesta con los $50 de la tarjeta", "esperadas": ["sección 5, Si la segunda parte queda incierta"] },
+    { "pregunta": "¿Hasta cuándo puede devolver un cliente unas pilas que compró?", "esperadas": ["sección 9, Condiciones de atención"] },
+    { "pregunta": "¿Hasta cuándo puede devolver un cliente unas pilas que compró?", "esperadas": ["sección 6, Catálogo"] },
+    { "pregunta": "¿Qué reviso cuando cierro mi caja?", "esperadas": ["sección 12"] },
+    { "pregunta": "¿Cómo cancelo un ticket que ya cobré?", "esperadas": ["sección 8, Ticket liquidado", "sección 9"] },
+    { "pregunta": "Me sobran 50 pesos en el corte", "esperadas": ["sección 12"] },
+    { "pregunta": "¿Puedo devolver un yogur abierto?", "esperadas": ["sección 9, Condiciones de atención"] },
+    { "pregunta": "¿Qué hago si no tengo cambio?", "esperadas": ["sección 4, Si no hay cambio suficiente"] },
+    { "pregunta": "¿Cuánto cuesta el café?", "esperadas": ["sección 6, Catálogo"] },
+    { "pregunta": "¿Cuánto efectivo puedo tener en la gaveta?", "esperadas": ["sección 10, Solicitar un retiro a resguardo"] },
+    { "pregunta": "¿Qué pasa si la terminal no responde?", "esperadas": ["sección 4, Terminal sin respuesta o con registros diferentes"] },
+    { "pregunta": "¿De cuánto es el fondo de caja?", "esperadas": ["sección 2, Fondo objetivo"] }
+  ]
+}

@@ -25,6 +25,7 @@ export async function guardarSecciones(
   if (e1) throw new Error(`No se pudieron limpiar las secciones: ${e1.message}`);
   const filas = secciones.map((s, i) => ({
     documento_id: documentoId, orden: i + 1, titulo: s.titulo.slice(0, 200), texto: s.texto, pagina: s.pagina ?? null,
+    referencia: s.referencia?.slice(0, 300) ?? null,
     // El trigger secciones_empresa lo vuelve a poner desde el documento: no se puede colar en otra empresa.
     empresa_id: empresaId,
   }));
@@ -37,17 +38,22 @@ export async function guardarSecciones(
     return { secciones: filas.length, conContexto, avisos };
   }
   const ordenes = filas.map(f => f.orden);
-  for (const lote of lotes(filas.map(f => ({ orden: f.orden, titulo: f.titulo, texto: f.texto })), 25)) {
-    const r = await generarConRespaldo(configurados(), peticionContexto(empresa, documento, lote), { plazo: 90_000 });
-    if (!r.ok) {
-      avisos.push('La IA no respondió al generar el contexto de algunas secciones.');
-      continue;
+  // Lotes chicos: con 25 secciones la respuesta de gpt-oss (tope de 4000 tokens) se cortaba y el JSON no servía.
+  // Tres lotes a la vez para que un manual de 100 secciones tarde menos de un minuto.
+  const pendientes = lotes(filas.map(f => ({ orden: f.orden, titulo: f.referencia ?? f.titulo, texto: f.texto })), 10);
+  let fallidos = 0;
+  const trabajar = async () => {
+    for (let lote = pendientes.shift(); lote; lote = pendientes.shift()) {
+      const r = await generarConRespaldo(configurados(), peticionContexto(empresa, documento, lote), { plazo: 90_000 });
+      const contextos = r.ok ? leerContextos(jsonDe(r.texto), ordenes) : new Map<number, string>();
+      if (contextos.size < lote.length) fallidos += lote.length - contextos.size;
+      for (const [orden, contexto] of contextos) {
+        const { error } = await supabase.from('secciones').update({ contexto }).eq('documento_id', documentoId).eq('orden', orden);
+        if (!error) conContexto++;
+      }
     }
-    const contextos = leerContextos(jsonDe(r.texto), ordenes);
-    for (const [orden, contexto] of contextos) {
-      const { error } = await supabase.from('secciones').update({ contexto }).eq('documento_id', documentoId).eq('orden', orden);
-      if (!error) conContexto++;
-    }
-  }
+  };
+  await Promise.all([trabajar(), trabajar(), trabajar()]);
+  if (fallidos) avisos.push(`${fallidos} secciones quedaron sin contexto (la IA no respondió bien); se pueden reprocesar.`);
   return { secciones: filas.length, conContexto, avisos };
 }

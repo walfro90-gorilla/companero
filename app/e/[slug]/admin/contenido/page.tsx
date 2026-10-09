@@ -16,7 +16,7 @@ export default async function Contenido({ params, searchParams }: PageProps<'/e/
   const { supabase, empresa } = await requerirGestion(slug);
   const { data } = await supabase
     .from('documentos')
-    .select('id, numero, titulo, fuente, tipo, estado, ejemplo, actualizado_en, secciones(orden, titulo, texto, contexto, pagina)')
+    .select('id, numero, titulo, fuente, tipo, estado, ejemplo, actualizado_en, secciones(orden, titulo, texto, contexto, pagina, referencia)')
     .eq('empresa_id', empresa.id)
     .order('numero');
   const docs = data ?? [];
@@ -66,7 +66,7 @@ export default async function Contenido({ params, searchParams }: PageProps<'/e/
                     <li key={s.orden} className="rounded-lg bg-stone-50 p-3 text-sm">
                       <p className="font-medium">
                         <span className="mr-2 font-mono text-xs text-stone-500">D{d.numero}-{s.orden}</span>
-                        {s.titulo}{s.pagina ? <span className="text-stone-400"> · pág. {s.pagina}</span> : null}
+                        {s.referencia ?? s.titulo}{s.pagina ? <span className="text-stone-400"> · pág. {s.pagina}</span> : null}
                       </p>
                       <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-stone-700">{s.texto}</p>
                       {s.contexto && <p className="mt-1 text-xs italic text-stone-500">Búsqueda: {s.contexto}</p>}

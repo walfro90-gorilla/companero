@@ -1,0 +1,191 @@
+{
+  "nota": "Generado con IA (groq) desde el material publicado de Tienda Escuela el 2026-10-09. Revisado por el equipo el 9-oct contra el manual: se corrigió un cálculo de la IA (pregunta 4: el cupón DESC10 no aplica bajo $150 a precio de lista), opciones repetidas, el momento del retiro (pregunta 6), los personajes de las prácticas (eran el propio cajero) y redacción de 4 pasos.",
+  "titulo": "Inducción del cajero: un turno completo",
+  "descripcion": "Aprende paso a paso cómo abrir, operar y cerrar tu caja en Tienda Escuela.",
+  "puesto": "Cajero",
+  "lecciones": [
+    {
+      "titulo": "Conoce tu rol y reglas básicas",
+      "objetivo": "Identificar tus responsabilidades y límites como cajero.",
+      "contenido": "1. Lee tu descripción de puesto: registrar productos, cobrar, custodiar efectivo y preparar el corte [D1-9].\n2. Usa solo tu cuenta personal; nunca compartas contraseñas ni uses credenciales del supervisor [D1-10].\n3. Recuerda que solo aceptas efectivo y tarjeta; divisas, vales, depósitos o facturación requieren procedimientos adicionales: consulta al supervisor antes de ofrecerlos [D1-11].\n4. Si surge una situación sin procedimiento, registra el hecho y solicita al supervisor [D1-12].\n5. Cuando el supervisor no está disponible, suspende la operación y guarda el registro hasta que pueda autorizarla [D1-13].",
+      "secciones": [
+        "D1-9",
+        "D1-10",
+        "D1-11",
+        "D1-12",
+        "D1-13"
+      ]
+    },
+    {
+      "titulo": "Apertura de caja y validación del fondo",
+      "objetivo": "Iniciar tu turno con el fondo correcto y documentado.",
+      "contenido": "1. Verifica que la caja, lector, impresora y terminal estén limpios y funcionando [D1-16].\n2. Inicia sesión con tu cuenta personal y confirma que corresponde a la caja asignada [D1-16].\n3. Recibe el fondo del supervisor y cuenta cada denominación; anota cantidades y total [D1-16].\n4. Si hay diferencia, vuelve a contar con el supervisor y no inicies ventas hasta aclararla [D1-17].\n5. Registra el fondo validado; ambos firman fecha, hora y responsables [D1-16].\n6. Coloca el fondo en la gaveta y conserva el registro para el corte [D1-16].",
+      "secciones": [
+        "D1-16",
+        "D1-17"
+      ]
+    },
+    {
+      "titulo": "Realiza una venta y cobra correctamente",
+      "objetivo": "Completar una venta y registrar el pago sin errores.",
+      "contenido": "1. Saluda, recibe y escanea cada producto; verifica descripción, cantidad y precio [D1-22].\n2. Revisa promociones automáticas antes de cobrar [D1-22].\n3. Informa el total y pregunta el medio de pago; si hay cupón, revisa condiciones y recalcula [D1-22].\n4. **Efectivo:** muestra total, recibe dinero, calcula y entrega cambio, confirma registro [D1-28].\n5. **Tarjeta:** informa el importe y presenta la terminal; el cliente maneja su tarjeta y su NIP, tú nunca pides ni registras el NIP. Si es aprobado y cubre el saldo, concluye la venta; si queda pendiente o sin respuesta, no repitas el cargo [D1-30].\n6. **Pago mixto:** confirma montos en efectivo y tarjeta, registra cada parte, verifica que la suma cubra el total y finaliza [D1-34].\n7. Entrega mercancía, ticket y agradece al cliente [D1-22].",
+      "secciones": [
+        "D1-22",
+        "D1-28",
+        "D1-30",
+        "D1-34"
+      ]
+    },
+    {
+      "titulo": "Aplica promociones y descuentos",
+      "objetivo": "Calcular el total con todas las ofertas vigentes.",
+      "contenido": "1. Obtén el subtotal a precio de lista sin incluir servicios [D1-46].\n2. Identifica pares de AGUA600 y combos CAFE355+PANIND dentro del horario; aplica precios promocionales [D1-40][D1-41].\n3. Si el cliente entrega cupón DESC10, verifica que la mercancía sume al menos $150 a precio de lista (sin servicios ni recargas) y que se use una sola vez por ticket [D1-42].\n4. Aplica el 10 % solo a líneas sin promoción automática; redondea a dos decimales [D1-46].\n5. Suma los importes finales y comunica el total antes del cobro [D1-45].\n6. Si una oferta que cumple las condiciones no aparece, detén el cobro y solicita revisión al supervisor; un descuento manual exige su autorización y motivo [D1-49].",
+      "secciones": [
+        "D1-46",
+        "D1-40",
+        "D1-41",
+        "D1-42",
+        "D1-45",
+        "D1-49"
+      ]
+    },
+    {
+      "titulo": "Cancelaciones y devoluciones",
+      "objetivo": "Procesar anulaciones o reembolsos siguiendo el procedimiento correcto.",
+      "contenido": "1. Identifica el estado del ticket (sin pago, parcial, incierto o liquidado) [D1-52].\n2. **Sin pago:** pide autorización al supervisor, registra motivo y elimina línea o anula ticket [D1-53].\n3. **Pago parcial:** conserva registro, entrega comprobantes y solicita al supervisor la conciliación y devolución de cada componente [D1-54].\n4. **Pago incierto:** no elimines ni cobres de nuevo; guarda el efectivo recibido como pendiente y avisa al supervisor [D1-55].\n5. **Ticket liquidado:** atiende la devolución contra el ticket original; calcula el importe según el precio pagado y el medio original [D1-60][D1-61].\n6. Registra folio, motivo, importe, medio y autorización; entrega comprobante al cliente [D1-57].",
+      "secciones": [
+        "D1-52",
+        "D1-53",
+        "D1-54",
+        "D1-55",
+        "D1-60",
+        "D1-61",
+        "D1-57"
+      ]
+    },
+    {
+      "titulo": "Manejo de efectivo y cierre de turno",
+      "objetivo": "Controlar movimientos de efectivo y realizar el corte sin diferencias.",
+      "contenido": "1. Si faltan denominaciones, solicita una **provisión** al supervisor, cuenta y registra el ingreso [D1-66].\n2. Cuando la gaveta supera $3,000, pide un **retiro a resguardo**; cuenta y firma el registro con el supervisor [D1-68].\n3. Registra cualquier **intercambio** de denominaciones; no afecta el efectivo esperado [D1-67].\n4. Separa el efectivo de operaciones pendientes y registra su custodia [D1-69].\n5. Al cerrar, solicita al supervisor, detén ventas y revisa ventas, servicios, devoluciones y retiros [D1-76].\n6. Cuenta la gaveta por denominación, incluye los pendientes por folio y calcula el efectivo esperado usando la fórmula de la sección 12 [D1-77].\n7. Si hay diferencia, vuelve a contar, revisa comprobantes y registra la diferencia real con supervisor [D1-78][D1-81].\n8. Entrega valores, documentos y firma el corte final [D1-94].",
+      "secciones": [
+        "D1-66",
+        "D1-68",
+        "D1-67",
+        "D1-69",
+        "D1-76",
+        "D1-77",
+        "D1-78",
+        "D1-81",
+        "D1-94"
+      ]
+    }
+  ],
+  "preguntas": [
+    {
+      "enunciado": "Al iniciar el turno cuentas $1,480 pero el registro indica $1,500. ¿Qué debes hacer?",
+      "opciones": [
+        "Iniciar la venta y registrar $1,500 de fondo.",
+        "Ajustar el fondo a $1,500 sin avisar.",
+        "Recontar con el supervisor y detener la apertura hasta aclararlo.",
+        "Descartar los $20 faltantes y continuar."
+      ],
+      "correcta": 2,
+      "explicacion": "Si el fondo contado no coincide, debes volver a contar con el supervisor y detener la apertura hasta aclararla [D1-16][D1-17].",
+      "seccion": "D1-16"
+    },
+    {
+      "enunciado": "Un cliente trae un producto que no tiene precio en el sistema. ¿Cuál es el procedimiento correcto?",
+      "opciones": [
+        "Asignarle el precio más cercano del catálogo y cobrar.",
+        "Cobrar a precio de lista estimado y registrar la diferencia.",
+        "Detener el cobro, solicitar al supervisor revisar el código y precio, sin sustituirlo.",
+        "Aplicar la promoción más alta disponible al producto."
+      ],
+      "correcta": 2,
+      "explicacion": "Debes detener el cobro, pedir al supervisor revisar código, presentación y precio, y no sustituir el código por otro de precio parecido [D1-23].",
+      "seccion": "D1-23"
+    },
+    {
+      "enunciado": "El cliente paga en efectivo pero no tienes suficiente cambio. ¿Qué haces?",
+      "opciones": [
+        "Entregas menos cambio y anotas la diferencia.",
+        "Usas dinero personal para completar el cambio.",
+        "Informas al supervisor antes de confirmar el pago para solicitar una provisión o intercambio.",
+        "Rechazas la venta y le pides al cliente que pague con tarjeta."
+      ],
+      "correcta": 2,
+      "explicacion": "Si no hay cambio suficiente, debes informar al supervisor antes de confirmar el pago; él puede autorizar una provisión o intercambio de denominaciones [D1-29].",
+      "seccion": "D1-29"
+    },
+    {
+      "enunciado": "Un cliente lleva tres aguas (AGUA600) y unas galletas (GAL25) y presenta el cupón DESC10. ¿Cuánto paga?",
+      "opciones": [
+        "$70.50",
+        "$75.00",
+        "$85.00",
+        "$67.50"
+      ],
+      "correcta": 1,
+      "explicacion": "Tres aguas cuestan $50 (un par a $30 más una a $20) y las galletas $25: $75 [D1-40]. El cupón no aplica porque la mercancía suma $85 a precio de lista y el mínimo es $150 [D1-42]. Siempre se revisa el mínimo antes de calcular el 10 % [D1-46].",
+      "seccion": "D1-42"
+    },
+    {
+      "enunciado": "Después de recibir $60 en efectivo, la tarjeta del cliente queda sin respuesta. ¿Qué debes hacer?",
+      "opciones": [
+        "Entregar la mercancía y volver a intentar el cobro de la tarjeta.",
+        "Registrar la venta como pendiente, guardar el efectivo separado, y avisar al supervisor.",
+        "Cancelar la venta y devolver el efectivo al cliente.",
+        "Ignorar el intento de tarjeta y cerrar la venta con el efectivo."
+      ],
+      "correcta": 1,
+      "explicacion": "Cuando la segunda parte (tarjeta) queda incierta, no entregas la mercancía ni repites el cobro; registras la venta como pendiente, resguardas el efectivo y notificas al supervisor [D1-35].",
+      "seccion": "D1-35"
+    },
+    {
+      "enunciado": "Después de cobrar una venta revisas tu gaveta y tienes $3,200 en efectivo. ¿Qué haces?",
+      "opciones": [
+        "Registrar el exceso como venta adicional.",
+        "Retirar $200 sin informar y ajustar el corte.",
+        "Solicitar al supervisor un retiro a resguardo y registrar la operación.",
+        "Ignorar el exceso y cerrar el turno."
+      ],
+      "correcta": 2,
+      "explicacion": "Si el efectivo supera $3,000, debes informar al supervisor y solicitar un retiro a resguardo, registrando la operación según el procedimiento de retiro [D1-68].",
+      "seccion": "D1-68"
+    }
+  ],
+  "escenarios": [
+    {
+      "titulo": "El fondo no cuadra",
+      "situacion": "Son las 08:00 y vas a abrir tu caja. Al contar el fondo te salen $1,480 y el registro dice $1,500.",
+      "personaje": "supervisor con prisa que te dice que abras ya y que lo arreglan al final del turno",
+      "objetivo": "Cuenta el fondo por denominación y registra el total. Compara el conteo con el fondo entregado; si hay diferencia, vuelve a contar con el supervisor y detén la apertura hasta aclararla. Llama al supervisor porque el fondo contado no coincide con el entregado [D1-6] y sigue el procedimiento de apertura que indica comparar y registrar el fondo real [D1-16].",
+      "secciones": [
+        "D1-6",
+        "D1-16",
+        "D1-15"
+      ]
+    },
+    {
+      "titulo": "Un precio que no coincide",
+      "situacion": "Escaneas un cable y el precio del sistema no coincide con la etiqueta del anaquel. Todavía no cobras.",
+      "personaje": "cliente con prisa que asegura que la etiqueta decía $99 y quiere que se lo cobres así o con otro código parecido",
+      "objetivo": "Detén el cobro del artículo, solicita al supervisor revisar el código, la presentación y el precio, y no sustituyas el código por otro. Espera la autorización del supervisor antes de registrar el precio correcto y continuar la venta [D1-23] y [D1-6].",
+      "secciones": [
+        "D1-23",
+        "D1-6"
+      ]
+    },
+    {
+      "titulo": "Pago mixto con la tarjeta en pendiente",
+      "situacion": "El cliente ya te dio $60 en efectivo y el resto va con tarjeta, pero la terminal se quedó en pendiente sin respuesta.",
+      "personaje": "cliente que tiene prisa y te exige su mercancía o que le pases la tarjeta otra vez",
+      "objetivo": "Registra el efectivo recibido y el cambio. Marca la parte de tarjeta como pendiente, no entregues la mercancía y guarda el efectivo separado con folio y responsable. Informa al supervisor porque la segunda parte quedó incierta [D1-35] y solicita que el supervisor verifique el estado del pago [D1-6].",
+      "secciones": [
+        "D1-35",
+        "D1-6",
+        "D1-34"
+      ]
+    }
+  ]
+}

@@ -64,7 +64,7 @@ Escribe ${n} preguntas de opción múltiple (4 opciones, una sola correcta) que 
 export function peticionEscenarios(e: Encargo): Peticion {
   return {
     instructions: `${BASE(e)}
-Formato: {"escenarios":[{"titulo":"…","situacion":"lo que está pasando, en 2 o 3 oraciones","personaje":"a quién interpretará el asistente (p. ej. 'cliente con prisa que quiere cancelar un producto ya cobrado')","objetivo":"qué debe hacer bien la persona según el material, con cita [D1-3]","secciones":["D1-3"]}]}
+Formato: {"escenarios":[{"titulo":"…","situacion":"lo que está pasando, en 2 o 3 oraciones","personaje":"la OTRA persona que interpretará el asistente: un cliente o el supervisor, NUNCA la persona en capacitación (p. ej. 'cliente con prisa que quiere cancelar un producto ya cobrado')","objetivo":"qué debe hacer bien la persona según el material, con cita [D1-3]","secciones":["D1-3"]}]}
 Propón 3 situaciones prácticas realistas del día a día del puesto en las que la persona tenga que aplicar el material. Al menos una debe requerir llamar al supervisor si el material lo indica.`,
     messages: [{ role: 'user', content: material(e.secciones) }],
     maxOutputTokens: 3000,
@@ -124,7 +124,8 @@ export function validarLecciones(json: unknown, validos: Set<string>, r: Revisio
     if (!l.success) { r.descartadas.push('una lección con formato inválido'); continue; }
     const citas = citasValidas(l.data.contenido, l.data.secciones, validos);
     if (!citas) { r.descartadas.push(`lección "${l.data.titulo}": sin cita o con cita a una sección que no existe`); continue; }
-    lecciones.push({ ...l.data, secciones: citas });
+    // "1. Apertura" → "Apertura": la app ya numera las lecciones.
+    lecciones.push({ ...l.data, titulo: l.data.titulo.replace(/^\d+[.)]\s*/, ''), secciones: citas });
   }
   return { titulo: base.data.titulo, descripcion: base.data.descripcion, lecciones };
 }
@@ -138,6 +139,7 @@ export function validarPreguntas(json: unknown, validos: Set<string>, r: Revisio
     if (!p.success) { r.descartadas.push('una pregunta con formato inválido'); continue; }
     const seccion = p.data.seccion.replace(/[[\]]/g, '').toUpperCase();
     if (p.data.correcta >= p.data.opciones.length) { r.descartadas.push(`pregunta "${p.data.enunciado}": la respuesta correcta no existe`); continue; }
+    if (new Set(p.data.opciones.map(o => o.toLowerCase())).size < p.data.opciones.length) { r.descartadas.push(`pregunta "${p.data.enunciado}": opciones repetidas`); continue; }
     if (!validos.has(seccion) || !citasValidas(p.data.explicacion, [seccion], validos)) {
       r.descartadas.push(`pregunta "${p.data.enunciado}": cita una sección que no existe`); continue;
     }

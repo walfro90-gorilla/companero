@@ -31,6 +31,16 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - Darle fecha y hora al asistente, porque hay promociones con horario del 8 al 10 de octubre.
   - Nueva prueba documentada contra el manual.
   - Decidido por Wal: la empresa demo pasa a ser **"Tienda Escuela"** y Superette se queda con una franja visible de contenido ficticio.
+  - **Hecho (9-oct, tarde):**
+    - El manual quedó en 96 secciones citables.
+    - Citas como «sección N, Subtítulo».
+    - Fecha y hora en el prompt.
+    - Búsqueda 18/18 con reescritura de la consulta.
+    - Red de seguridad de canalización.
+    - Prueba documentada 10/10 dos veces.
+    - Módulo de inducción generado con IA y revisado; la revisión encontró un cálculo equivocado de la IA, que ya se corrigió.
+    - `npm run validar`: las 5 suites en verde.
+  - **Pulsar para hablar en el chat:** Whisper en Groq; el audio no se guarda y se filtran las frases fantasma (ADR 0005).
 - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`) · **Demo:** _pendiente (Vercel)_
 - **Pendiente de Del Río:** la identidad visual del avatar y quién es su **enlace de RH u Operación**. El material ya llegó: es el manual de Tienda Escuela, y el permiso para usarlo con IA lo da la organización (ADR 0013).
 
@@ -81,8 +91,8 @@ respuesta en streaming con [D1-3] y [CANALIZAR:…] ─► UI valida contra lo c
 
 - **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue · 0013 material del reto (Tienda Escuela)**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
 - **Datos y permisos:** `supabase/migrations/` (Postgres con RLS en TODAS las tablas; helpers `mis_empresas()`, `gestiono()`, `superviso()`, `atiendo()`). La autorización la decide la base, no el código. `lib/sesion.ts` = capa de acceso (`contextoEmpresa(slug)`, `requerirGestion`). Tipos: `npm run tipos`.
-- **Rutas:** `/` landing · `/entrar` · `/inicio` (mis empresas, crear, unirse) · `/unirse/{codigo}` (QR) · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,equipo,metricas,ajustes}` · APIs `/api/chat` y `/api/practica`.
-- **Contenido de ejemplo:** `conocimiento/{del-rio,superette}/*.md`, lo siembra `npm run sembrar` marcado `ejemplo` (la UI lo avisa). Lo escribió el equipo: **no es de Del Río ni de Superette**. El material real se sube desde la app.
+- **Rutas:** `/` landing · `/entrar` · `/inicio` (mis empresas, crear, unirse) · `/unirse/{codigo}` (QR) · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,equipo,metricas,ajustes}` · APIs `/api/chat`, `/api/practica` y `/api/transcribir` (voz).
+- **Contenido:** `conocimiento/tienda-escuela/` tiene el manual OFICIAL del reto (PDF, ficticio) y su módulo revisado; `conocimiento/superette/` tiene contenido de ejemplo escrito por el equipo. `npm run sembrar` los carga; la UI pone una franja de contenido ficticio en ambas empresas.
 - **IA:** `lib/ia/` reutiliza la cadena de brotes (Anthropic → Groq, espera el primer fragmento antes de comprometerse con un proveedor). Los modelos se cambian con `IA_MODELO_ANTHROPIC` e `IA_MODELO_GROQ`, sin tocar código.
 
 ## Comandos
@@ -102,6 +112,8 @@ npm run tipos          # regenera lib/supabase/tipos.ts desde el esquema local
 npm run probar:cadena  # ping a cada proveedor de IA (requiere llaves en .env.local)
 npm run prueba         # prueba documentada → docs/prueba-documentada.md (-- --empresa del-rio)
 npm run validar        # corre TODO y escribe docs/validacion.md (evidencia para el jurado; HUMO_EMAIL=correo)
+npm run medir:busqueda # banco de 18 preguntas: recall de la búsqueda con y sin reescritura
+npm run generar:modulo # genera con IA el módulo desde el material → conocimiento/<empresa>/modulo-induccion.json (se REVISA antes de sembrar)
 ```
 
 **Para el jurado:** `docs/validacion.md` se genera, no se escribe a mano. Toda prueba nueva entra a una de sus suites y se vuelve a correr `npm run validar` antes de entregar.

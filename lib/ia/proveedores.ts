@@ -50,3 +50,22 @@ export function estadoProveedores() {
     configurado: Boolean(process.env[p.variable]), posicion: activos.indexOf(p.proveedor) + 1,
   }));
 }
+
+// Modelos rápidos para tareas cortas de apoyo (reescribir la consulta antes de buscar): Groq gpt-oss-20b y, de
+// respaldo, Claude Haiku. Se cambian con IA_MODELO_RAPIDO_GROQ / IA_MODELO_RAPIDO_ANTHROPIC.
+const rapido = {
+  groq: process.env.IA_MODELO_RAPIDO_GROQ || 'openai/gpt-oss-20b',
+  anthropic: process.env.IA_MODELO_RAPIDO_ANTHROPIC || 'claude-haiku-5-5',
+};
+
+export const CADENA_RAPIDA: ProveedorIA[] = [
+  {
+    proveedor: 'groq', nombre: 'Groq', variable: 'GROQ_API_KEY', modelo: rapido.groq,
+    crear: () => groq(rapido.groq), opciones: { groq: { reasoningEffort: 'low' } }, tokensSalida: 1200,
+  },
+  { proveedor: 'anthropic', nombre: 'Anthropic', variable: 'ANTHROPIC_API_KEY', modelo: rapido.anthropic, crear: () => anthropic(rapido.anthropic) },
+];
+
+export function rapidosConfigurados(): ProveedorIA[] {
+  return ordenar(CADENA_RAPIDA.filter(p => Boolean(process.env[p.variable])), process.env.IA_ORDEN);
+}

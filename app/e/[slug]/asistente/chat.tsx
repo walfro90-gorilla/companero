@@ -4,9 +4,10 @@ import { useRef, useState } from 'react';
 import { BookOpen, FileSearch, RefreshCw, Send, UserRound, Volume2, VolumeX } from 'lucide-react';
 import type { Avatar as DatosAvatar } from '@/lib/avatar';
 import { analizar, textoPlano, type Destino } from '@/lib/conocimiento/citas';
-import type { Consultada } from '@/lib/rag/material';
+import { citaCorta, nombreCita, type Consultada } from '@/lib/rag/material';
 import { Avatar, type EstadoAvatar } from '@/app/_ui/avatar';
 import { ChipCita, ConNegritas, PanelSeccion } from '@/app/_ui/fuentes';
+import { PulsarParaHablar } from '@/app/_ui/pulsar-para-hablar';
 import { leerSecciones, type SeccionVisible } from './acciones';
 
 // Chat con el asistente (docs/adr/0004 y 0010). Muestra el paso de búsqueda (qué secciones consultó), las
@@ -58,7 +59,7 @@ function leerConsultadas(cabecera: string | null): Consultada[] {
   }
 }
 
-export function Chat({ slug, avatar, bienvenida, hayEjemplo }: { slug: string; avatar: DatosAvatar; bienvenida: string; hayEjemplo: boolean }) {
+export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: DatosAvatar; bienvenida: string }) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([{ rol: 'avatar', texto: bienvenida, fija: true }]);
   const [entrada, setEntrada] = useState('');
   const [estado, setEstado] = useState<EstadoAvatar>('reposo');
@@ -150,11 +151,6 @@ export function Chat({ slug, avatar, bienvenida, hayEjemplo }: { slug: string; a
           {conVoz ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
           {conVoz ? 'Voz activada' : 'Voz apagada'}
         </button>
-        {hayEjemplo && (
-          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            <strong>Contenido de ejemplo, no oficial.</strong> Se reemplazará por el material autorizado por la empresa.
-          </p>
-        )}
       </aside>
 
       <section className="flex min-h-[60vh] flex-col rounded-2xl border border-stone-200 bg-white shadow-sm">
@@ -204,10 +200,16 @@ export function Chat({ slug, avatar, bienvenida, hayEjemplo }: { slug: string; a
             <input
               value={entrada}
               onChange={e => setEntrada(e.target.value)}
-              placeholder={`Pregúntale a ${avatar.nombre} sobre tu trabajo…`}
+              placeholder={`Escribe o mantén presionado el micrófono para hablarle a ${avatar.nombre}…`}
               maxLength={2000}
               className="min-w-0 flex-1 rounded-xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
               aria-label="Tu pregunta"
+            />
+            <PulsarParaHablar
+              slug={slug}
+              deshabilitado={ocupado}
+              onTexto={texto => enviar(texto)}
+              onEstado={e => setEstado(e === 'grabando' ? 'escuchando' : e === 'transcribiendo' ? 'pensando' : 'reposo')}
             />
             <button
               type="submit"
@@ -239,8 +241,9 @@ function RespuestaAvatar({
   const a = analizar(mensaje.texto, id => validas.has(id));
   const nombre = (id: string) => {
     const c = consultadas.find(x => x.codigo === id);
-    return c ? `${c.documento} › ${c.titulo}` : id;
+    return c ? nombreCita(c) : id;
   };
+  const corta = (id: string) => citaCorta(consultadas.find(x => x.codigo === id)?.referencia, id);
   return (
     <div className="flex max-w-[92%] flex-col gap-2">
       {!mensaje.fija && !mensaje.error && (
@@ -265,7 +268,7 @@ function RespuestaAvatar({
             t.tipo === 'texto' ? (
               <ConNegritas key={i} texto={t.texto} />
             ) : (
-              t.ids.map(id => <ChipCita key={`${i}-${id}`} codigo={id} onAbrir={onAbrir} titulo={nombre(id)} />)
+              t.ids.map(id => <ChipCita key={`${i}-${id}`} codigo={id} onAbrir={onAbrir} titulo={nombre(id)} etiqueta={corta(id)} />)
             ),
           )
         )}

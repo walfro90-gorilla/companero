@@ -57,3 +57,25 @@
 4. Empresa demo con el manual: sembrar sube el PDF por el mismo camino que la app.
 5. Nueva `pruebas/consultas.json`, luego `npm run prueba` y `npm run validar`.
 6. Generar el módulo de inducción desde el manual y revisarlo.
+
+## Hecho (9-oct, tarde)
+- **Ingesta del PDF por títulos y subtítulos** (`lib/ingesta/pdf.ts`, con pruebas):
+  - Detecta la jerarquía por el tamaño de letra, ordena el texto como se ve en la página y une títulos partidos y su número.
+  - Quita encabezados y pies de página repetidos y marca las columnas de las tablas con " · ".
+  - El manual quedó en **96 secciones citables**, todas con contexto de IA, en lotes de 10 y tres a la vez.
+- **Citas como las pide el manual:** columna `secciones.referencia` (migración `…120400`). La UI muestra "sección 5" en el chip y la referencia completa con página en "Fuentes", en el panel y en Contenido.
+- **Fecha y hora en el prompt:** con la hora real, Rosa aplica o no COMBO42. A las 12:37 cobró $163.50, el ejemplo del manual para después de las 10:30.
+- **Búsqueda más precisa** (medida con `pruebas/busqueda.json`, 18 preguntas):
+  - Peso por rareza de la palabra (IDF) y prefijo de raíz (`…120500`).
+  - La vía aproximada, solo sobre el título, con la mitad de peso (`…120600`).
+  - **Reescritura de la consulta** con un modelo rápido (Groq `gpt-oss-20b`; Haiku de respaldo), y se fusiona la búsqueda original con la reescrita.
+  - Se mandan 12 secciones. Resultado: **18/18 con reescritura y 15/18 sin ella** (`npm run medir:busqueda`).
+- **Red de seguridad de la canalización** (`lib/ia/canalizacion.ts`): si la respuesta manda al supervisor sin la marca y la persona está atendiendo algo en ese momento, una verificación corta con IA agrega la canalización. Lo usan el chat y la prueba.
+- **Prueba documentada** contra el manual: **10/10 en dos corridas seguidas** con Groq (8 correctas, incluido el cálculo de $160.50 a las 9:00, y 2 canalizadas). Unos 3 s por respuesta.
+- **Módulo de inducción** generado con IA (`npm run generar:modulo`) y **revisado por el equipo** (`conocimiento/tienda-escuela/modulo-induccion.json`). La revisión encontró:
+  - Un **cálculo equivocado de la IA**: aplicó DESC10 sin revisar el mínimo de $150.
+  - Opciones repetidas.
+  - Personajes de práctica que eran el propio cajero.
+
+  Se corrigió el contenido y se endureció el generador: descarta opciones repetidas, quita la numeración y exige que el personaje sea la otra persona. Es la evidencia de que **la IA propone y RH valida**.
+- Empresa demo **Tienda Escuela** (`tienda-escuela`) con el PDF original en Storage para "ver en el documento original". Hay una franja de contenido ficticio en todas las pantallas de Tienda Escuela y de Superette.

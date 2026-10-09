@@ -1,15 +1,16 @@
 {
-  "nota": "Prueba documentada (docs/adr/0007). Las 'esperadas' apuntan al contenido de EJEMPLO: al llegar el módulo de Del Río se reescriben contra sus secciones. 'canaliza': 'supervisor' | 'rh' = debe canalizar; 'opcional' = puede o no.",
+  "nota": "Prueba documentada (docs/adr/0007 y 0013) contra el manual OFICIAL del reto: «Manual de procedimientos para cajeros — Tienda Escuela» (ficticio). 'esperadas': referencias del manual («sección N, Subtítulo»); cuenta como acierto citar cualquiera. 'contiene': textos que deben aparecer en la respuesta (cálculos). 'canaliza': 'supervisor' | 'rh' = debe canalizar; 'opcional' = puede o no. Hora fija de la prueba: 'ahora' (sábado 10 de octubre, día de la demo).",
+  "ahora": "2026-10-10T09:00:00-06:00",
   "consultas": [
-    { "id": 1, "tipo": "cubierta", "pregunta": "¿Cómo hago una cancelación?", "esperadas": ["D1-5"], "canaliza": "opcional" },
-    { "id": 2, "tipo": "cubierta", "pregunta": "¿Qué hago si un producto no tiene precio?", "esperadas": ["D1-3"], "canaliza": "opcional" },
-    { "id": 3, "tipo": "cubierta", "pregunta": "¿Cómo aplico una promoción?", "esperadas": ["D1-4"], "canaliza": "opcional" },
-    { "id": 4, "tipo": "cubierta", "pregunta": "¿Qué debo revisar al cerrar caja?", "esperadas": ["D1-6"], "canaliza": "opcional" },
-    { "id": 5, "tipo": "cubierta", "pregunta": "¿Cuándo debo llamar al supervisor?", "esperadas": ["D1-7"], "canaliza": "opcional" },
-    { "id": 6, "tipo": "cubierta", "pregunta": "Al hacer mi corte me faltan 50 pesos, ¿qué hago?", "esperadas": ["D1-6", "D1-7"], "canaliza": "supervisor" },
-    { "id": 7, "tipo": "cubierta", "pregunta": "¿Cómo cobro si el cliente paga con tarjeta?", "esperadas": ["D1-2"] },
-    { "id": 8, "tipo": "cubierta", "pregunta": "¿Le puedo pasar mi contraseña de la terminal a una compañera para que me cubra?", "esperadas": ["D2-4", "D1-1"] },
-    { "id": 9, "tipo": "sin_respuesta", "pregunta": "¿Cómo acepto un pago con vales de despensa?", "canaliza": "supervisor" },
-    { "id": 10, "tipo": "sin_respuesta", "pregunta": "¿Cuántos días de vacaciones me tocan al año?", "canaliza": "rh" }
+    { "id": 1, "tipo": "cubierta", "pregunta": "¿Cómo hago una cancelación?", "esperadas": ["sección 8"], "canaliza": "opcional" },
+    { "id": 2, "tipo": "cubierta", "pregunta": "¿Qué hago si un producto no tiene precio?", "esperadas": ["sección 3, Producto sin precio o diferencia con la etiqueta"], "canaliza": "opcional" },
+    { "id": 3, "tipo": "cubierta", "pregunta": "¿Cómo aplico una promoción?", "esperadas": ["sección 6", "sección 7"], "canaliza": "opcional" },
+    { "id": 4, "tipo": "cubierta", "pregunta": "¿Qué debo revisar al cerrar caja?", "esperadas": ["sección 12"], "canaliza": "opcional" },
+    { "id": 5, "tipo": "cubierta", "pregunta": "¿Cuándo debo llamar al supervisor?", "esperadas": ["Referencia rápida, Cuándo llamar al supervisor", "sección 1"], "canaliza": "opcional" },
+    { "id": 6, "tipo": "cubierta", "pregunta": "Son las 9 de la mañana. Un cliente lleva cuatro aguas, un café, un pan, una botana y unas galletas, y trae el cupón DESC10. ¿Cuánto le cobro?", "esperadas": ["sección 7", "sección 6"], "contiene": ["160.50"], "canaliza": "opcional" },
+    { "id": 7, "tipo": "cubierta", "pregunta": "El cliente me pagó $70 en efectivo y la terminal se quedó sin respuesta con los $50 de la tarjeta, ¿qué hago?", "esperadas": ["sección 5, Si la segunda parte queda incierta", "sección 4, Terminal sin respuesta o con registros diferentes"], "canaliza": "supervisor" },
+    { "id": 8, "tipo": "cubierta", "pregunta": "¿Hasta cuándo puede devolver un cliente unas pilas que compró?", "esperadas": ["sección 9, Condiciones de atención", "sección 9"], "contiene": ["168"], "canaliza": "opcional" },
+    { "id": 9, "tipo": "sin_respuesta", "pregunta": "¿Cuántos días de vacaciones me tocan al año?", "canaliza": "rh" },
+    { "id": 10, "tipo": "sin_respuesta", "pregunta": "Un cliente quiere pagar con vales de despensa, ¿los acepto?", "canaliza": "supervisor" }
   ]
 }

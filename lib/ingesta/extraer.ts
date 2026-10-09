@@ -1,7 +1,8 @@
 import 'server-only';
 import mammoth from 'mammoth';
-import { extractText } from 'unpdf';
+import { extractTextItems } from 'unpdf';
 import { htmlAMarkdown } from './html.ts';
+import { lineasDeFragmentos, seccionarPorTitulos, type Fragmento } from './pdf.ts';
 import { seccionarMarkdown, seccionarPaginas, type SeccionCruda } from './seccionar.ts';
 
 // Del archivo original a secciones (docs/adr/0010). Sin OCR: un PDF escaneado (imagen) no trae texto y se
@@ -23,8 +24,12 @@ export class DocumentoSinTexto extends Error {}
 export async function extraer(tipo: Tipo, bytes: Uint8Array, titulo: string): Promise<SeccionCruda[]> {
   let secciones: SeccionCruda[];
   if (tipo === 'pdf') {
-    const { text } = await extractText(new Uint8Array(bytes), { mergePages: false });
-    secciones = seccionarPaginas(text);
+    // Primero por títulos y subtítulos (la cita queda como la pide el documento: «sección 5, Subtítulo»);
+    // si el PDF no tiene jerarquía visible, una sección por página (ADR 0013).
+    const { items } = await extractTextItems(new Uint8Array(bytes));
+    const lineas = lineasDeFragmentos(items as Fragmento[][]);
+    secciones = seccionarPorTitulos(lineas, titulo)
+      ?? seccionarPaginas(items.map((_, i) => lineas.filter(l => l.pagina === i + 1).map(l => l.texto).join('\n')));
   } else if (tipo === 'docx') {
     const { value } = await mammoth.convertToHtml({ buffer: Buffer.from(bytes) });
     secciones = seccionarMarkdown(htmlAMarkdown(value), titulo);

@@ -10,17 +10,32 @@ export type Recuperada = {
   titulo: string;
   texto: string;
   pagina: number | null;
+  /** Cómo la cita el documento («sección 5, Si la segunda parte queda incierta»), si se sabe (ADR 0013). */
+  referencia: string | null;
   puntaje: number;
   vias: string;
 };
 
 /** Lo que el navegador muestra como "consulté estas secciones" (sin el texto, que viaja aparte). */
-export type Consultada = Pick<Recuperada, 'codigo' | 'documento' | 'titulo' | 'pagina' | 'vias'>;
+export type Consultada = Pick<Recuperada, 'codigo' | 'documento' | 'titulo' | 'pagina' | 'referencia' | 'vias'>;
+
+/** Lo que ve la persona por una cita: la referencia del documento, o el título si no hay. */
+export function nombreCita(c: { referencia?: string | null; documento?: string; titulo: string; pagina?: number | null }): string {
+  const base = c.referencia ?? (c.documento ? `${c.documento} › ${c.titulo}` : c.titulo);
+  return c.pagina ? `${base} (pág. ${c.pagina})` : base;
+}
+
+/** Texto corto para el chip de una cita: «sección 5» de «sección 5, Si la segunda…». */
+export function citaCorta(referencia: string | null | undefined, codigo: string): string {
+  if (!referencia) return codigo;
+  const corta = referencia.split(',')[0].trim();
+  return corta.length <= 24 ? corta : `${corta.slice(0, 22)}…`;
+}
 
 export function materialParaPrompt(xs: Recuperada[]): string {
   if (!xs.length) return 'El buscador no encontró ninguna sección del material relacionada con esta conversación.';
   return xs
-    .map(s => `[${s.codigo}] ${s.documento} › ${s.titulo}${s.pagina ? ` (pág. ${s.pagina})` : ''}\n${s.texto}`)
+    .map(s => `[${s.codigo}] ${s.referencia ? `${s.documento}, ${s.referencia}` : `${s.documento} › ${s.titulo}`}${s.pagina ? ` (pág. ${s.pagina})` : ''}\n${s.texto}`)
     .join('\n\n');
 }
 

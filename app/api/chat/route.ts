@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { responder } from '@/lib/ia/asistente';
+import { canalizacionFaltante, responder } from '@/lib/ia/asistente';
 import { MAX_CARACTERES, MAX_MENSAJES } from '@/lib/ia/mensajes';
 import { analizar } from '@/lib/conocimiento/citas';
 import type { Consultada } from '@/lib/rag/material';
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   if (!r.ok) return error('No pude responder en este momento. Intenta de nuevo en un minuto.', 502);
 
   const codigos = new Set(recuperadas.map(x => x.codigo));
-  const consultadas: Consultada[] = recuperadas.map(({ codigo, documento, titulo, pagina, vias }) => ({ codigo, documento, titulo, pagina, vias }));
+  const consultadas: Consultada[] = recuperadas.map(({ codigo, documento, titulo, pagina, referencia, vias }) => ({ codigo, documento, titulo, pagina, referencia, vias }));
 
   async function registrar(texto: string) {
     const a = analizar(texto, id => codigos.has(id));
@@ -98,6 +98,12 @@ export async function POST(request: Request) {
         console.error('[asistente] se cortó el flujo a mitad:', err);
       } finally {
         clearTimeout(corta);
+        // Red de seguridad: si mandó al supervisor sin marca y la persona está atendiendo algo ahora, se canaliza.
+        const marca = await canalizacionFaltante(pregunta!.texto, completo).catch(() => '');
+        if (marca) {
+          completo += marca;
+          controlador.enqueue(codificador.encode(marca));
+        }
         // Se registra antes de cerrar: en serverless, después de cerrar la función puede congelarse.
         await registrar(completo).catch(e => console.error('[asistente] registro:', e));
         controlador.close();

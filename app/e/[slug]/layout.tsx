@@ -7,7 +7,10 @@ import { Navegacion, type Enlace } from './navegacion';
 // Marco de cada empresa (docs/adr/0009): color de marca, nombre y menú según el rol.
 export default async function LayoutEmpresa({ children, params }: LayoutProps<'/e/[slug]'>) {
   const { slug } = await params;
-  const { empresa, miembro, gestiona, supervisa, usuario } = await contextoEmpresa(slug);
+  const { supabase, empresa, miembro, gestiona, supervisa, usuario } = await contextoEmpresa(slug);
+  // Franja de contenido ficticio en TODAS las pantallas si la empresa usa material de ejemplo (ADR 0013).
+  const { count: ficticios } = await supabase
+    .from('documentos').select('id', { count: 'exact', head: true }).eq('empresa_id', empresa.id).eq('ejemplo', true).neq('estado', 'archivado');
   const base = `/e/${slug}`;
   const enlaces: Enlace[] = [
     { href: base, texto: 'Inicio', icono: 'inicio' },
@@ -39,6 +42,12 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<'/
         </div>
         <Navegacion enlaces={enlaces} />
       </header>
+      {(ficticios ?? 0) > 0 && (
+        <p className="border-b border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm text-amber-950">
+          <strong>Contenido ficticio con fines de demostración.</strong> No describe políticas, precios ni sistemas reales de
+          Del Río, Superette ni de ninguna otra empresa.
+        </p>
+      )}
       {children}
     </div>
   );

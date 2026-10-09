@@ -1,5 +1,6 @@
 // `npm run sembrar`: crea las empresas de demostración con su material de EJEMPLO (docs/adr/0009).
-//   - del-rio        → el reto (cajeros). Su material real se sube desde la app cuando Del Río lo entregue.
+//   - tienda-escuela → el reto (cajeros) con el manual OFICIAL del reto: «Manual de procedimientos para cajeros —
+//                      Tienda Escuela», ficticio (docs/adr/0013). Se carga el PDF por el mismo camino que la app.
 //   - superette      → segunda empresa del mismo grupo (la ficha dice "Del Río y Superette"): prueba de que
 //                      cada empresa ve solo lo suyo y tiene su propio asistente.
 // Usa la llave SECRETA (solo en .env.local; la app nunca la usa) y es idempotente: lo que ya existe no se
@@ -8,6 +9,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
+import { extraer } from '../lib/ingesta/extraer.ts';
 import { guardarSecciones } from '../lib/ingesta/ingerir.ts';
 import { seccionarMarkdown, sinEncabezado } from '../lib/ingesta/seccionar.ts';
 import type { Database } from '../lib/supabase/tipos.ts';
@@ -29,9 +31,9 @@ type Demo = {
 
 const DEMOS: Demo[] = [
   {
-    slug: 'del-rio', nombre: 'Del Río (demo)', giro: 'Comercio / tiendas', carpeta: 'conocimiento/del-rio',
+    slug: 'tienda-escuela', nombre: 'Tienda Escuela', giro: 'Comercio / tiendas', carpeta: 'conocimiento/tienda-escuela',
     sucursales: ['Sucursal Centro', 'Sucursal Las Torres'], puestos: ['Cajero'],
-    // Identidad provisional: Del Río no ha autorizado nombre, colores ni logotipo (docs/adr/0005).
+    // Escenario ficticio del reto; identidad provisional, sin marca de Del Río ni de Superette (docs/adr/0005 y 0013).
     avatar: {
       nombre: 'Rosa', rol: 'tu compañera de capacitación',
       preguntas: ['¿Cómo hago una cancelación?', '¿Qué hago si un producto no tiene precio?', '¿Cómo aplico una promoción?',
@@ -67,6 +69,7 @@ async function sembrar(d: Demo) {
   await supabase.from('puestos').insert(d.puestos.map(nombre => ({ empresa_id: empresa.id, nombre })));
   if (adminEmail) await supabase.from('invitaciones').insert({ empresa_id: empresa.id, email: adminEmail, rol: 'admin' });
 
+  for (const archivo of readdirSync(d.carpeta).filter(a => a.endsWith('.pdf')).sort()) await sembrarPdf(empresa.id, d.nombre, d.carpeta, archivo);
   for (const archivo of readdirSync(d.carpeta).filter(a => a.endsWith('.md')).sort()) {
     const md = readFileSync(`${d.carpeta}/${archivo}`, 'utf8');
     const { campos, cuerpo } = sinEncabezado(md);
@@ -88,6 +91,29 @@ async function sembrar(d: Demo) {
   await sembrarModulo(empresa.id, d.carpeta);
   const { data: s } = await supabase.from('sucursales').select('nombre, codigo_union').eq('empresa_id', empresa.id);
   console.log(`✓ ${d.slug}: /e/${d.slug} · QR: ${(s ?? []).map(x => `${x.nombre} → /unirse/${x.codigo_union}`).join(' · ')}`);
+}
+
+/** Un PDF por el mismo camino que la app: original a Storage, secciones por títulos, contexto con IA. */
+async function sembrarPdf(empresaId: string, empresa: string, carpeta: string, archivo: string) {
+  const bytes = new Uint8Array(readFileSync(`${carpeta}/${archivo}`));
+  const titulo = archivo === 'manual-cajeros-tienda-escuela.pdf' ? 'Manual de procedimientos para cajeros' : archivo.replace(/\.pdf$/i, '');
+  const { data: doc, error } = await supabase
+    .from('documentos')
+    .insert({
+      empresa_id: empresaId, titulo, tipo: 'pdf', estado: 'autorizado',
+      // El manual del reto es ficticio: la franja de contenido ficticio se muestra en toda la empresa.
+      ejemplo: true, fuente: `${archivo} (documento ficticio con fines educativos)`,
+    })
+    .select('id, numero')
+    .single();
+  if (error || !doc) throw new Error(`${archivo}: ${error?.message}`);
+  const ruta = `${empresaId}/${doc.id}/${archivo}`;
+  const { error: e2 } = await supabase.storage.from('documentos').upload(ruta, bytes, { contentType: 'application/pdf', upsert: true });
+  if (e2) throw new Error(`${archivo} (Storage): ${e2.message}`);
+  await supabase.from('documentos').update({ archivo: ruta }).eq('id', doc.id);
+  const secciones = await extraer('pdf', bytes, titulo);
+  const r = await guardarSecciones(supabase, { documentoId: doc.id, empresaId, empresa, documento: titulo, secciones });
+  console.log(`  D${doc.numero} ${archivo}: ${r.secciones} secciones, ${r.conContexto} con contexto${r.avisos.length ? ` (${r.avisos.join(' ')})` : ''}`);
 }
 
 type ModuloEjemplo = {

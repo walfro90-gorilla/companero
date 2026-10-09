@@ -3,6 +3,9 @@
 Reporte de investigación web. Lo marcado "(no verificado)" no se confirmó en fuente primaria. Las decisiones que
 salgan de aquí van en `docs/adr/`.
 
+> **Ciencia del aprendizaje, comportamiento, multimedia y color** (9-oct): `docs/investigacion-aprendizaje.md`, con
+> recomendaciones priorizadas para la demo y el piloto.
+
 ## Del Río (para el pitch)
 - **Grupo de la Vega** (Almacenes Distribuidores de la Frontera): Del Río (227), Del Río Express (27), Superette
   (35), Oasis (13), Almacén (2); ~300 sucursales en el estado de Chihuahua. Lema "¡Tu Súper en Menos Pasos!".

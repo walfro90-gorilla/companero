@@ -64,38 +64,33 @@ const resumen: { suite: string; resultado: string; ok: boolean | null }[] = [];
   );
 }
 
-// 3) Paso de búsqueda del RAG: ¿encuentra la sección correcta?
+// 3) Paso de búsqueda del RAG: banco de preguntas contra el manual del reto, sin y con reescritura de la consulta.
 {
-  type C = { id: number; tipo: string; pregunta: string; esperadas?: string[] };
-  const { consultas } = JSON.parse(readFileSync('pruebas/consultas.json', 'utf8')) as { consultas: C[] };
-  const filas: string[] = [];
-  let cubiertas = 0;
-  let encontradas = 0;
-  for (const c of consultas) {
-    const sql = `select coalesce(string_agg(codigo, ', ' order by puntaje desc), '') from public.buscar_secciones((select id from public.empresas where slug = 'del-rio'), $q$${c.pregunta}$q$, 8)`;
-    const r = correr('psql', [DB, '-At', '-c', sql]);
-    const trajo = r.salida.trim();
-    const lista = trajo ? trajo.split(', ') : [];
-    let veredicto = '—';
-    if (c.esperadas?.length) {
-      cubiertas++;
-      const ok = c.esperadas.some(e => lista.includes(e));
-      if (ok) encontradas++;
-      veredicto = ok ? `✅ (posición ${Math.min(...c.esperadas.map(e => lista.indexOf(e)).filter(i => i >= 0)) + 1})` : '❌';
-    }
-    filas.push(`| ${c.id} | ${celda(c.pregunta)} | ${c.tipo === 'cubierta' ? (c.esperadas ?? []).join(', ') : 'no está en el material'} | ${trajo || '(nada)'} | ${veredicto} |`);
+  type Modo = { modo: string; aciertos: number; total: number; mrr: number; detalle: { pregunta: string; esperada: string; posicion: number | null; primeras: string[] }[] };
+  const r = correr('node', ['--conditions=react-server', '--env-file-if-exists=.env.local', 'scripts/medir-busqueda.ts', '--json']);
+  let modos: Modo[] = [];
+  try {
+    modos = JSON.parse(r.salida.trim().split('\n').at(-1) ?? '[]') as Modo[];
+  } catch {
+    modos = [];
   }
-  resumen.push({ suite: 'Búsqueda del RAG (encuentra la sección correcta)', resultado: `${encontradas} de ${cubiertas}`, ok: encontradas === cubiertas });
+  const sin = modos.find(m => m.modo === 'sin reescritura');
+  const con = modos.find(m => m.modo === 'con reescritura');
+  resumen.push({ suite: 'Búsqueda del RAG (encuentra la sección correcta)', resultado: con ? `${con.aciertos} de ${con.total} (sin reescritura: ${sin?.aciertos ?? '—'})` : 'no se pudo medir', ok: con ? con.aciertos === con.total : false });
   md.push(
     '## 3. Búsqueda en el material (paso de recuperación del RAG)',
     '',
-    'Antes de responder, el asistente busca en el material publicado de la empresa (texto en español sin acentos, búsqueda aproximada para faltas de ortografía y, cuando se active, búsqueda por significado). Si la búsqueda no trae la sección correcta, la respuesta no puede ser correcta: por eso se mide por separado. Material: el de ejemplo de Del Río (demo).',
+    'Antes de responder, el asistente busca en el material publicado: un modelo rápido reescribe la pregunta con el vocabulario de un manual (por ejemplo, "¿cuánto efectivo puedo tener en la gaveta?" → "límite efectivo gaveta retiro") y se busca con la pregunta original y con la reescrita. La búsqueda es texto en español sin acentos con peso por rareza de la palabra (tipo BM25) y prefijo de raíz, más una vía aproximada para faltas de ortografía. Si la búsqueda no trae la sección correcta, la respuesta no puede ser correcta: por eso se mide por separado, con un banco de preguntas (`pruebas/busqueda.json`) contra el manual oficial del reto (96 secciones citables).',
     '',
-    `**Resultado:** encontró la sección esperada en **${encontradas} de ${cubiertas}** consultas cubiertas por el material.`,
+    `**Resultado:** con reescritura, la sección esperada llegó entre las 12 que recibe la IA en **${con?.aciertos ?? '—'} de ${con?.total ?? '—'}** preguntas; sin reescritura, ${sin?.aciertos ?? '—'} de ${sin?.total ?? '—'}.`,
     '',
-    '| # | Consulta | Sección esperada | Secciones que trajo (en orden) | ¿La encontró? |',
-    '|---|---|---|---|---|',
-    ...filas,
+    '| Pregunta | Sección esperada | Sin reescritura | Con reescritura |',
+    '|---|---|---|---|',
+    ...(con?.detalle ?? []).map((d, i) => {
+      const s0 = sin?.detalle[i];
+      const v = (p: number | null | undefined) => (p ? `✅ posición ${p}` : '❌');
+      return `| ${celda(d.pregunta)} | ${celda(d.esperada)} | ${v(s0?.posicion)} | ${v(d.posicion)} |`;
+    }),
     '',
   );
 }
@@ -167,7 +162,7 @@ const total = [
   '|---|---|---|',
   ...resumen.map(r => `| ${r.suite} | ${r.resultado} | ${r.ok === null ? '⏳' : r.ok ? '✅' : '❌'} |`),
   '',
-  '> El material de las empresas de demo es **de ejemplo**, escrito por el equipo: no es de Del Río ni de Superette.',
+  '> Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.',
   '',
   ...md,
 ].join('\n');

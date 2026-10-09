@@ -2,10 +2,11 @@ import type { Avatar as DatosAvatar } from '@/lib/avatar';
 
 // Personaje 2D (docs/adr/0005); colores y nombre por empresa. Los estados solo cambian la animación (globals.css).
 
-export type EstadoAvatar = 'reposo' | 'pensando' | 'hablando' | 'canalizando';
+export type EstadoAvatar = 'reposo' | 'escuchando' | 'pensando' | 'hablando' | 'canalizando';
 
 const ETIQUETA: Record<EstadoAvatar, string> = {
   reposo: 'Lista para ayudarte',
+  escuchando: 'Te escucho…',
   pensando: 'Revisando tu material…',
   hablando: 'Respondiendo',
   canalizando: 'Esto le toca a otra persona',
@@ -23,6 +24,7 @@ export function Avatar({ avatar, estado, chico = false }: { avatar: DatosAvatar;
         aria-label={`${avatar.nombre}: ${ETIQUETA[estado]}`}
       >
         <circle cx="100" cy="100" r="96" fill={c.fondo} />
+        {estado === 'escuchando' && <circle className="avatar-escucha" cx="100" cy="100" r="92" fill="none" stroke={c.camisa} strokeWidth="5" />}
         <g className="avatar-cuerpo">
           {/* Cabello de atrás */}
           <path d="M48 98 C44 46 156 46 152 98 L156 150 L44 150 Z" fill={c.cabello} />
