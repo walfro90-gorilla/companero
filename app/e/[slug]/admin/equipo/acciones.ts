@@ -62,16 +62,25 @@ export async function actualizarMiembro(slug: string, usuarioId: string, d: Form
 
 /** Alta de empleados por número de reloj (docs/adr/0014): uno por renglón, "número, nombre" opcional. */
 export async function altaEmpleados(slug: string, _: EstadoEquipo, d: FormData): Promise<EstadoEquipo> {
-  const { empresa } = await requerirGestion(slug); // autoriza con la sesión; la llave secreta solo crea
+  const { supabase, empresa } = await requerirGestion(slug); // autoriza con la sesión; la llave secreta solo crea
   if (!accesoRelojDisponible()) return { error: 'Falta configurar el acceso por número de reloj (SUPABASE_SECRET_KEY).' };
   const lista = leerLista(texto(d, 'numeros'));
   if ('error' in lista) return { error: lista.error };
   const rol: RolEmpleado = texto(d, 'rol') === 'supervisor' ? 'supervisor' : 'colaborador';
+  // La llave secreta se salta la RLS: la sucursal y el puesto del formulario se validan contra esta empresa (y la
+  // base lo vuelve a revisar con el trigger validar_misma_empresa).
+  const sucursalId = opcional(d, 'sucursal');
+  const puestoId = opcional(d, 'puesto');
+  const [{ data: suc }, { data: pue }] = await Promise.all([
+    sucursalId ? supabase.from('sucursales').select('id').eq('id', sucursalId).eq('empresa_id', empresa.id).maybeSingle() : Promise.resolve({ data: null }),
+    puestoId ? supabase.from('puestos').select('id').eq('id', puestoId).eq('empresa_id', empresa.id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  if ((sucursalId && !suc) || (puestoId && !pue)) return { error: 'La sucursal o el puesto no son de esta empresa.' };
   const admin = clienteAdmin();
   let nuevos = 0;
   const yaExistian: string[] = [];
   for (const e of lista) {
-    const r = await altaEmpleado(admin, { empresaId: empresa.id, numero: e.numero, nombre: e.nombre, sucursalId: opcional(d, 'sucursal'), puestoId: opcional(d, 'puesto'), rol });
+    const r = await altaEmpleado(admin, { empresaId: empresa.id, numero: e.numero, nombre: e.nombre, sucursalId, puestoId, rol });
     if ('error' in r) return { error: `${r.error} (${nuevos} dados de alta antes del error)` };
     if (r.nuevo) nuevos++;
     else yaExistian.push(e.numero);

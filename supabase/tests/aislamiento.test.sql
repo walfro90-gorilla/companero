@@ -71,11 +71,39 @@ do $$ declare v_uno uuid := (select id from public.empresas where slug = 'uno');
   exception when insufficient_privilege then raise notice 'ok: Beto no puede hacerse miembro de Uno'; end;
 end $$;
 
--- Caro entra a Uno con el código QR de la sucursal: queda como colaboradora.
+-- Ya no hay atajo para unirse con solo el código del QR: el alta por QR la hace el servidor (ADR 0014).
+select pg_temp.esperar(to_regprocedure('public.unirse_con_codigo(text)') is null, 'ya no existe unirse_con_codigo');
+
+-- Nadie apunta a una sucursal o un puesto de OTRA empresa (trigger validar_misma_empresa), ni con la llave secreta.
 select pg_temp.root();
-select set_config('prueba.codigo', (select s.codigo_union from public.sucursales s join public.empresas e on e.id = s.empresa_id where e.slug = 'uno'), true);
+do $$
+declare
+  v_uno uuid := (select id from public.empresas where slug = 'uno');
+  v_suc_dos uuid := (select s.id from public.sucursales s join public.empresas e on e.id = s.empresa_id where e.slug = 'dos');
+  v_pue_dos uuid := (select p.id from public.puestos p join public.empresas e on e.id = p.empresa_id where e.slug = 'dos');
+begin
+  begin
+    insert into public.miembros (empresa_id, usuario_id, rol, sucursal_id)
+      values (v_uno, '00000000-0000-4000-8000-0000000000c3', 'colaborador', v_suc_dos);
+    raise exception 'FALLÓ: la llave secreta metió a alguien de Uno en una sucursal de Dos';
+  exception when check_violation then raise notice 'ok: ni la llave secreta mete a un miembro en la sucursal de otra empresa'; end;
+  perform pg_temp.como('00000000-0000-4000-8000-0000000000a1', 'ana@uno.mx');
+  begin
+    insert into public.invitaciones (empresa_id, email, rol, puesto_id) values (v_uno, 'rh@uno.mx', 'rh', v_pue_dos);
+    raise exception 'FALLÓ: Ana invitó con un puesto de Dos';
+  exception when check_violation then raise notice 'ok: Ana (admin de Uno) no invita con el puesto de otra empresa'; end;
+  begin
+    update public.miembros set puesto_id = v_pue_dos where usuario_id = auth.uid();
+    raise exception 'FALLÓ: Ana se puso un puesto de Dos';
+  exception when check_violation then raise notice 'ok: ni se pone el puesto de otra empresa'; end;
+end $$;
+
+-- Caro entra a Uno por el QR de la sucursal: el servidor (llave secreta) la da de alta como colaboradora.
+select pg_temp.root();
+insert into public.miembros (empresa_id, usuario_id, rol, sucursal_id, numero_reloj)
+  select e.id, '00000000-0000-4000-8000-0000000000c3', 'colaborador', s.id, '0042'
+    from public.empresas e join public.sucursales s on s.empresa_id = e.id where e.slug = 'uno';
 select pg_temp.como('00000000-0000-4000-8000-0000000000c3', 'caro@uno.mx');
-select public.unirse_con_codigo(lower(current_setting('prueba.codigo')));
 select pg_temp.esperar((select rol from public.miembros where usuario_id = auth.uid()) = 'colaborador', 'Caro entra como colaboradora');
 
 -- Caro ve lo autorizado, no el borrador; y la búsqueda encuentra con otras palabras y sin acentos.
@@ -135,6 +163,12 @@ do $$ begin
     select m.empresa_id, auth.uid(), m.id, '[]'::jsonb, 5, 5, 10 from public.modulos m where m.titulo = 'Módulo de prueba';
   raise exception 'FALLÓ: Caro creó un intento ya calificado';
 exception when insufficient_privilege then raise notice 'ok: Caro no puede crear un intento ya calificado'; end $$;
+-- La práctica la guarda el servidor con la retroalimentación que generó la IA: Caro no puede insertar una propia.
+do $$ begin
+  insert into public.practicas (empresa_id, usuario_id, modulo_id, escenario_id, retroalimentacion)
+    select m.empresa_id, auth.uid(), m.id, gen_random_uuid(), '¡Excelente! 10/10' from public.modulos m where m.titulo = 'Módulo de prueba';
+  raise exception 'FALLÓ: Caro guardó una práctica con retroalimentación inventada';
+exception when insufficient_privilege then raise notice 'ok: Caro no puede guardar una práctica con retroalimentación inventada'; end $$;
 select pg_temp.como('00000000-0000-4000-8000-0000000000a1', 'ana@uno.mx');
 update public.intentos set calificacion = 8, comentario = 'Repasa cancelaciones', revisado_por = auth.uid(), revisado_en = now();
 select pg_temp.esperar((select calificacion from public.intentos) = 8, 'Ana (admin) califica el intento');

@@ -51,21 +51,9 @@ export async function enviarTest(slug: string, moduloId: string, respuestas: Rec
   return { aciertos, total, aprobado: total > 0 && aciertos / total >= APROBADO, detalle, progreso: await progresoDe(supabase, empresa.id, usuario.id) };
 }
 
-export type Turno = { rol: 'usuario' | 'avatar'; texto: string };
-
-/** Guarda la práctica completa (conversación y retroalimentación de la IA) para que RH la revise (ADR 0014). */
-export async function completarPractica(
-  slug: string, moduloId: string, escenarioId: string, turnos: Turno[], retroalimentacion: string,
-): Promise<Progreso> {
+/** La práctica ya la guardó /api/practica al generar la retroalimentación (ADR 0014); aquí solo se refresca el progreso. */
+export async function completarPractica(slug: string, moduloId: string): Promise<Progreso> {
   const { supabase, empresa, usuario } = await contexto(slug, moduloId);
-  const transcripcion = turnos
-    .slice(-40)
-    .filter(t => (t.rol === 'usuario' || t.rol === 'avatar') && typeof t.texto === 'string')
-    .map(t => ({ rol: t.rol, texto: t.texto.slice(0, 2000) }));
-  await supabase.from('practicas').insert({
-    empresa_id: empresa.id, usuario_id: usuario.id, modulo_id: moduloId, escenario_id: escenarioId,
-    transcripcion, retroalimentacion: retroalimentacion.slice(0, 6000),
-  });
   revalidatePath(`/e/${slug}`);
   return progresoDe(supabase, empresa.id, usuario.id);
 }

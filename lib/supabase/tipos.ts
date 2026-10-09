@@ -7,13 +7,13 @@ export type Database = {
           Tables: {
             "accesos_reloj": {
                   Row: {
-                    "creado_en": string,"empresa_id": string | null,"exito": boolean,"id": number,"ip": string
+                    "alta": boolean,"creado_en": string,"empresa_id": string | null,"exito": boolean,"id": number,"ip": string
                   }
                   Insert: {
-                    "creado_en"?: string,"empresa_id"?: string | null,"exito": boolean,"id"?: number,"ip": string
+                    "alta"?: boolean,"creado_en"?: string,"empresa_id"?: string | null,"exito": boolean,"id"?: number,"ip": string
                   }
                   Update: {
-                    "creado_en"?: string,"empresa_id"?: string | null,"exito"?: boolean,"id"?: number,"ip"?: string
+                    "alta"?: boolean,"creado_en"?: string,"empresa_id"?: string | null,"exito"?: boolean,"id"?: number,"ip"?: string
                   }
                   Relationships: [
                     {
@@ -484,11 +484,6 @@ isOneToOne: false
                            },
 "tengo_rol":
 { Args: { "p_empresa": string,"p_roles": (Database["public"]['Enums']["rol_miembro"])[] }; Returns: boolean
-                           },
-"unirse_con_codigo":
-{ Args: { "p_codigo": string }; Returns: {
-              "empresa_id": string,"slug": string
-            }[]
                            }
           }
           Enums: {

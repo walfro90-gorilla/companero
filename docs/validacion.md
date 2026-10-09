@@ -1,13 +1,13 @@
 # Validación técnica
 
-Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 3:36 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
+Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 3:57 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
 
 | Qué se prueba | Resultado | |
 |---|---|---|
 | Lógica de la aplicación | 64 de 64 | ✅ |
-| Aislamiento entre empresas, roles y privacidad | 32 comprobaciones | ✅ |
+| Aislamiento entre empresas, roles y privacidad | 37 comprobaciones | ✅ |
 | Búsqueda del RAG (encuentra la sección correcta) | 18 de 18 (sin reescritura: 16) | ✅ |
-| Punta a punta (login, pantallas, QR, permisos) | 43 de 43 | ✅ |
+| Punta a punta (login, pantallas, QR, permisos) | 48 de 48 | ✅ |
 | Prueba documentada con IA (≥10 consultas) | 10 de 10 (groq) | ✅ |
 
 > Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos, cargado en la empresa «Del Río» de la demo; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.
@@ -103,6 +103,10 @@ Los permisos los hace cumplir la base de datos (Row Level Security de Postgres),
 | Beto no ve secciones de Uno | ✅ |
 | la búsqueda tampoco le devuelve nada de Uno | ✅ |
 | Beto no puede hacerse miembro de Uno | ✅ |
+| ya no existe unirse_con_codigo | ✅ |
+| ni la llave secreta mete a un miembro en la sucursal de otra empresa | ✅ |
+| Ana (admin de Uno) no invita con el puesto de otra empresa | ✅ |
+| ni se pone el puesto de otra empresa | ✅ |
 | Caro entra como colaboradora | ✅ |
 | Caro ve solo el documento autorizado | ✅ |
 | y solo su sección | ✅ |
@@ -121,6 +125,7 @@ Los permisos los hace cumplir la base de datos (Row Level Security de Postgres),
 | Caro ve su intento | ✅ |
 | Caro NO puede ponerse calificación | ✅ |
 | Caro no puede crear un intento ya calificado | ✅ |
+| Caro no puede guardar una práctica con retroalimentación inventada | ✅ |
 | Ana (admin) califica el intento | ✅ |
 | quien califica no puede cambiar las respuestas ni el puntaje | ✅ |
 | Beto (otra empresa) no ve intentos de Uno | ✅ |
@@ -147,9 +152,9 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 | ¿Hasta cuándo puede devolver un cliente unas pilas que compró? | sección 6, Catálogo | ✅ posición 2 | ✅ posición 4 |
 | ¿Qué reviso cuando cierro mi caja? | sección 12 | ✅ posición 1 | ✅ posición 1 |
 | ¿Cómo cancelo un ticket que ya cobré? | sección 8, Ticket liquidado / sección 9 | ❌ | ✅ posición 12 |
-| Me sobran 50 pesos en el corte | sección 12 | ✅ posición 12 | ✅ posición 6 |
+| Me sobran 50 pesos en el corte | sección 12 | ✅ posición 12 | ✅ posición 7 |
 | ¿Puedo devolver un yogur abierto? | sección 9, Condiciones de atención | ✅ posición 2 | ✅ posición 1 |
-| ¿Qué hago si no tengo cambio? | sección 4, Si no hay cambio suficiente | ✅ posición 1 | ✅ posición 7 |
+| ¿Qué hago si no tengo cambio? | sección 4, Si no hay cambio suficiente | ✅ posición 1 | ✅ posición 3 |
 | ¿Cuánto cuesta el café? | sección 6, Catálogo | ✅ posición 1 | ✅ posición 1 |
 | ¿Cuánto efectivo puedo tener en la gaveta? | sección 10, Solicitar un retiro a resguardo | ✅ posición 5 | ✅ posición 4 |
 | ¿Qué pasa si la terminal no responde? | sección 4, Terminal sin respuesta o con registros diferentes | ✅ posición 4 | ✅ posición 5 |
@@ -159,7 +164,7 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 
 Un script usa la app como lo haría una persona: el admin entra con correo y contraseña; el estudiante 0001 entra solo con su número de reloj; un empleado nuevo se da de alta con el QR de una sucursal; el estudiante deja un test, el admin lo califica en Respuestas y el estudiante ve su calificación. Comprueba desde la web que un empleado no entra a la gestión ni a otra empresa, que un número no registrado no entra sin QR y que no hay Google ni modo invitado.
 
-**Resultado:** 43 de 43.
+**Resultado:** 48 de 48.
 
 | Paso | |
 |---|---|
@@ -194,11 +199,16 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | el admin lo califica (9/10 con comentario) | ✅ |
 | el estudiante ve su calificación y el comentario en su Inicio | ✅ |
 | el estudiante NO puede cambiar su calificación | ✅ |
+| el estudiante NO puede guardar una práctica con retroalimentación inventada | ✅ |
+| al evaluar la práctica, el servidor guarda la retroalimentación que generó la IA y la conversación | ✅ |
+| la práctica aparece en Respuestas para revisar | ✅ |
 | un número no registrado NO entra sin QR (404) | ✅ |
 | el QR de Superette está en Equipo (69BA724A) | ✅ |
 | la página del QR pide el número de reloj (sin sesión) | ✅ |
-| un número nuevo por QR queda dado de alta y entra (H81795418) | ✅ |
+| un número nuevo por QR queda dado de alta y entra (H83102426) | ✅ |
 | el colaborador ve el inicio de Superette | ✅ |
+| después de 20 altas desde la misma red, un número nuevo espera (429) | ✅ |
+| pero quien ya está dado de alta sí entra desde esa red (200) | ✅ |
 | un colaborador NO entra a Contenido (404) | ✅ |
 | ni a otra empresa (404) | ✅ |
 | chat responde con citas ([{"codigo":"D1-2","documento":"Manual del colaborador de tienda (EJEMPLO)","titu…) | ✅ |

@@ -8,7 +8,7 @@ import { analizar } from '@/lib/conocimiento/citas';
 import { boton, botonSecundario, campo, tarjeta } from '@/app/_ui/estilos';
 import { Festejo } from '@/app/_ui/festejo';
 import { ChipCita, ConNegritas, PanelSeccion, TextoConCitas } from '@/app/_ui/fuentes';
-import { completarPractica, enviarTest, marcarLeccion, type Calificacion, type Turno as TurnoPractica } from './acciones';
+import { completarPractica, enviarTest, marcarLeccion, type Calificacion } from './acciones';
 
 type Leccion = { id: string; orden: number; titulo: string; objetivo: string | null; contenido: string };
 type Pregunta = { id: string; orden: number; enunciado: string; opciones: string[] };
@@ -110,8 +110,8 @@ export function Recorrido(p: {
           revisiones={p.revisionesPractica}
           escenarios={p.escenarios}
           practicadas={practicadas}
-          onCompletada={async (id, turnos, retro) => {
-            const nuevo = await completarPractica(p.slug, p.modulo.id, id, turnos, retro);
+          onCompletada={async id => {
+            const nuevo = await completarPractica(p.slug, p.modulo.id);
             setPracticadas(new Set(practicadas).add(id));
             avanzar(nuevo, false);
           }}
@@ -275,7 +275,7 @@ function Test({ slug, moduloId, preguntas, onCalificado, revision }: { slug: str
 
 type Turno = { rol: 'usuario' | 'avatar'; texto: string };
 
-type AlCompletar = (id: string, turnos: TurnoPractica[], retroalimentacion: string) => Promise<void>;
+type AlCompletar = (id: string) => Promise<void>;
 
 function Practica({ slug, escenarios, practicadas, onCompletada, revisiones }: { slug: string; escenarios: Escenario[]; practicadas: Set<string>; onCompletada: AlCompletar; revisiones: Record<string, { calificacion: number; comentario: string | null }> }) {
   const [activo, setActivo] = useState<Escenario | null>(null);
@@ -336,8 +336,8 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
       if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? 'No pude responder.');
       if (evaluar) {
         const validas = new Set((res.headers.get('x-secciones') ?? '').split(',').filter(Boolean));
-        const texto = await leerFlujo(res, t => setRetro({ texto: t, validas }));
-        await onCompletada(escenario.id, historial, texto);
+        await leerFlujo(res, t => setRetro({ texto: t, validas }));
+        await onCompletada(escenario.id);
       } else {
         setTurnos([...historial, { rol: 'avatar', texto: '' }]);
         await leerFlujo(res, t => setTurnos([...historial, { rol: 'avatar', texto: t }]));

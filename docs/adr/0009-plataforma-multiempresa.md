@@ -17,8 +17,9 @@
 
 **La autorización vive en Postgres (RLS), no en el código.** Patrón de estampida (membresía + helpers
 `security definer`: `mis_empresas()`, `gestiono()`, `superviso()`, `atiendo()`) con el estilo de brotes
-(`(select helper())` en las políticas). Las altas sensibles van por RPC que validan adentro (`crear_empresa`,
-`unirse_con_codigo`). Un trigger impide que alguien sin `gestiono()` se cambie rol/sucursal/puesto.
+(`(select helper())` en las políticas). Las altas sensibles van por RPC que validan adentro (`crear_empresa`; `unirse_con_codigo` se quitó en la
+migración `120800`: el alta por QR ahora la hace el servidor con número de reloj, ADR 0014). El trigger
+`validar_misma_empresa` impide apuntar a la sucursal o al puesto de otra empresa. Un trigger impide que alguien sin `gestiono()` se cambie rol/sucursal/puesto.
 Probado en `supabase/tests/aislamiento.test.sql` (25 comprobaciones) y desde HTTP en `npm run humo`.
 
 ## Login (Supabase Auth)

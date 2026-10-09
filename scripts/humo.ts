@@ -35,8 +35,10 @@ async function sesionAdmin(correo: string, clave: string) {
 }
 
 /** Entra con número de reloj por la API, como el formulario; devuelve la cookie de sesión (o el estado si falla). */
-async function sesionReloj(cuerpo: { numero: string; empresa?: string; codigo?: string }) {
-  const res = await fetch(`${SITIO}/api/acceso-reloj`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpo) });
+async function sesionReloj(cuerpo: { numero: string; empresa?: string; codigo?: string }, ip?: string) {
+  const res = await fetch(`${SITIO}/api/acceso-reloj`, {
+    method: 'POST', headers: { 'content-type': 'application/json', ...(ip ? { 'x-forwarded-for': ip } : {}) }, body: JSON.stringify(cuerpo),
+  });
   const cookie = res.headers.getSetCookie().map(c => c.split(';')[0]).join('; ');
   return { status: res.status, cookie, json: (await res.json().catch(() => null)) as { destino?: string; error?: string } | null };
 }
@@ -121,6 +123,30 @@ revisar(html.includes('Retroalimentación de tu instructor') && html.includes(ma
 const { data: propio } = await sbCajero.from('intentos').update({ calificacion: 10 }).eq('id', pendiente!.id).select('calificacion');
 revisar(!propio?.length, 'el estudiante NO puede cambiar su calificación');
 
+// 1d) La práctica la guarda el servidor (ADR 0014): el estudiante no puede inventarse la retroalimentación de la IA.
+const inicioHumo = new Date(Date.now() - 1000).toISOString();
+const { data: escenario } = await sbCajero.from('escenarios').select('id').eq('modulo_id', moduloId!).limit(1).single();
+const { error: ePractica } = await sbCajero.from('practicas').insert({
+  empresa_id: emp!.id, usuario_id: yoCajero.user!.id, modulo_id: moduloId!, escenario_id: escenario!.id, retroalimentacion: '¡Excelente! 10/10',
+});
+revisar(Boolean(ePractica), 'el estudiante NO puede guardar una práctica con retroalimentación inventada');
+r = await pedir('/api/practica', cajero, {
+  method: 'POST', headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({
+    empresa: 'del-rio', escenario: escenario!.id, evaluar: true,
+    mensajes: [{ rol: 'avatar', texto: 'Oiga, me cobró dos veces el refresco.' }, { rol: 'usuario', texto: 'Disculpe, llamo a mi supervisor para que autorice la cancelación.' }],
+  }),
+});
+const retroIA = await r.text();
+if (r.status === 502) revisar(retroIA.includes('No pude responder'), 'práctica sin llaves de IA: 502 con mensaje claro');
+else {
+  const { data: guardada } = await sbCajero.from('practicas').select('retroalimentacion, transcripcion').eq('usuario_id', yoCajero.user!.id).gte('completada_en', inicioHumo).single();
+  revisar(r.status === 200 && guardada?.retroalimentacion === retroIA && (guardada.transcripcion as unknown[]).length === 2,
+    'al evaluar la práctica, el servidor guarda la retroalimentación que generó la IA y la conversación');
+  html = await (await pedir('/e/del-rio/admin/respuestas', admin)).text();
+  revisar(html.includes('Disculpe, llamo a mi supervisor'), 'la práctica aparece en Respuestas para revisar');
+}
+
 acceso = await sesionReloj({ empresa: 'del-rio', numero: '9999' });
 revisar(acceso.status === 404 && !acceso.cookie, `un número no registrado NO entra sin QR (${acceso.status})`);
 
@@ -135,6 +161,16 @@ const colaborador = acceso.cookie;
 revisar(acceso.status === 200 && acceso.json?.destino === '/e/superette', `un número nuevo por QR queda dado de alta y entra (${numeroNuevo})`);
 r = await pedir('/e/superette', colaborador);
 revisar(r.status === 200, 'el colaborador ve el inicio de Superette');
+// Límite de altas por QR (ADR 0014): desde una red que ya dio de alta a 20 números, uno nuevo espera; uno registrado entra.
+const ipHumo = `humo-${Date.now()}`;
+if (process.env.SUPABASE_SECRET_KEY) {
+  const sec = createClient(url, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
+  await sec.from('accesos_reloj').insert(Array.from({ length: 20 }, () => ({ ip: ipHumo, exito: true, alta: true })));
+  acceso = await sesionReloj({ codigo: qr!, numero: `H${Date.now().toString().slice(-8)}` }, ipHumo);
+  revisar(acceso.status === 429 && !acceso.cookie, `después de 20 altas desde la misma red, un número nuevo espera (${acceso.status})`);
+  acceso = await sesionReloj({ codigo: qr!, numero: numeroNuevo }, ipHumo);
+  revisar(acceso.status === 200, `pero quien ya está dado de alta sí entra desde esa red (${acceso.status})`);
+}
 r = await pedir('/e/superette/admin/contenido', colaborador);
 revisar(r.status === 404, `un colaborador NO entra a Contenido (${r.status})`);
 r = await pedir('/e/del-rio', colaborador);
@@ -181,11 +217,14 @@ revisar(r.status === 400, `voz sin audio → 400 (${r.status})`);
 r = await voz(admin, wavTono(1.5));
 revisar(r.status === 422, `un ruido sin voz llega a Whisper y NO se manda como pregunta (${r.status}: 422 "no te escuché")`);
 
-// Limpieza para no ensuciar la demo: intentos fallidos de acceso (si no, varias corridas bloquearían la IP local), el
-// test calificado de prueba del estudiante 0001 y los empleados de prueba dados de alta por QR (números H + 8 dígitos).
+// Limpieza para no ensuciar la demo: intentos fallidos de acceso (si no, varias corridas bloquearían la IP local) y
+// los de la red de prueba, el test calificado y la práctica de prueba del estudiante 0001, y los empleados de prueba
+// dados de alta por QR (números H + 8 dígitos).
 if (process.env.SUPABASE_SECRET_KEY) {
   const sec = createClient(url, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
   await sec.from('accesos_reloj').delete().eq('exito', false);
+  await sec.from('accesos_reloj').delete().like('ip', 'humo-%');
+  await sec.from('practicas').delete().eq('usuario_id', yoCajero.user!.id).gte('completada_en', inicioHumo);
   await sec.from('intentos').delete().like('comentario', 'humo-%');
   const { data: dePrueba } = await sec.from('miembros').select('usuario_id, numero_reloj').like('numero_reloj', 'H%');
   for (const m of (dePrueba ?? []).filter(x => /^H\d{8}$/.test(x.numero_reloj ?? ''))) await sec.auth.admin.deleteUser(m.usuario_id);

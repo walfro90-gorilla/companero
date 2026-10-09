@@ -2,13 +2,13 @@ import { headers } from 'next/headers';
 import { z } from 'zod';
 import { altaEmpleado } from '@/lib/empleados';
 import { abrirSesion } from '@/lib/sesion-empleado';
-import { LIMITE_FALLOS, VENTANA_MIN, normalizarNumero } from '@/lib/reloj';
+import { LIMITE_ALTAS, LIMITE_FALLOS, VENTANA_MIN, normalizarNumero } from '@/lib/reloj';
 import { accesoRelojDisponible, clienteAdmin } from '@/lib/supabase/admin';
 import { rutaSegura } from '@/lib/texto';
 
 // Acceso de empleados por número de reloj (docs/adr/0014). Desde la página de la empresa solo entran números ya
 // registrados; desde el QR de una sucursal, un número nuevo queda dado de alta como colaborador de esa sucursal.
-// Admin y RH no entran por aquí (correo y contraseña). Límite de intentos fallidos por IP.
+// Admin y RH no entran por aquí (correo y contraseña). Límites por IP: intentos fallidos y altas nuevas por QR.
 
 const Cuerpo = z.object({
   numero: z.string().max(40),
@@ -59,15 +59,19 @@ export async function POST(request: Request) {
   if (miembro && (miembro.rol === 'admin' || miembro.rol === 'rh')) {
     return fallo('Este número es de administración: entra con tu correo y contraseña.', 403);
   }
+  let nuevo = false;
   if (!usuarioId) {
     if (!sucursalId) return fallo('Ese número de reloj no está registrado. Escanea el QR de tu sucursal o pide tu alta a RH.', 404);
+    const { count: altas } = await admin.from('accesos_reloj').select('id', { count: 'exact', head: true }).eq('ip', ip).eq('alta', true).gte('creado_en', desde);
+    if ((altas ?? 0) >= LIMITE_ALTAS) return error(`Se dieron de alta muchos números desde esta red. Espera ${VENTANA_MIN} minutos o pide tu alta a RH.`, 429);
     const alta = await altaEmpleado(admin, { empresaId: empresa.id, numero, sucursalId, rol: 'colaborador' });
     if ('error' in alta) return error(alta.error, 500);
     usuarioId = alta.usuarioId;
+    nuevo = alta.nuevo;
   }
 
   if (!(await abrirSesion(admin, usuarioId))) return error('No se pudo abrir la sesión. Intenta de nuevo.', 500);
-  await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa.id, exito: true });
+  await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa.id, exito: true, alta: nuevo });
   const base = `/e/${empresa.slug}`;
   const next = rutaSegura(datos.data.next, base);
   return Response.json({ destino: next.startsWith(base) ? next : base });

@@ -19,6 +19,9 @@ export const esCorreoDeEmpleado = (email: string | null | undefined) => Boolean(
 /** Intentos fallidos permitidos por IP en la ventana; luego se bloquea un rato (para que no adivinen números). */
 export const LIMITE_FALLOS = 8;
 export const VENTANA_MIN = 10;
+/** Altas nuevas por QR permitidas por IP en la misma ventana (para que nadie llene Auth de usuarios). Holgado
+ *  porque en el evento varios jueces escanean desde el mismo Wi-Fi, que sale a internet con una sola IP. */
+export const LIMITE_ALTAS = 20;
 
 /** "0001\n0002, Ana\n0003" → [{ numero: '0001' }, { numero: '0002', nombre: 'Ana' }, …] (alta en lote de RH). */
 export function leerLista(texto: string): { numero: string; nombre: string | null }[] | { error: string } {

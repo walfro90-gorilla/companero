@@ -28,7 +28,9 @@ export async function altaEmpleado(
   });
   if (e2) {
     await admin.auth.admin.deleteUser(data.user.id);
-    return { error: e2.code === '23505' ? `El número ${e.numero} ya existe.` : 'No se pudo dar de alta al empleado.' };
+    if (e2.code === '23505') return { error: `El número ${e.numero} ya existe.` };
+    if (e2.code === '23514') return { error: 'La sucursal o el puesto no son de esta empresa.' };
+    return { error: 'No se pudo dar de alta al empleado.' };
   }
   return { usuarioId: data.user.id, nuevo: true };
 }

@@ -28,7 +28,8 @@ la configuración de Auth en el panel (paso 3) y sembrar los datos de demo (paso
       **25/25**; la base quedó en 0 usuarios y 0 empresas.
 - [x] Llave publicable: `sb_publishable_0yIhQ3WBZAs-o9AiwTrFWA_ouXuOnPE` (pública por diseño; protege la RLS).
 
-Siguientes migraciones: archivo `20261009120700_…` o mayor; aplicarlas por MCP (`apply_migration` con el mismo
+Después: la `120700` ya está aplicada (9-oct). La `20261009120800_endurecer_acceso_y_revision` se aplica **antes** de
+empujar el código que la usa. Las siguientes, `120900` o mayor; aplicarlas por MCP (`apply_migration` con el mismo
 nombre y luego alinear la versión) o por CLI: `! supabase login`, `supabase link --project-ref bavkhusmzyyswtfksosk`,
 `supabase db push`.
 
@@ -66,7 +67,9 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `SUPABASE_SECRET_KEY` (Settings → API Keys de `bavkhusmzyyswtfksosk`) y `GROQ_API_KEY`.
 - [ ] Agregar a `.env.nube`: `SEMBRAR_ADMIN_EMAIL` y `SEMBRAR_ADMIN_PASSWORD` (la contraseña de tu cuenta de admin en
       producción; mínimo 8).
-- [ ] Aplicar la migración `20261009120700_reloj_y_revision.sql` (número de reloj, límite de intentos y revisión).
+- [x] Migración `20261009120700_reloj_y_revision.sql` (número de reloj, límite de intentos y revisión), aplicada el 9-oct.
+- [ ] Migración `20261009120800_endurecer_acceso_y_revision.sql` (límite de altas por QR, sucursal y puesto de la misma
+      empresa, práctica guardada por el servidor, sin `unirse_con_codigo`). La aplica Bart por MCP antes del push.
 - [ ] `npm run sembrar:nube` → crea **Del Río** (`del-rio`, con el manual del reto; sube el PDF a Storage, 96 secciones con
       contexto de IA y el módulo revisado), los **estudiantes 0001–0004** (entran en `/acceso/del-rio`) y
       **Superette (demo)**, y tu cuenta de admin con contraseña.
