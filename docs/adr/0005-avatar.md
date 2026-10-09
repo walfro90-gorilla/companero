@@ -19,6 +19,10 @@
   con datos de Del Río, por una mejora que el reto marca como opcional.
 - 3D (three.js): más tiempo en la apariencia que en lo que se evalúa (exactitud, citas, canalización).
 
+## Con el manual del reto (9-oct, ADR 0013)
+El escenario es **Tienda Escuela** (ficticia). La identidad del asistente sigue siendo provisional y sin marca de
+Del Río ni de Superette.
+
 ## Pendiente
 Preguntar en `#reto-del-rio` o en el taller del viernes 10:00 (Ramsés Salinas): ¿tienen mascota o personaje?
 ¿Colores y logotipo autorizados? ¿Nombre preferido para el asistente?

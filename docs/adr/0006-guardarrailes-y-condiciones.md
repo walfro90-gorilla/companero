@@ -20,5 +20,12 @@
 ## Proveedores y privacidad
 - Los materiales viajan a **Anthropic** y **Groq**: ninguno entrena con datos de API; en Groq conviene activar
   Zero Data Retention en Data Controls (acción de Wal en la consola).
-- **Pendiente**: confirmar con Del Río/organización que sus materiales pueden enviarse a estos proveedores
-  (el manual del hacker lo pide explícitamente). Hasta confirmar, solo se envía el contenido de ejemplo.
+- ~~**Pendiente**: confirmar con Del Río/organización que sus materiales pueden enviarse a estos proveedores~~
+  **Resuelto para el reto (9-oct, ADR 0013):** el material es el manual ficticio de Tienda Escuela y la
+  organización indica que "cada equipo decide cómo utilizarla en el desarrollo de su solución de IA". Con
+  material real de una empresa (piloto) se vuelve a pedir permiso antes de mandarlo a cualquier proveedor.
+
+## A quién se canaliza según el manual (ADR 0013)
+Se mantienen dos destinos. "Soporte" siempre actúa mediante el supervisor (sección 1) → supervisor. Lo que la
+sección 13 deja a la "inducción específica de la sucursal" (equipo de emergencia, contactos de seguridad) →
+supervisor. Salarios, prestaciones, sanciones, nómina, contratación y condiciones laborales → RH.

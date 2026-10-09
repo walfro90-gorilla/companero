@@ -34,6 +34,13 @@ seguimiento ("¿y si no está?") se buscan junto con la anterior. Solo son citas
 trajo el buscador. La UI muestra el paso de búsqueda ("Consulté 3 secciones del material") y cada cita abre
 el texto exacto y el documento original en su página.
 
+## Ajustes por el manual del reto (9-oct, ADR 0013)
+- **PDF por títulos y subtítulos**: la jerarquía se detecta por el tamaño de letra (en el manual, 19 pt las
+  secciones y 12.5 pt los subtítulos). Cada subtítulo es una unidad citable con su sección y su página. Si un PDF
+  no tiene jerarquía visible, se parte por páginas como antes.
+- **Fecha y hora** de Cd. Juárez en la parte del prompt que no va a caché: hay promociones con vigencia y
+  horario, y "la hora aplicable es la de inicio del cobro".
+
 ## Pendiente
 - Proveedor de embeddings (y permiso de Del Río para mandar su material a ese proveedor).
 - Si un PDF es escaneado (sin texto), hoy se pide la versión con texto; OCR con la visión de Claude es mejora.

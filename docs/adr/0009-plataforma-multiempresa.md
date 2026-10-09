@@ -45,6 +45,10 @@ modelo de IA **nunca** recibe quién pregunta. Lo que ve RH de las consultas es 
 - La app solo usa la llave **publicable**; la secreta es solo para scripts locales (`sembrar`, `prueba`).
 - Los archivos suben del navegador directo a Storage (Vercel limita el cuerpo de una función a 4.5 MB).
 
+## Empresas de la demo (9-oct, ADR 0013; decisión de Wal)
+**"Tienda Escuela"** (`tienda-escuela`), con el manual oficial del reto, en lugar de "Del Río (demo)". La segunda
+empresa sigue siendo **"Superette (demo)"**, con una franja visible de contenido ficticio en todas sus pantallas.
+
 ## Descartado
 - Subdominio por empresa (estampida): DNS/certificados por inquilino no aportan a la demo; `/e/{slug}` basta.
 - Tabla pública de posiciones entre personas (ver ADR 0011).

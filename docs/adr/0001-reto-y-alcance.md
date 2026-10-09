@@ -71,8 +71,12 @@ uso y comprensión. Participación, premios y piloto quedan sujetos a acuerdo co
 ## Fuera de alcance
 Otros puestos; integración con caja o sistemas internos; login con datos personales; calificar a personas.
 
+## Material del reto (9-oct): resuelto
+La organización entregó el **"Manual de procedimientos para cajeros — Tienda Escuela"** (ficticio, con fines
+educativos; 15 secciones). Es el material autorizado del reto. Qué cambia: [ADR 0013](0013-material-del-reto-tienda-escuela.md).
+
 ## Pendiente de Del Río
-- El **módulo y los materiales autorizados** (hasta que lleguen se trabaja con contenido de ejemplo, marcado
+- ~~El **módulo y los materiales autorizados**~~ → resuelto con el manual de Tienda Escuela (ADR 0013). Texto original: (hasta que lleguen se trabaja con contenido de ejemplo, marcado
   como tal en la UI; ver ADR 0004).
 - La **identidad visual autorizada** del avatar (ADR 0005).
 - Confirmar que los materiales pueden enviarse a proveedores de IA externos (ADR 0006).

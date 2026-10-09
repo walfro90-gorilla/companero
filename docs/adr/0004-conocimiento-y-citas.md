@@ -32,6 +32,11 @@ Si el corpus pasa de ~60K tokens (varios módulos o puestos), se agrega búsqued
 (Postgres FTS en Supabase, como la biblioteca de brotes) para mandar solo las secciones relevantes. El formato
 de ids y de citas no cambia.
 
+## Cómo se muestra la cita (9-oct, ADR 0013)
+El manual del reto pide citar con **"sección N, Subtítulo"** («sección 5, Si la segunda parte queda incierta»).
+La marca interna `[D1-n]` y su validación no cambian; lo que cambia es lo que ve la persona: la referencia
+legible del manual (sección, subtítulo y página) en lugar del código.
+
 ## Contenido de ejemplo
 Mientras Del Río entrega su módulo, `conocimiento/` tiene documentos **de ejemplo** escritos por el equipo,
 marcados `estado: ejemplo`. La UI muestra una franja "Contenido de ejemplo, no oficial" mientras exista al

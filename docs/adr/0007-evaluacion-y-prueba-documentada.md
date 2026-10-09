@@ -26,6 +26,14 @@
   corrección, no se esconde la fila.
 - Se corre al menos: al tener el material real, después de cada cambio de instrucciones y antes de entregar.
 
+## Con el manual del reto (9-oct, ADR 0013)
+- `pruebas/consultas.json` se reescribe contra el manual de Tienda Escuela:
+  - las 5 preguntas de la ficha;
+  - 3 con casos especiales o con cálculo (promoción con horario, cupón con mínimo, pago mixto incierto);
+  - 2 sin respuesta, tomadas de su tabla "Lo que este manual no define": una a RH y otra al supervisor.
+- Las secciones esperadas se escriben como las cita el manual ("sección 7, Procedimiento de cálculo").
+- El módulo, el test y las prácticas se generan desde el manual y el equipo los revisa antes de publicarlos.
+
 ## Criterios de acierto
 - Cubierta: cita al menos una sección esperada, no cita secciones inexistentes y no canaliza.
 - Sin respuesta: canaliza (`[CANALIZAR:…]`) y no presenta un procedimiento.

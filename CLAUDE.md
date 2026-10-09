@@ -6,7 +6,8 @@ Objetivo: en ~3 días, construir en equipo un **prototipo con IA** que resuelva 
 > Misión oficial: *comprender el problema, construir una solución y demostrar cómo puede generar valor.*
 
 Fuentes: `~/Downloads/manual-del-hacker.pdf` (manual oficial, la fuente más precisa), https://www.hackknights.com/evento y,
-para nuestro reto, la **ficha técnica de Del Río** `~/Downloads/Fichas Técnicas Hack Knights 2026.pdf` (trae los criterios de evaluación; ver ADR 0008).
+para nuestro reto, la **ficha técnica de Del Río** `~/Downloads/Fichas Técnicas Hack Knights 2026.pdf` (trae los criterios de evaluación; ver ADR 0008)
+y el **material oficial del reto**: `~/Downloads/Manual_cajeros_Tienda_Escuela_Hack_Knights (1).pdf`, manual ficticio de la "Tienda Escuela" (ver ADR 0013).
 Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el manual incluye el jueves 8).
 
 ---
@@ -23,9 +24,15 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
 - **IA probada con Groq (9-oct):** prueba documentada 10/10 (8 correctas + 2 canalizadas), generación de módulo en ~20 s (6 lecciones, 6 preguntas, 3 prácticas, todo citado), simulador de práctica con retroalimentación citada.
 - **Despliegue ([ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md), runbook [`docs/despliegue.md`](docs/despliegue.md)):** Compañero va en un proyecto de Supabase **propio, nuevo y vacío** (`us-east-1`) + Vercel. ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que esté vacío.
 - **Llaves (9-oct):** `GROQ_API_KEY` ya está en `.env.local`; `ANTHROPIC_API_KEY` vacía.
-- **Falta:** proyecto de Supabase nuevo (lo crea Wal) → migraciones por MCP → Vercel; llave de Anthropic (eslabón principal) y repetir la prueba documentada con ella; proyecto de Supabase en la nube (lo crea Wal) + deploy en Vercel; credenciales de Google (opcional); embeddings (opcional); el material real de Del Río.
+- **Falta:** cargar el manual de Tienda Escuela y hacer los ajustes del ADR 0013; proyecto de Supabase nuevo (lo crea Wal) → migraciones por MCP → Vercel; llave de Anthropic (eslabón principal) y repetir la prueba documentada con ella; credenciales de Google (opcional); embeddings (opcional).
+- **Material del reto (9-oct, 11:30) → [ADR 0013](docs/adr/0013-material-del-reto-tienda-escuela.md):** "Manual de procedimientos para cajeros — Tienda Escuela", **ficticio**, 15 secciones. Reemplaza nuestro contenido de ejemplo de Del Río. Implicaciones:
+  - Citar como "**sección N, Subtítulo**".
+  - Partir el PDF por títulos y subtítulos (19 pt y 12.5 pt).
+  - Darle fecha y hora al asistente, porque hay promociones con horario del 8 al 10 de octubre.
+  - Nueva prueba documentada contra el manual.
+  - Decidido por Wal: la empresa demo pasa a ser **"Tienda Escuela"** y Superette se queda con una franja visible de contenido ficticio.
 - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`) · **Demo:** _pendiente (Vercel)_
-- **Pendiente de Del Río:** el módulo y los materiales autorizados, la identidad visual del avatar, la confirmación de que sus materiales pueden ir a Anthropic y Groq, y quién es su **enlace de RH u Operación** (valida contenido y resuelve dudas).
+- **Pendiente de Del Río:** la identidad visual del avatar y quién es su **enlace de RH u Operación**. El material ya llegó: es el manual de Tienda Escuela, y el permiso para usarlo con IA lo da la organización (ADR 0013).
 
 ---
 
@@ -72,7 +79,7 @@ pregunta ─► app/api/chat ─► buscar_secciones (Postgres: texto + aproxima
 respuesta en streaming con [D1-3] y [CANALIZAR:…] ─► UI valida contra lo consultado · consultas + canalizaciones (Realtime)
 ```
 
-- **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
+- **Decisiones:** `docs/adr/` (0001 reto · 0002 stack · 0003 proveedores IA · 0004 citas · 0005 avatar · 0006 guardarraíles · 0007 test y prueba documentada · 0008 criterios · **0009 multiempresa · 0010 RAG · 0011 módulos, gamificación y canalizaciones · 0012 despliegue · 0013 material del reto (Tienda Escuela)**). Una decisión nueva o un cambio de rumbo se registra como ADR nuevo.
 - **Datos y permisos:** `supabase/migrations/` (Postgres con RLS en TODAS las tablas; helpers `mis_empresas()`, `gestiono()`, `superviso()`, `atiendo()`). La autorización la decide la base, no el código. `lib/sesion.ts` = capa de acceso (`contextoEmpresa(slug)`, `requerirGestion`). Tipos: `npm run tipos`.
 - **Rutas:** `/` landing · `/entrar` · `/inicio` (mis empresas, crear, unirse) · `/unirse/{codigo}` (QR) · `/e/{slug}` (inicio con nivel e insignias) · `/e/{slug}/asistente` · `/e/{slug}/modulos/{id}` (lecciones → test → práctica) · `/e/{slug}/canalizaciones` · `/e/{slug}/admin/{contenido,modulos,equipo,metricas,ajustes}` · APIs `/api/chat` y `/api/practica`.
 - **Contenido de ejemplo:** `conocimiento/{del-rio,superette}/*.md`, lo siembra `npm run sembrar` marcado `ejemplo` (la UI lo avisa). Lo escribió el equipo: **no es de Del Río ni de Superette**. El material real se sube desde la app.
