@@ -10,6 +10,23 @@ export const MAX_TEXTO_VOZ = 4000;
 /** Lo que se dice en voz alta: corto, para que suene a persona y no a lectura. */
 export const MAX_RESUMEN = 300;
 export const VOZ_POR_OMISION = 'es-MX-DaliaNeural';
+/** Las líneas del cliente simulado se dicen tal cual (modo literal), cortas. */
+export const MAX_LITERAL = 600;
+
+/** Quién habla: la asistente (coach) o el cliente simulado de la práctica. El servidor elige la voz; el navegador nunca. */
+export type Quien = 'asistente' | 'cliente' | 'clienta';
+export const VOCES: Record<Quien, { variable: string; omision: string }> = {
+  asistente: { variable: 'AZURE_VOZ', omision: VOZ_POR_OMISION },
+  cliente: { variable: 'AZURE_VOZ_CLIENTE', omision: 'es-MX-JorgeNeural' },
+  clienta: { variable: 'AZURE_VOZ_CLIENTA', omision: 'es-MX-BeatrizNeural' },
+};
+
+/** El personaje de la práctica ("señora que quiere cancelar…") decide si su voz es de mujer o de hombre. */
+export function quienEs(personaje: string): Quien {
+  return /\b(se[ñn]ora|clienta|mujer|ella|muchacha|chica|abuela|mam[aá]|madre|joven madre|estudiante universitaria|supervisora|gerente mujer)\b/i.test(personaje)
+    ? 'clienta'
+    : 'cliente';
+}
 
 export function escaparXml(t: string): string {
   return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
@@ -27,13 +44,14 @@ export function ssml(texto: string, voz: string): string {
 /** El modelo rápido convierte la respuesta escrita en lo que se dice: sin inventar nada (Exactitud, 30 %). */
 export function peticionResumen(respuesta: string, canaliza: 'supervisor' | 'rh' | null): Peticion {
   const aviso = canaliza
-    ? ` La respuesta canaliza la duda a ${canaliza === 'rh' ? 'Recursos Humanos' : 'su supervisor'}: dilo al final ("ya le avisé a ${canaliza === 'rh' ? 'Recursos Humanos' : 'tu supervisor'}").`
+    ? ` La respuesta canaliza la duda a ${canaliza === 'rh' ? 'Recursos Humanos' : 'su supervisor'}: dilo UNA sola vez, al final ("ya le avisé a ${canaliza === 'rh' ? 'Recursos Humanos' : 'tu supervisor'}").`
     : '';
   return {
     instructions:
       'Conviertes la respuesta escrita de un asistente de capacitación en lo que dirá en voz alta. Escribe 2 o 3 frases ' +
       `naturales en español de México, hablándole de tú a la persona, de máximo ${MAX_RESUMEN - 20} caracteres en total. ` +
-      'Di SOLO lo que dice la respuesta: no agregues datos, montos, pasos ni reglas. Sin citas, corchetes, listas, ' +
+      'Di SOLO lo que dice la respuesta: no agregues datos, montos, pasos ni reglas, y no cambies quién hace qué ' +
+      '(cliente, cajero, supervisor) ni el orden de los pasos. Sin citas, corchetes, listas, ' +
       'viñetas, emojis ni símbolos. El dinero se escribe así: "160 pesos con 50 centavos". Si es un cálculo, di solo el ' +
       'resultado final y "te dejo el desglose en la pantalla". Si la respuesta trae pasos o ' +
       `detalles que no caben, termina con "Te dejo los pasos en la pantalla."${aviso} Responde solo el texto que se va a decir.`,
@@ -72,4 +90,28 @@ export function resumenDeRespaldo(respuesta: string, canaliza: 'supervisor' | 'r
   if (dicho) dicho += '.';
   const cierre = canaliza ? ` Ya le avisé a ${canaliza === 'rh' ? 'Recursos Humanos' : 'tu supervisor'}.` : pasos.length > 2 ? ' Te dejo los pasos en la pantalla.' : '';
   return recortar(limpiarResumen(dicho), MAX_RESUMEN - cierre.length) + cierre;
+}
+
+/** Cuántos pasos en lista trae una respuesta escrita. */
+const pasosDe = (respuesta: string) => textoPlano(respuesta).split('\n').filter(l => /^\s*(?:\d+[.)]|[-•*])\s+/.test(l)).length;
+
+/**
+ * Lo que dijo el modelo, con lo que NO puede faltar (no se deja al modelo): si la respuesta trae más pasos de los que
+ * se dicen, «Te dejo los pasos en la pantalla»; si canaliza, el aviso (una sola vez).
+ */
+export function completarResumen(resumen: string, respuesta: string, canaliza: 'supervisor' | 'rh' | null): string {
+  const destino = canaliza === 'rh' ? 'Recursos Humanos' : 'tu supervisor';
+  const cierre =
+    canaliza && !/avis[eé]|te lo paso|le paso|canalic|ya sabe/i.test(resumen) ? ` Ya le avisé a ${destino}.`
+    : !canaliza && pasosDe(respuesta) > 2 && !/pantalla/i.test(resumen) ? ' Te dejo los pasos en la pantalla.'
+    : '';
+  return cierre ? recortar(resumen, MAX_RESUMEN - cierre.length) + cierre : resumen;
+}
+
+/** Una línea del cliente simulado, para decirse tal cual: sin marcas ni símbolos, corta. */
+export function textoLiteral(t: string): string {
+  return recortar(
+    textoPlano(t).replace(/[\[\]【】{}<>|~^_`#*]/g, ' ').replace(/\s+/g, ' ').replace(/\s+([.,;:!?])/g, '$1').trim(),
+    MAX_LITERAL,
+  );
 }

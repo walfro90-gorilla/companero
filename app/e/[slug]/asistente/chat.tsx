@@ -4,12 +4,11 @@ import { useRef, useState } from 'react';
 import { BookOpen, FileSearch, RefreshCw, Send, UserRound, Volume2, VolumeX } from 'lucide-react';
 import type { Avatar as DatosAvatar } from '@/lib/avatar';
 import { analizar, type Destino } from '@/lib/conocimiento/citas';
-import { elegirVoz } from '@/lib/voz/elegir-voz';
-import { MAX_TEXTO_VOZ, resumenDeRespaldo } from '@/lib/voz/hablar';
 import { citaCorta, nombreCita, type Consultada } from '@/lib/rag/material';
 import { Avatar, type EstadoAvatar } from '@/app/_ui/avatar';
 import { ChipCita, ConNegritas, PanelSeccion } from '@/app/_ui/fuentes';
 import { PulsarParaHablar } from '@/app/_ui/pulsar-para-hablar';
+import { useVoz } from '@/app/_ui/usar-voz';
 import { leerSecciones, type SeccionVisible } from './acciones';
 
 // Chat con el asistente (docs/adr/0004 y 0010). Muestra el paso de búsqueda (qué secciones consultó), las
@@ -39,41 +38,6 @@ const DESTINO: Record<Destino, { titulo: string; texto: string }> = {
   },
 };
 
-// La voz (docs/adr/0016): un resumen hablado de la respuesta con Azure Speech (es-MX-DaliaNeural); si no está
-// disponible, el mismo resumen con una voz femenina del navegador elegida por nombre (lib/voz/elegir-voz.ts).
-
-/** WAV vacío: se reproduce dentro del clic de "Voz activada" para desbloquear el audio en celular y Safari. */
-const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-
-/** Las voces del navegador pueden llegar vacías la primera vez: se espera voiceschanged (máximo 1.5 s). */
-function vocesDelNavegador(): Promise<SpeechSynthesisVoice[]> {
-  const voz = window.speechSynthesis;
-  const ya = voz.getVoices();
-  if (ya.length) return Promise.resolve(ya);
-  return new Promise(listo => {
-    const leer = () => listo(voz.getVoices());
-    voz.addEventListener('voiceschanged', leer, { once: true });
-    setTimeout(leer, 1500);
-  });
-}
-
-async function decirConNavegador(texto: string, alTerminar: () => void) {
-  const voz = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
-  if (!voz) return alTerminar();
-  const elegida = elegirVoz(await vocesDelNavegador());
-  // Mejor callar que sonar robótica (eSpeak) o con voz de hombre.
-  if (!elegida) return alTerminar();
-  voz.cancel();
-  const dicho = new SpeechSynthesisUtterance(texto);
-  dicho.voice = elegida;
-  dicho.lang = elegida.lang;
-  dicho.rate = 1;
-  dicho.pitch = 1.05;
-  dicho.onend = alTerminar;
-  dicho.onerror = alTerminar;
-  voz.speak(dicho);
-}
-
 function leerConsultadas(cabecera: string | null): Consultada[] {
   if (!cabecera) return [];
   try {
@@ -87,7 +51,6 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
   const [mensajes, setMensajes] = useState<Mensaje[]>([{ rol: 'avatar', texto: bienvenida, fija: true }]);
   const [entrada, setEntrada] = useState('');
   const [estado, setEstado] = useState<EstadoAvatar>('reposo');
-  const [conVoz, setConVoz] = useState(false);
   const [secciones, setSecciones] = useState<Map<string, SeccionVisible>>(new Map());
   const [abierta, setAbierta] = useState<string | null>(null);
   // Ocupado mientras llega la respuesta (o se transcribe la voz); mientras el avatar HABLA ya se puede preguntar otra
@@ -95,60 +58,8 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
   const [cargando, setCargando] = useState(false);
   const ocupado = cargando || estado === 'pensando';
   const final = useRef<HTMLDivElement>(null);
-  const audio = useRef<HTMLAudioElement | null>(null);
-  /** Cada respuesta tiene su turno de voz: si llega otra pregunta, la voz anterior ya no suena. */
-  const turnoVoz = useRef(0);
-
-  function callar() {
-    turnoVoz.current++;
-    audio.current?.pause();
-    if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
-  }
-
-  /** En el clic de "Voz activada": deja listo el audio (celular y Safari solo lo dejan sonar si nació en un clic). */
-  function desbloquearAudio() {
-    const a = audio.current ?? new Audio();
-    audio.current = a;
-    a.src = SILENCIO;
-    a.play().catch(() => {});
-    const voz = window.speechSynthesis;
-    if (voz) {
-      voz.getVoices();
-      voz.speak(new SpeechSynthesisUtterance(''));
-    }
-  }
-
-  async function decir(texto: string, canaliza: Destino | null, alTerminar: () => void) {
-    const turno = ++turnoVoz.current;
-    const vigente = () => turno === turnoVoz.current;
-    let resumen: string | null = null;
-    try {
-      const res = await fetch('/api/voz', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ empresa: slug, texto: texto.slice(0, MAX_TEXTO_VOZ) }),
-      });
-      if (res.ok) {
-        const url = URL.createObjectURL(await res.blob());
-        if (!vigente()) return URL.revokeObjectURL(url);
-        const a = audio.current ?? new Audio();
-        audio.current = a;
-        const fin = () => {
-          URL.revokeObjectURL(url);
-          a.onended = a.onerror = null;
-          if (vigente()) alTerminar();
-        };
-        a.onended = fin;
-        a.onerror = fin;
-        a.src = url;
-        await a.play();
-        return;
-      }
-      resumen = ((await res.json().catch(() => null)) as { resumen?: string } | null)?.resumen ?? null;
-    } catch {
-      // Sin red o audio bloqueado: cae a la voz del navegador.
-    }
-    if (vigente()) await decirConNavegador(resumen ?? resumenDeRespaldo(texto, canaliza), alTerminar);
-  }
+  // La voz (docs/adr/0016): resumen hablado con Azure Speech y respaldo femenino del navegador (app/_ui/usar-voz.ts).
+  const voz = useVoz(slug);
 
   const bajar = () => requestAnimationFrame(() => final.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }));
 
@@ -163,7 +74,7 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
   async function enviar(texto: string) {
     const pregunta = texto.trim();
     if (!pregunta || ocupado) return;
-    callar();
+    voz.callar();
     setCargando(true);
     const historial: Mensaje[] = [...mensajes, { rol: 'usuario', texto: pregunta }];
     setMensajes([...historial, { rol: 'avatar', texto: '' }]);
@@ -214,7 +125,7 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
     const validas = new Set(consultadas.map(c => c.codigo));
     const { canalizar } = analizar(completo, id => validas.has(id));
     const alTerminar = () => setEstado(canalizar ? 'canalizando' : 'reposo');
-    if (conVoz) decir(completo, canalizar, alTerminar);
+    if (voz.activa) voz.decir(completo, { canaliza: canalizar, alTerminar });
     else alTerminar();
   }
 
@@ -228,17 +139,14 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
         <button
           type="button"
           onClick={() => {
-            if (conVoz) {
-              callar();
-              if (!cargando && estado === 'hablando') setEstado('reposo');
-            } else desbloquearAudio();
-            setConVoz(!conVoz);
+            if (voz.activa && !cargando && estado === 'hablando') setEstado('reposo');
+            voz.alternar();
           }}
           className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm hover:bg-stone-50"
-          aria-pressed={conVoz}
+          aria-pressed={voz.activa}
         >
-          {conVoz ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-          {conVoz ? 'Voz activada' : 'Voz apagada'}
+          {voz.activa ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+          {voz.activa ? 'Voz activada' : 'Voz apagada'}
         </button>
       </aside>
 
@@ -299,7 +207,7 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
               deshabilitado={ocupado}
               onTexto={texto => enviar(texto)}
               onEstado={e => {
-                if (e === 'grabando') callar();
+                if (e === 'grabando') voz.callar();
                 setEstado(e === 'grabando' ? 'escuchando' : e === 'transcribiendo' ? 'pensando' : 'reposo');
               }}
             />

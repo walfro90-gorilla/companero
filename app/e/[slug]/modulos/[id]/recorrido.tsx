@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { BookOpen, Check, CheckCircle2, ChevronRight, ClipboardCheck, MessageCircle, MessagesSquare, Send, Sparkles, XCircle } from 'lucide-react';
+import { BookOpen, Check, CheckCircle2, ChevronRight, ClipboardCheck, MessageCircle, MessagesSquare, Send, Sparkles, Volume2, VolumeX, XCircle } from 'lucide-react';
+import type { Avatar as DatosAvatar } from '@/lib/avatar';
 import type { Progreso } from '@/lib/juego';
 import { analizar } from '@/lib/conocimiento/citas';
+import { quienEs } from '@/lib/voz/hablar';
+import { Avatar } from '@/app/_ui/avatar';
 import { boton, botonSecundario, campo, tarjeta } from '@/app/_ui/estilos';
+import { PulsarParaHablar } from '@/app/_ui/pulsar-para-hablar';
+import { useVoz } from '@/app/_ui/usar-voz';
 import { Festejo } from '@/app/_ui/festejo';
 import { ChipCita, ConNegritas, PanelSeccion, TextoConCitas } from '@/app/_ui/fuentes';
 import { completarPractica, enviarTest, marcarLeccion, type Calificacion } from './acciones';
@@ -14,10 +19,62 @@ type Leccion = { id: string; orden: number; titulo: string; objetivo: string | n
 type Pregunta = { id: string; orden: number; enunciado: string; opciones: string[] };
 type Escenario = { id: string; orden: number; titulo: string; situacion: string; personaje: string };
 type Paso = 'lecciones' | 'test' | 'practica';
+type Voz = ReturnType<typeof useVoz>;
+
+// La asistente guía la inducción como coach (docs/adr/0016; la ficha: "el avatar guía la inducción"): presenta cada
+// lección, anima en el test y da la retroalimentación de la práctica, con su voz si está activada. En la práctica, la
+// otra persona (el cliente simulado) es OTRO personaje, con su propio avatar y su propia voz.
+
+/** El cliente simulado: avatar genérico distinto del de la asistente. */
+function avatarCliente(personaje: string): DatosAvatar {
+  const mujer = quienEs(personaje) === 'clienta';
+  return {
+    nombre: mujer ? 'Clienta' : 'Cliente', rol: personaje, saludo: null, preguntas: [],
+    colores: mujer
+      ? { piel: '#f0c08a', cabello: '#7c4a2d', camisa: '#7c3aed', fondo: '#ede9fe', detalle: null, acento: null }
+      : { piel: '#c68642', cabello: '#1f1b16', camisa: '#475569', fondo: '#e2e8f0', detalle: null, acento: null },
+  };
+}
+
+/** La asistente con una burbuja corta. `escuchar`: lo que dice con su voz al pedirlo (resumen de una lección, etc.). */
+function Coach({ avatar, voz, texto, escuchar, children }: { avatar: DatosAvatar; voz: Voz; texto?: string; escuchar?: string; children?: ReactNode }) {
+  const hablando = voz.diciendo === 'asistente';
+  return (
+    <div className="flex items-start gap-3">
+      <div className="shrink-0"><Avatar avatar={avatar} estado={hablando ? 'hablando' : 'reposo'} chico /></div>
+      <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-[var(--marca-suave)] p-3 text-sm text-stone-800 ring-1 ring-[var(--marca)]/15">
+        <p className="mb-0.5 text-xs font-medium text-stone-500">{avatar.nombre}</p>
+        {texto && <p>{texto}</p>}
+        {children}
+        {escuchar && (
+          <button
+            type="button"
+            onClick={() => {
+              if (hablando) return voz.callar();
+              voz.desbloquear();
+              voz.decir(escuchar);
+            }}
+            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--marca)] hover:underline"
+          >
+            {hablando ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />} {hablando ? 'Callar' : 'Escúchala'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** "Identificar los pasos…" → "En esta lección vas a aprender a identificar los pasos…". */
+function presentacion(l: Leccion): string {
+  const objetivo = l.objetivo?.trim().replace(/[.]+$/, '');
+  if (!objetivo) return `Vamos con «${l.titulo}». Lee con calma; si algo no te queda claro, pregúntame.`;
+  return `En esta lección vas a aprender a ${objetivo.charAt(0).toLowerCase()}${objetivo.slice(1)}.`;
+}
 
 export function Recorrido(p: {
   slug: string;
   asistente: string;
+  avatar: DatosAvatar;
   modulo: { id: string; titulo: string; descripcion: string | null; tipo: 'induccion' | 'refuerzo' };
   lecciones: Leccion[];
   preguntas: Pregunta[];
@@ -37,6 +94,7 @@ export function Recorrido(p: {
   const [festejo, setFestejo] = useState<{ titulo: string; texto: string } | null>(null);
   const leccionesListas = p.lecciones.every(l => vistas.has(l.id));
   const [paso, setPaso] = useState<Paso>(leccionesListas && p.preguntas.length ? 'test' : 'lecciones');
+  const voz = useVoz(p.slug);
 
   /** Actualiza el progreso, anima los puntos ganados y festeja si subió de nivel o terminó el módulo. */
   function avanzar(nuevo: Progreso, terminaModulo: boolean) {
@@ -64,6 +122,14 @@ export function Recorrido(p: {
         {p.modulo.descripcion && <p className="text-stone-600">{p.modulo.descripcion}</p>}
         <p className="text-xs text-stone-500">{AVISO_REVISION}</p>
         <BarraNivel progreso={progreso} ganados={ganados} />
+        <button
+          type="button"
+          onClick={voz.alternar}
+          aria-pressed={voz.activa}
+          className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 bg-white px-3 py-1 text-sm text-stone-700 hover:bg-stone-50"
+        >
+          {voz.activa ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />} {voz.activa ? `Voz de ${p.avatar.nombre} activada` : 'Voz apagada'}
+        </button>
       </header>
 
       <nav className="grid grid-cols-3 gap-2">
@@ -71,7 +137,10 @@ export function Recorrido(p: {
           <button
             key={x.id}
             type="button"
-            onClick={() => setPaso(x.id)}
+            onClick={() => {
+              voz.callar();
+              setPaso(x.id);
+            }}
             className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm ${paso === x.id ? 'border-[var(--marca)] bg-[var(--marca-suave)] font-medium' : 'border-stone-200 bg-white'}`}
           >
             {x.listo ? <CheckCircle2 className="size-4 text-emerald-600" /> : <x.icono className="size-4" />} {x.texto}
@@ -82,6 +151,7 @@ export function Recorrido(p: {
       {paso === 'lecciones' && (
         <Lecciones
           {...p}
+          voz={voz}
           vistas={vistas}
           onVista={async id => {
             const nuevo = await marcarLeccion(p.slug, p.modulo.id, id);
@@ -94,6 +164,8 @@ export function Recorrido(p: {
       )}
       {paso === 'test' && (
         <Test
+          avatar={p.avatar}
+          voz={voz}
           slug={p.slug}
           moduloId={p.modulo.id}
           revision={p.revisionTest}
@@ -106,6 +178,8 @@ export function Recorrido(p: {
       )}
       {paso === 'practica' && (
         <Practica
+          avatar={p.avatar}
+          voz={voz}
           slug={p.slug}
           revisiones={p.revisionesPractica}
           escenarios={p.escenarios}
@@ -149,7 +223,7 @@ export function BarraNivel({ progreso, ganados }: { progreso: Progreso; ganados?
   );
 }
 
-function Lecciones({ slug, lecciones, vistas, onVista }: { slug: string; lecciones: Leccion[]; vistas: Set<string>; onVista: (id: string) => Promise<void> }) {
+function Lecciones({ slug, avatar, voz, lecciones, vistas, onVista }: { slug: string; avatar: DatosAvatar; voz: Voz; lecciones: Leccion[]; vistas: Set<string>; onVista: (id: string) => Promise<void> }) {
   const primera = lecciones.find(l => !vistas.has(l.id))?.id ?? lecciones[0]?.id;
   const [abierta, setAbierta] = useState<string | undefined>(primera);
   const [ocupado, setOcupado] = useState(false);
@@ -160,14 +234,21 @@ function Lecciones({ slug, lecciones, vistas, onVista }: { slug: string; leccion
         const esta = abierta === l.id;
         return (
           <article key={l.id} className={`${tarjeta} p-0`}>
-            <button type="button" onClick={() => setAbierta(esta ? undefined : l.id)} className="flex w-full items-center gap-3 p-4 text-left">
+            <button
+              type="button"
+              onClick={() => {
+                voz.callar();
+                setAbierta(esta ? undefined : l.id);
+              }}
+              className="flex w-full items-center gap-3 p-4 text-left"
+            >
               {vista ? <CheckCircle2 className="size-5 shrink-0 text-emerald-600" /> : <span className="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-stone-300 text-xs">{i + 1}</span>}
               <span className="flex-1 font-medium">{l.titulo}</span>
               <ChevronRight className={`size-5 text-stone-400 transition-transform ${esta ? 'rotate-90' : ''}`} />
             </button>
             {esta && (
               <div className="space-y-3 border-t border-stone-100 p-4">
-                {l.objetivo && <p className="text-sm text-stone-500">Al terminar podrás: {l.objetivo}</p>}
+                <Coach avatar={avatar} voz={voz} texto={presentacion(l)} escuchar={l.contenido} />
                 <div className="text-stone-800"><TextoConCitas slug={slug} texto={l.contenido} /></div>
                 {!vista && (
                   <button
@@ -177,6 +258,7 @@ function Lecciones({ slug, lecciones, vistas, onVista }: { slug: string; leccion
                     onClick={async () => {
                       setOcupado(true);
                       try {
+                        voz.callar();
                         await onVista(l.id);
                         setAbierta(lecciones[i + 1]?.id);
                       } finally {
@@ -211,7 +293,14 @@ function Revision({ calificacion, comentario }: { calificacion: number | null; c
 
 const AVISO_REVISION = 'Tu instructor puede revisar tus respuestas para darte retroalimentación. Es para que aprendas, no una evaluación de tu desempeño.';
 
-function Test({ slug, moduloId, preguntas, onCalificado, revision }: { slug: string; moduloId: string; preguntas: Pregunta[]; onCalificado: (c: Calificacion) => void; revision: { calificacion: number | null; comentario: string | null } | null }) {
+/** Lo que dice la asistente al calificar el test: fijo, sin IA (el puntaje es automático; ver ADR 0011). */
+function animo(c: Calificacion): string {
+  return c.aprobado
+    ? `¡Muy bien! Sacaste ${c.aciertos} de ${c.total}. Revisa las explicaciones para afianzar lo que aprendiste.`
+    : `Vas bien: ${c.aciertos} de ${c.total}. Lee las explicaciones y vuelve a intentarlo cuando quieras; es para aprender, no para calificarte.`;
+}
+
+function Test({ slug, avatar, voz, moduloId, preguntas, onCalificado, revision }: { slug: string; avatar: DatosAvatar; voz: Voz; moduloId: string; preguntas: Pregunta[]; onCalificado: (c: Calificacion) => void; revision: { calificacion: number | null; comentario: string | null } | null }) {
   const [respuestas, setRespuestas] = useState<Record<string, number>>({});
   const [resultado, setResultado] = useState<Calificacion | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -219,11 +308,13 @@ function Test({ slug, moduloId, preguntas, onCalificado, revision }: { slug: str
   return (
     <section className="space-y-3">
       {revision && <Revision {...revision} />}
-      {resultado && (
-        <div className={`rounded-2xl p-4 ${resultado.aprobado ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900'}`}>
-          <p className="text-lg font-semibold">{resultado.aciertos} de {resultado.total} correctas</p>
-          <p>{resultado.aprobado ? '¡Aprobaste! Revisa las explicaciones para afianzar.' : 'Vas bien. Lee las explicaciones y vuelve a intentarlo cuando quieras: es para aprender, no para calificarte.'}</p>
-        </div>
+      {resultado ? (
+        <Coach avatar={avatar} voz={voz}>
+          <p className={`text-lg font-semibold ${resultado.aprobado ? 'text-emerald-800' : 'text-amber-800'}`}>{resultado.aciertos} de {resultado.total} correctas</p>
+          <p>{animo(resultado)}</p>
+        </Coach>
+      ) : (
+        <Coach avatar={avatar} voz={voz} texto={`¡Tú puedes! Son ${preguntas.length} preguntas. Al final te explico cada respuesta con tu material.`} />
       )}
       {preguntas.map(q => {
         const d = porId.get(q.id);
@@ -261,6 +352,7 @@ function Test({ slug, moduloId, preguntas, onCalificado, revision }: { slug: str
               const c = await enviarTest(slug, moduloId, respuestas);
               setResultado(c);
               onCalificado(c);
+              if (voz.activa) voz.decir(animo(c), { modo: 'literal' });
             } finally {
               setOcupado(false);
             }
@@ -277,12 +369,16 @@ type Turno = { rol: 'usuario' | 'avatar'; texto: string };
 
 type AlCompletar = (id: string) => Promise<void>;
 
-function Practica({ slug, escenarios, practicadas, onCompletada, revisiones }: { slug: string; escenarios: Escenario[]; practicadas: Set<string>; onCompletada: AlCompletar; revisiones: Record<string, { calificacion: number; comentario: string | null }> }) {
+function Practica({ slug, avatar, voz, escenarios, practicadas, onCompletada, revisiones }: { slug: string; avatar: DatosAvatar; voz: Voz; escenarios: Escenario[]; practicadas: Set<string>; onCompletada: AlCompletar; revisiones: Record<string, { calificacion: number; comentario: string | null }> }) {
   const [activo, setActivo] = useState<Escenario | null>(null);
   if (!activo) {
     return (
       <section className="space-y-2">
-        <p className="text-sm text-stone-600">Practica situaciones reales: la IA hace de la otra persona y al final te da retroalimentación con base en tu material.</p>
+        <Coach
+          avatar={avatar}
+          voz={voz}
+          texto="Practica situaciones reales: la IA hace de la otra persona y tú le respondes escribiendo o con el micrófono. Al final te doy retroalimentación con base en tu material."
+        />
         {escenarios.map(e => (
           <button key={e.id} type="button" onClick={() => setActivo(e)} className={`${tarjeta} flex w-full items-center gap-3 text-left hover:border-stone-400`}>
             {practicadas.has(e.id) ? <CheckCircle2 className="size-5 text-emerald-600" /> : <MessagesSquare className="size-5 text-stone-400" />}
@@ -301,7 +397,15 @@ function Practica({ slug, escenarios, practicadas, onCompletada, revisiones }: {
       </section>
     );
   }
-  return <Simulador slug={slug} escenario={activo} onSalir={() => setActivo(null)} onCompletada={onCompletada} />;
+  return (
+    <Simulador
+      slug={slug} avatar={avatar} voz={voz} escenario={activo} onCompletada={onCompletada}
+      onSalir={() => {
+        voz.callar();
+        setActivo(null);
+      }}
+    />
+  );
 }
 
 async function leerFlujo(res: Response, alRecibir: (texto: string) => void) {
@@ -317,7 +421,10 @@ async function leerFlujo(res: Response, alRecibir: (texto: string) => void) {
   return todo;
 }
 
-function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; escenario: Escenario; onSalir: () => void; onCompletada: AlCompletar }) {
+function Simulador({ slug, avatar, voz, escenario, onSalir, onCompletada }: { slug: string; avatar: DatosAvatar; voz: Voz; escenario: Escenario; onSalir: () => void; onCompletada: AlCompletar }) {
+  const cliente = avatarCliente(escenario.personaje);
+  const quien = quienEs(escenario.personaje);
+  const [escuchando, setEscuchando] = useState(false);
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [entrada, setEntrada] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -326,6 +433,7 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
   const [abierta, setAbierta] = useState<string | null>(null);
 
   async function hablar(historial: Turno[], evaluar = false) {
+    voz.callar();
     setOcupado(true);
     setError('');
     try {
@@ -336,17 +444,31 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
       if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? 'No pude responder.');
       if (evaluar) {
         const validas = new Set((res.headers.get('x-secciones') ?? '').split(',').filter(Boolean));
-        await leerFlujo(res, t => setRetro({ texto: t, validas }));
+        const texto = await leerFlujo(res, t => setRetro({ texto: t, validas }));
         await onCompletada(escenario.id);
+        // La retroalimentación la da la asistente, con su voz (resumen).
+        if (voz.activa) voz.decir(texto);
       } else {
         setTurnos([...historial, { rol: 'avatar', texto: '' }]);
-        await leerFlujo(res, t => setTurnos([...historial, { rol: 'avatar', texto: t }]));
+        const texto = await leerFlujo(res, t => setTurnos([...historial, { rol: 'avatar', texto: t }]));
+        // El cliente simulado dice su línea tal cual, con OTRA voz.
+        if (voz.activa && texto.trim()) voz.decir(texto, { modo: 'literal', quien });
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Algo falló.');
     } finally {
       setOcupado(false);
     }
+  }
+
+  /** El turno de la persona en capacitación: escrito o dictado con el micrófono (Whisper, igual que en el chat). */
+  function responder(texto: string) {
+    const limpio = texto.trim();
+    if (!limpio || ocupado) return;
+    setEntrada('');
+    const h: Turno[] = [...turnos, { rol: 'usuario', texto: limpio }];
+    setTurnos(h);
+    hablar(h);
   }
 
   const empezado = turnos.length > 0;
@@ -357,7 +479,15 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
       <header>
         <button type="button" onClick={onSalir} className="text-sm text-stone-500 hover:text-stone-900">← Otras prácticas</button>
         <h2 className="mt-1 text-lg font-semibold">{escenario.titulo}</h2>
-        <p className="text-sm text-stone-600">{escenario.situacion}</p>
+        <div className="mt-2 flex items-center gap-3">
+          <div className="shrink-0">
+            <Avatar avatar={cliente} estado={voz.diciendo === quien || (ocupado && !retro) ? 'hablando' : escuchando ? 'escuchando' : 'reposo'} chico />
+          </div>
+          <div className="text-sm">
+            <p className="font-medium">{cliente.nombre}: <span className="font-normal text-stone-600">{escenario.personaje}</span></p>
+            <p className="text-stone-600">{escenario.situacion}</p>
+          </div>
+        </div>
       </header>
       {!empezado && (
         <button type="button" disabled={ocupado} onClick={() => hablar([])} className={boton}>
@@ -368,7 +498,7 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
         {turnos.map((t, i) => (
           <div key={i} className={t.rol === 'usuario' ? 'flex justify-end' : ''}>
             <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2 ${t.rol === 'usuario' ? 'rounded-br-sm bg-stone-800 text-white' : 'rounded-bl-sm bg-amber-50 text-amber-950 ring-1 ring-amber-200'}`}>
-              {t.rol === 'avatar' && <span className="mb-0.5 block text-xs font-medium text-amber-700">{escenario.personaje}</span>}
+              {t.rol === 'avatar' && <span className="mb-0.5 block text-xs font-medium text-amber-700">{cliente.nombre}</span>}
               {t.texto || '…'}
             </p>
           </div>
@@ -376,18 +506,22 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
       </div>
       {empezado && !retro && (
         <form
-          className="flex gap-2"
+          className="flex items-center gap-2"
           onSubmit={e => {
             e.preventDefault();
-            const texto = entrada.trim();
-            if (!texto || ocupado) return;
-            setEntrada('');
-            const h: Turno[] = [...turnos, { rol: 'usuario', texto }];
-            setTurnos(h);
-            hablar(h);
+            responder(entrada);
           }}
         >
-          <input value={entrada} onChange={e => setEntrada(e.target.value)} className={campo} placeholder="¿Qué le dices?" maxLength={1000} disabled={ocupado} />
+          <PulsarParaHablar
+            slug={slug}
+            deshabilitado={ocupado}
+            onTexto={responder}
+            onEstado={e => {
+              if (e === 'grabando') voz.callar();
+              setEscuchando(e === 'grabando');
+            }}
+          />
+          <input value={entrada} onChange={e => setEntrada(e.target.value)} className={campo} placeholder="¿Qué le dices? Escribe o mantén presionado el micrófono" maxLength={1000} disabled={ocupado} />
           <button type="submit" disabled={ocupado || !entrada.trim()} className={boton}><Send className="size-4" /></button>
         </form>
       )}
@@ -396,13 +530,13 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
           <Sparkles className="size-4" /> Terminar y ver retroalimentación
         </button>
       )}
-      {a && (
-        <div className="rounded-2xl bg-stone-50 p-4 text-stone-800 ring-1 ring-stone-200">
-          <p className="mb-2 text-sm font-medium text-stone-500">Retroalimentación con base en tu material</p>
+      {a && retro && (
+        <Coach avatar={avatar} voz={voz} escuchar={ocupado ? undefined : retro.texto}>
+          <p className="mb-1 text-xs text-stone-500">Retroalimentación con base en tu material</p>
           <div className="whitespace-pre-wrap leading-relaxed">
             {a.trozos.map((t, i) => (t.tipo === 'texto' ? <ConNegritas key={i} texto={t.texto} /> : t.ids.map(id => <ChipCita key={`${i}-${id}`} codigo={id} onAbrir={setAbierta} />)))}
           </div>
-        </div>
+        </Coach>
       )}
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
       {abierta && <PanelSeccion slug={slug} codigo={abierta} onCerrar={() => setAbierta(null)} />}

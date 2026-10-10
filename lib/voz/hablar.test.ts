@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { elegirVoz } from './elegir-voz.ts';
-import { MAX_RESUMEN, escaparXml, limpiarResumen, resumenDeRespaldo, ssml } from './hablar.ts';
+import { elegirVoz, elegirVozCliente } from './elegir-voz.ts';
+import { MAX_LITERAL, MAX_RESUMEN, completarResumen, escaparXml, limpiarResumen, quienEs, resumenDeRespaldo, ssml, textoLiteral } from './hablar.ts';
 
 test('el SSML escapa el texto y separa las frases con una pausa', () => {
   assert.equal(escaparXml(`& < > " '`), '&amp; &lt; &gt; &quot; &apos;');
@@ -35,4 +35,34 @@ test('la voz de respaldo es femenina y en español; nunca una de hombre ni eSpea
   for (const voces of [[v('Microsoft Raul', 'es-MX'), v('Diego', 'es-AR'), v('Microsoft Pablo', 'es-ES'), v('Juan', 'es-MX')]]) {
     assert.equal(elegirVoz(voces), null);
   }
+});
+
+test('la voz del cliente simulado sale del personaje: de mujer o de hombre', () => {
+  assert.equal(quienEs('señora con prisa que quiere cancelar un producto ya cobrado'), 'clienta');
+  assert.equal(quienEs('Clienta molesta porque le cobraron dos veces'), 'clienta');
+  assert.equal(quienEs('cliente con prisa que quiere pagar con tarjeta'), 'cliente');
+  assert.equal(quienEs('el supervisor del turno'), 'cliente');
+});
+
+test('lo que no puede faltar en el resumen: los pasos en pantalla o el aviso, una sola vez', () => {
+  const pasos = 'Haz esto:\n1. Uno.\n2. Dos.\n3. Tres.\n4. Cuatro.';
+  assert.ok(completarResumen('Pide autorización al supervisor.', pasos, null).endsWith('Te dejo los pasos en la pantalla.'));
+  assert.equal(completarResumen('Pide autorización. Te dejo los pasos en la pantalla.', pasos, null), 'Pide autorización. Te dejo los pasos en la pantalla.');
+  assert.equal(completarResumen('Eso no viene en tu material. Ya le avisé a Recursos Humanos.', 'x', 'rh'), 'Eso no viene en tu material. Ya le avisé a Recursos Humanos.');
+  assert.ok(completarResumen('Eso no viene en tu material.', 'x', 'supervisor').endsWith('Ya le avisé a tu supervisor.'));
+  assert.ok(completarResumen('a '.repeat(200), pasos, null).length <= MAX_RESUMEN);
+});
+
+test('una línea del cliente se dice tal cual, sin marcas y corta', () => {
+  assert.equal(textoLiteral('¡Oiga! Me cobró **dos veces** [D1-5] el refresco.'), '¡Oiga! Me cobró dos veces el refresco.');
+  assert.ok(textoLiteral('Bla. '.repeat(300)).length <= MAX_LITERAL);
+});
+
+test('la voz del cliente en el navegador es distinta de la de la asistente y nunca eSpeak', () => {
+  const v = (name: string, lang: string) => ({ name, lang });
+  const voces = [v('Microsoft Sabina - Spanish (Mexico)', 'es-MX'), v('Microsoft Raul - Spanish (Mexico)', 'es-MX'), v('espeak-ng Spanish', 'es')];
+  const asistente = elegirVoz(voces);
+  assert.equal(asistente?.name, 'Microsoft Sabina - Spanish (Mexico)');
+  assert.equal(elegirVozCliente(voces, asistente, false)?.name, 'Microsoft Raul - Spanish (Mexico)');
+  assert.equal(elegirVozCliente([voces[0], voces[2]], asistente, true), null);
 });

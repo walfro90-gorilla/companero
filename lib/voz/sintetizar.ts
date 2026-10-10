@@ -1,5 +1,5 @@
 import 'server-only';
-import { VOZ_POR_OMISION, ssml } from './hablar.ts';
+import { VOCES, ssml, type Quien } from './hablar.ts';
 
 // Texto a voz con Azure Speech (docs/adr/0016; Microsoft patrocina el evento; plan F0 gratis). Solo se manda el
 // RESUMEN hablado de una respuesta, nunca datos personales. Ni el texto ni la llave se registran.
@@ -9,11 +9,16 @@ const VOZ = /^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$/;
 
 export const sintesisDisponible = () => Boolean(process.env.AZURE_SPEECH_KEY);
 
-/** MP3 con la voz neural (AZURE_VOZ cambia la voz sin tocar código). null si Azure no respondió bien. */
-export async function sintetizar(texto: string): Promise<ArrayBuffer | null> {
+/**
+ * MP3 con la voz neural de quien habla (la asistente o el cliente simulado). AZURE_VOZ, AZURE_VOZ_CLIENTE y
+ * AZURE_VOZ_CLIENTA cambian las voces sin tocar código; el navegador nunca elige el nombre de la voz.
+ * null si Azure no respondió bien.
+ */
+export async function sintetizar(texto: string, quien: Quien = 'asistente'): Promise<ArrayBuffer | null> {
   const llave = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION || 'eastus';
-  const voz = process.env.AZURE_VOZ && VOZ.test(process.env.AZURE_VOZ) ? process.env.AZURE_VOZ : VOZ_POR_OMISION;
+  const elegida = process.env[VOCES[quien].variable];
+  const voz = elegida && VOZ.test(elegida) ? elegida : VOCES[quien].omision;
   if (!llave || !REGION.test(region)) return null;
   const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
     method: 'POST',

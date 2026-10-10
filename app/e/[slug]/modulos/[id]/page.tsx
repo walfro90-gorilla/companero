@@ -38,6 +38,7 @@ export default async function Modulo({ params }: PageProps<'/e/[slug]/modulos/[i
     <Recorrido
       slug={slug}
       asistente={empresa.avatar.nombre}
+      avatar={empresa.avatar}
       modulo={{ id: m.id, titulo: m.titulo, descripcion: m.descripcion, tipo: m.tipo }}
       lecciones={orden(m.lecciones)}
       preguntas={orden(m.preguntas)}

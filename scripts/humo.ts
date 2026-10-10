@@ -118,6 +118,8 @@ revisar(html.includes('Núm. 0001') && html.includes('Inducción del cajero: un 
 r = await pedir(`/e/del-rio/modulos/${moduloId}`, cajero);
 html = await r.text();
 revisar(r.status === 200 && html.includes("Conoce tu rol y reglas básicas"), 'el estudiante abre el módulo');
+revisar(html.includes('En esta lección vas a aprender') && html.includes('Escúchala') && html.includes('Voz apagada'),
+  'la asistente guía la lección como coach (presentación, «Escúchala» y botón de voz)');
 revisar(!html.includes("Si el fondo contado no coincide, debes volver"), 'la página del test NO trae las respuestas ni sus explicaciones');
 revisar(html.includes('Tu instructor puede revisar tus respuestas'), 'el estudiante ve el aviso de que su instructor revisa sus respuestas');
 for (const ruta of ['/e/del-rio/admin/modulos', '/e/del-rio/admin/respuestas']) {
@@ -263,6 +265,21 @@ if (process.env.AZURE_SPEECH_KEY) {
   revisar(r.status === 503 && Boolean(j?.resumen) && !/[\[\]]/.test(j!.resumen!) && j!.resumen!.length <= 300,
     `sin llave de Azure → 503 con el resumen hablado para la voz del navegador («${j?.resumen?.slice(0, 60)}…»)`);
 }
+
+// Modo literal (las líneas del cliente simulado se dicen tal cual, con otra voz que elige el servidor).
+const vozCon = (cuerpo: object) => fetch(`${SITIO}/api/voz`, {
+  method: 'POST', headers: { 'content-type': 'application/json', cookie: cajero }, body: JSON.stringify({ empresa: 'del-rio', ...cuerpo }),
+});
+r = await vozCon({ texto: '¡Oiga! Me cobró dos veces [D1-5] el refresco.', modo: 'literal', quien: 'cliente' });
+if (process.env.AZURE_SPEECH_KEY) revisar(r.status === 200, `el cliente simulado habla con su voz (${r.status})`);
+else {
+  const j = (await r.json().catch(() => null)) as { resumen?: string } | null;
+  revisar(r.status === 503 && j?.resumen === '¡Oiga! Me cobró dos veces el refresco.', `la línea del cliente se dice tal cual, sin pasar por el modelo («${j?.resumen}»)`);
+}
+r = await vozCon({ texto: 'Hola', modo: 'literal', quien: 'es-MX-JorgeNeural' });
+revisar(r.status === 400, `el navegador no elige el nombre de la voz (${r.status})`);
+r = await vozCon({ texto: 'x'.repeat(601), modo: 'literal', quien: 'cliente' });
+revisar(r.status === 400, `una línea literal de más de 600 caracteres no se dice (${r.status})`);
 
 // 4) Pulsar para hablar: el audio llega a Whisper (Groq) y se protege igual que el chat.
 function wavTono(segundos: number): Blob {

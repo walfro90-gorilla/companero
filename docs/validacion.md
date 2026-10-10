@@ -1,13 +1,13 @@
 # Validación técnica
 
-Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:29 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
+Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:41 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
 
 | Qué se prueba | Resultado | |
 |---|---|---|
-| Lógica de la aplicación | 72 de 72 | ✅ |
+| Lógica de la aplicación | 76 de 76 | ✅ |
 | Aislamiento entre empresas, roles y privacidad | 42 comprobaciones | ✅ |
 | Búsqueda del RAG (encuentra la sección correcta) | 18 de 18 (sin reescritura: 16) | ✅ |
-| Punta a punta (login, pantallas, QR, permisos) | 65 de 65 | ✅ |
+| Punta a punta (login, pantallas, QR, permisos) | 69 de 69 | ✅ |
 | Prueba documentada con IA (≥10 consultas) | 10 de 10 (groq) | ✅ |
 
 > Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos, cargado en la empresa «Del Río» de la demo; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.
@@ -16,7 +16,7 @@ Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:
 
 Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se parte un documento en secciones citables, cómo se detectan y validan las citas `[D1-3]` y las canalizaciones, el paso de búsqueda del RAG, el respaldo entre proveedores de IA (si Anthropic falla, responde Groq sin que se note) y las reglas de la gamificación.
 
-**Resultado:** 72 pasan, 0 fallan.
+**Resultado:** 76 pasan, 0 fallan.
 
 <details><summary>Ver cada caso</summary>
 
@@ -92,6 +92,10 @@ Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se part
 - ✅ el resumen hablado no lleva citas, viñetas ni símbolos y no pasa del máximo
 - ✅ el resumen de respaldo dice la primera frase y dos pasos, y avisa si canaliza
 - ✅ la voz de respaldo es femenina y en español; nunca una de hombre ni eSpeak
+- ✅ la voz del cliente simulado sale del personaje: de mujer o de hombre
+- ✅ lo que no puede faltar en el resumen: los pasos en pantalla o el aviso, una sola vez
+- ✅ una línea del cliente se dice tal cual, sin marcas y corta
+- ✅ la voz del cliente en el navegador es distinta de la de la asistente y nunca eSpeak
 
 </details>
 
@@ -170,14 +174,14 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 | ¿Qué hago si no tengo cambio? | sección 4, Si no hay cambio suficiente | ✅ posición 1 | ✅ posición 5 |
 | ¿Cuánto cuesta el café? | sección 6, Catálogo | ✅ posición 1 | ✅ posición 1 |
 | ¿Cuánto efectivo puedo tener en la gaveta? | sección 10, Solicitar un retiro a resguardo | ✅ posición 5 | ✅ posición 4 |
-| ¿Qué pasa si la terminal no responde? | sección 4, Terminal sin respuesta o con registros diferentes | ✅ posición 4 | ✅ posición 5 |
+| ¿Qué pasa si la terminal no responde? | sección 4, Terminal sin respuesta o con registros diferentes | ✅ posición 4 | ✅ posición 7 |
 | ¿De cuánto es el fondo de caja? | sección 2, Fondo objetivo | ✅ posición 1 | ✅ posición 1 |
 
 ## 4. Punta a punta
 
 Un script usa la app como lo haría una persona: el admin entra con correo y contraseña; el estudiante 0001 entra solo con su número de reloj; un empleado nuevo se da de alta con el QR de una sucursal; el estudiante deja un test, el admin lo califica en Respuestas y el estudiante ve su calificación. Comprueba desde la web que un empleado no entra a la gestión ni a otra empresa, que un número no registrado no entra sin QR y que no hay Google ni modo invitado.
 
-**Resultado:** 65 de 65.
+**Resultado:** 69 de 69.
 
 | Paso | |
 |---|---|
@@ -210,6 +214,7 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | las pantallas del estudiante no llevan a la entrada de administración | ✅ |
 | el estudiante ve su número, su ruta de capacitación y su nivel | ✅ |
 | el estudiante abre el módulo | ✅ |
+| la asistente guía la lección como coach (presentación, «Escúchala» y botón de voz) | ✅ |
 | la página del test NO trae las respuestas ni sus explicaciones | ✅ |
 | el estudiante ve el aviso de que su instructor revisa sus respuestas | ✅ |
 | un estudiante NO entra a /e/del-rio/admin/modulos (404) | ✅ |
@@ -226,7 +231,7 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | el QR de Superette está en Equipo (69BA724A) | ✅ |
 | la página del QR pide el número de reloj (sin sesión) | ✅ |
 | la página del QR NO lleva a la entrada de administración | ✅ |
-| un número nuevo por QR queda dado de alta y entra (H99408650) | ✅ |
+| un número nuevo por QR queda dado de alta y entra (H00159279) | ✅ |
 | el colaborador ve el inicio de Superette | ✅ |
 | después de 20 altas desde la misma red, un número nuevo espera (429) | ✅ |
 | pero quien ya está dado de alta sí entra desde esa red (200) | ✅ |
@@ -242,7 +247,10 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | voz del asistente sin sesión → 401 (401) | ✅ |
 | un texto de más de 4000 caracteres no se dice (400) | ✅ |
 | ni con el material de otra empresa (404) | ✅ |
-| sin llave de Azure → 503 con el resumen hablado para la voz del navegador («Para cancelar un artículo ya cobrado, llama al supervisor, m…») | ✅ |
+| sin llave de Azure → 503 con el resumen hablado para la voz del navegador («Para cancelar un artículo ya cobrado, primero llama al super…») | ✅ |
+| la línea del cliente se dice tal cual, sin pasar por el modelo («¡Oiga! Me cobró dos veces el refresco.») | ✅ |
+| el navegador no elige el nombre de la voz (400) | ✅ |
+| una línea literal de más de 600 caracteres no se dice (400) | ✅ |
 | voz sin sesión → 401 (401) | ✅ |
 | voz sin audio → 400 (400) | ✅ |
 | un ruido sin voz llega a Whisper y NO se manda como pregunta (422: 422 "no te escuché") | ✅ |
