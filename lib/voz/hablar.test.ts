@@ -72,3 +72,10 @@ test('sin pasos (o si canaliza) no dice «pasos en la pantalla», y cada oració
   assert.equal(r, 'Entiendo tu duda, pero esa información no está en el material. Ya le avisé a Recursos Humanos.');
   assert.equal(completarResumen('pide tu ticket. te dejo los pasos en la pantalla.', 'Pide tu ticket.', null), 'Pide tu ticket.');
 });
+
+test('el aviso de canalización se dice una sola vez aunque el modelo lo repita', () => {
+  assert.equal(
+    completarResumen('Eso no viene en tu material. Te lo paso a Recursos Humanos para que lo revisen. Ya le avisé a Recursos Humanos.', 'x [CANALIZAR:rh]', 'rh'),
+    'Eso no viene en tu material. Ya le avisé a Recursos Humanos.',
+  );
+});

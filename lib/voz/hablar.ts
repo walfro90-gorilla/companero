@@ -95,6 +95,9 @@ export function resumenDeRespaldo(respuesta: string, canaliza: 'supervisor' | 'r
 /** Mayúscula al empezar el texto y después de cada punto, signo de admiración o de interrogación. */
 const mayusculas = (t: string) => t.replace(/(^|[.!?]\s+)(\p{Ll})/gu, (_, antes: string, letra: string) => antes + letra.toUpperCase());
 
+/** Una oración que dice que la duda ya se canalizó. */
+const AVISO = /avis[eé]|te lo paso|le paso|lo paso a|canalic/i;
+
 /** Cuántos pasos en lista trae una respuesta escrita. */
 const pasosDe = (respuesta: string) => textoPlano(respuesta).split('\n').filter(l => /^\s*(?:\d+[.)]|[-•*])\s+/.test(l)).length;
 
@@ -108,8 +111,14 @@ export function completarResumen(resumen: string, respuesta: string, canaliza: '
   // está en el material. Te dejo los pasos en la pantalla. ya le avisé a Recursos Humanos»).
   if (canaliza || pasosDe(respuesta) <= 2) resumen = resumen.replace(/\s*te dejo los pasos en la pantalla\.?/gi, ' ');
   resumen = mayusculas(resumen.replace(/\s+/g, ' ').trim());
+  if (canaliza) {
+    // El aviso una sola vez: si el modelo dijo «te lo paso a RH…» y también «ya le avisé a RH», queda el último.
+    const frases = resumen.split(/(?<=[.!?])\s+/);
+    const avisos = frases.filter(f => AVISO.test(f));
+    if (avisos.length > 1) resumen = frases.filter(f => !AVISO.test(f) || f === avisos.at(-1)).join(' ');
+  }
   const cierre =
-    canaliza && !/avis[eé]|te lo paso|le paso|canalic|ya sabe/i.test(resumen) ? ` Ya le avisé a ${destino}.`
+    canaliza && !AVISO.test(resumen) && !/ya sabe/i.test(resumen) ? ` Ya le avisé a ${destino}.`
     : !canaliza && pasosDe(respuesta) > 2 && !/pantalla/i.test(resumen) ? ' Te dejo los pasos en la pantalla.'
     : '';
   return cierre ? recortar(resumen, MAX_RESUMEN - cierre.length) + cierre : resumen;
