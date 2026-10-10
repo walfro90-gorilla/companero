@@ -1,13 +1,13 @@
 # Validación técnica
 
-Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:08 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
+Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:29 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
 
 | Qué se prueba | Resultado | |
 |---|---|---|
-| Lógica de la aplicación | 68 de 68 | ✅ |
+| Lógica de la aplicación | 72 de 72 | ✅ |
 | Aislamiento entre empresas, roles y privacidad | 42 comprobaciones | ✅ |
 | Búsqueda del RAG (encuentra la sección correcta) | 18 de 18 (sin reescritura: 16) | ✅ |
-| Punta a punta (login, pantallas, QR, permisos) | 61 de 61 | ✅ |
+| Punta a punta (login, pantallas, QR, permisos) | 65 de 65 | ✅ |
 | Prueba documentada con IA (≥10 consultas) | 10 de 10 (groq) | ✅ |
 
 > Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos, cargado en la empresa «Del Río» de la demo; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.
@@ -16,7 +16,7 @@ Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:
 
 Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se parte un documento en secciones citables, cómo se detectan y validan las citas `[D1-3]` y las canalizaciones, el paso de búsqueda del RAG, el respaldo entre proveedores de IA (si Anthropic falla, responde Groq sin que se note) y las reglas de la gamificación.
 
-**Resultado:** 68 pasan, 0 fallan.
+**Resultado:** 72 pasan, 0 fallan.
 
 <details><summary>Ver cada caso</summary>
 
@@ -88,6 +88,10 @@ Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se part
 - ✅ extensión según el formato
 - ✅ descarta silencios y frases fantasma de Whisper
 - ✅ descarta las frases fantasma típicas de Whisper con ruido o música
+- ✅ el SSML escapa el texto y separa las frases con una pausa
+- ✅ el resumen hablado no lleva citas, viñetas ni símbolos y no pasa del máximo
+- ✅ el resumen de respaldo dice la primera frase y dos pasos, y avisa si canaliza
+- ✅ la voz de respaldo es femenina y en español; nunca una de hombre ni eSpeak
 
 </details>
 
@@ -173,7 +177,7 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 
 Un script usa la app como lo haría una persona: el admin entra con correo y contraseña; el estudiante 0001 entra solo con su número de reloj; un empleado nuevo se da de alta con el QR de una sucursal; el estudiante deja un test, el admin lo califica en Respuestas y el estudiante ve su calificación. Comprueba desde la web que un empleado no entra a la gestión ni a otra empresa, que un número no registrado no entra sin QR y que no hay Google ni modo invitado.
 
-**Resultado:** 61 de 61.
+**Resultado:** 65 de 65.
 
 | Paso | |
 |---|---|
@@ -222,7 +226,7 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | el QR de Superette está en Equipo (69BA724A) | ✅ |
 | la página del QR pide el número de reloj (sin sesión) | ✅ |
 | la página del QR NO lleva a la entrada de administración | ✅ |
-| un número nuevo por QR queda dado de alta y entra (H98132299) | ✅ |
+| un número nuevo por QR queda dado de alta y entra (H99408650) | ✅ |
 | el colaborador ve el inicio de Superette | ✅ |
 | después de 20 altas desde la misma red, un número nuevo espera (429) | ✅ |
 | pero quien ya está dado de alta sí entra desde esa red (200) | ✅ |
@@ -235,6 +239,10 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | pero una pregunta de más de 2000 caracteres no (400) | ✅ |
 | al salir, el empleado regresa a la entrada de SU empresa | ✅ |
 | y su otra sesión sigue abierta (salir no saca a quien comparte el número) | ✅ |
+| voz del asistente sin sesión → 401 (401) | ✅ |
+| un texto de más de 4000 caracteres no se dice (400) | ✅ |
+| ni con el material de otra empresa (404) | ✅ |
+| sin llave de Azure → 503 con el resumen hablado para la voz del navegador («Para cancelar un artículo ya cobrado, llama al supervisor, m…») | ✅ |
 | voz sin sesión → 401 (401) | ✅ |
 | voz sin audio → 400 (400) | ✅ |
 | un ruido sin voz llega a Whisper y NO se manda como pregunta (422: 422 "no te escuché") | ✅ |

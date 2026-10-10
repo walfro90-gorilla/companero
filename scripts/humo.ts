@@ -242,6 +242,28 @@ revisar(r.status === 303 && (r.headers.get('location') ?? '').endsWith('/acceso/
 r = await pedir('/e/superette', colaborador);
 revisar(r.status === 200, 'y su otra sesión sigue abierta (salir no saca a quien comparte el número)');
 
+// 4b) La voz del asistente (ADR 0016): resumen hablado con Azure Speech; sin llave, 503 con el resumen para la voz
+// del navegador.
+const vozAsistente = (cookie: string, texto: string, empresa = 'del-rio') => fetch(`${SITIO}/api/voz`, {
+  method: 'POST', headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ empresa, texto }),
+});
+const respuestaLarga = 'Para cancelar un artículo ya cobrado pide autorización al supervisor [D1-8].\n1. Llama al supervisor.\n2. Muestra el ticket.\n3. Espera su clave.';
+r = await vozAsistente('', respuestaLarga);
+revisar(r.status === 401, `voz del asistente sin sesión → 401 (${r.status})`);
+r = await vozAsistente(cajero, 'x'.repeat(4001));
+revisar(r.status === 400, `un texto de más de 4000 caracteres no se dice (${r.status})`);
+r = await vozAsistente(cajero, respuestaLarga, 'superette');
+revisar(r.status === 404, `ni con el material de otra empresa (${r.status})`);
+r = await vozAsistente(cajero, respuestaLarga);
+if (process.env.AZURE_SPEECH_KEY) {
+  const mp3 = await r.arrayBuffer();
+  revisar(r.status === 200 && (r.headers.get('content-type') ?? '').includes('audio/mpeg') && mp3.byteLength > 1024, `la voz de Azure devuelve el audio del resumen (${r.status}, ${mp3.byteLength} bytes)`);
+} else {
+  const j = (await r.json().catch(() => null)) as { resumen?: string } | null;
+  revisar(r.status === 503 && Boolean(j?.resumen) && !/[\[\]]/.test(j!.resumen!) && j!.resumen!.length <= 300,
+    `sin llave de Azure → 503 con el resumen hablado para la voz del navegador («${j?.resumen?.slice(0, 60)}…»)`);
+}
+
 // 4) Pulsar para hablar: el audio llega a Whisper (Groq) y se protege igual que el chat.
 function wavTono(segundos: number): Blob {
   const tasa = 16_000;

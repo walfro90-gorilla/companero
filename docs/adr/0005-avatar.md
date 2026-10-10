@@ -32,6 +32,9 @@
 El escenario es **Tienda Escuela** (ficticia). La identidad del asistente sigue siendo provisional y sin marca de
 Del Río ni de Superette.
 
+## Voz (9-oct)
+La voz cambió: ahora es un resumen hablado con Azure Speech (`es-MX-DaliaNeural`), con una voz femenina del navegador como respaldo. Ver ADR 0016.
+
 ## Uniforme de Del Río (9-oct, decisión de Wal)
 Wal pidió aplicar al avatar la paleta de Del Río, tomando como referencia la foto del uniforme: playera azul con cuello y vivos rojos.
 - **Colores:** salen exactos del logo, contando sus píxeles.

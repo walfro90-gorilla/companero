@@ -63,6 +63,9 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `grep '^GROQ_API_KEY=' .env.local | cut -d= -f2- | tr -d '\n' | vercel env add GROQ_API_KEY production --sensitive --yes`
       (repetir con `preview`). Después, volver a desplegar (las variables solo aplican a despliegues nuevos).
 - [ ] `ANTHROPIC_API_KEY` (opcional, eslabón principal cuando exista), igual que la de Groq.
+- [ ] **Voz natural (ADR 0016):** `AZURE_SPEECH_KEY` (*sensitive*), `AZURE_SPEECH_REGION` (p. ej. `eastus`) y, si se
+      quiere otra voz, `AZURE_VOZ`. Recurso Azure Speech, plan F0. Sin la llave, el resumen lo dice el navegador con una
+      voz femenina de respaldo.
 - [x] **`SUPABASE_SECRET_KEY` (obligatoria desde el ADR 0014: acceso por número de reloj y alta de empleados)**, como
       *sensitive*, en Production y Preview, igual que la de Groq (desde `.env.nube`, sin imprimirla). La usa solo el
       servidor (`lib/supabase/admin.ts`).
