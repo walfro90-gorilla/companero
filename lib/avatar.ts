@@ -20,7 +20,7 @@ export type Avatar = {
 };
 
 export const AVATAR_BASE: Avatar = {
-  nombre: 'Rosa',
+  nombre: 'Rio',
   rol: 'tu compañera de capacitación',
   saludo: null,
   colores: { piel: '#f1c7a0', cabello: '#3b2418', camisa: '#c81e5b', fondo: '#fde7ef', detalle: null, acento: null },

@@ -66,7 +66,7 @@
   - Quita encabezados y pies de página repetidos y marca las columnas de las tablas con " · ".
   - El manual quedó en **96 secciones citables**, todas con contexto de IA, en lotes de 10 y tres a la vez.
 - **Citas como las pide el manual:** columna `secciones.referencia` (migración `…120400`). La UI muestra "sección 5" en el chip y la referencia completa con página en "Fuentes", en el panel y en Contenido.
-- **Fecha y hora en el prompt:** con la hora real, Rosa aplica o no COMBO42. A las 12:37 cobró $163.50, el ejemplo del manual para después de las 10:30.
+- **Fecha y hora en el prompt:** con la hora real, la asistente (Rio) aplica o no COMBO42. A las 12:37 cobró $163.50, el ejemplo del manual para después de las 10:30.
 - **Búsqueda más precisa** (medida con `pruebas/busqueda.json`, 18 preguntas):
   - Peso por rareza de la palabra (IDF) y prefijo de raíz (`…120500`).
   - La vía aproximada, solo sobre el título, con la mitad de peso (`…120600`).
