@@ -67,6 +67,8 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       Rio), `ELEVENLABS_VOZ_CLIENTE` y `ELEVENLABS_VOZ_CLIENTA` (voice_id), y opcional `ELEVENLABS_MODELO`. Azure Speech
       queda como segunda opción (`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`). Sin ninguna, el navegador dice el resumen
       con una voz femenina; en Edge, «Microsoft Dalia Online (Natural)». Para la demo: presentar desde Edge.
+      *10-oct: las `AZURE_*` están en Production desde las 11:20 (con su despliegue); `/api/voz` responde 200 con
+      `audio/mpeg` en el chat y en «Escúchala». ElevenLabs no está configurado.*
 - [x] **`SUPABASE_SECRET_KEY` (obligatoria desde el ADR 0014: acceso por número de reloj y alta de empleados)**, como
       *sensitive*, en Production y Preview, igual que la de Groq (desde `.env.nube`, sin imprimirla). La usa solo el
       servidor (`lib/supabase/admin.ts`).
@@ -89,12 +91,24 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
 ## 6. Verificación antes de la demo
 - [ ] `/entrar` → «Administración» (correo y contraseña) y «Soy empleado» → Del Río → 0001 (solo el número), en
       incógnito y en el celular. Ninguna pantalla de empleado debe mostrar la entrada de administración.
+      *10-oct, 12:00: la parte de empleado pasó en Chrome (0004 y 0002, sin liga a administración). Falta incógnito y
+      celular.*
 - [ ] Escanear el QR de una sucursal desde otro teléfono y entrar con un número de reloj nuevo (queda dado de alta).
 - [ ] Hacer una práctica como estudiante y calificarla como admin en Respuestas; el estudiante ve la calificación.
-- [ ] Preguntar a la asistente: una pregunta cubierta (con cita) y una que canalice; ver la canalización
+      *10-oct, 12:20: 0004 hizo la práctica «Un precio que no coincide» (retroalimentación con cita, +30 pts) y el
+      test (5 de 6, con explicación y cita en cada pregunta). Falta calificarla como admin.*
+- [x] Preguntar a la asistente: una pregunta cubierta (con cita) y una que canalice; ver la canalización
       llegar en vivo a "Dudas del equipo".
+      *10-oct: «¿Cómo aplico una promoción?» cita las secciones 3, 6 y 7, y la fuente abre el PDF en la pág. 17. Vales de
+      despensa → supervisor; vacaciones y horas extra → RH. Con la bandeja visible llegan sin recargar en menos de 20 s
+      gracias al refresco de respaldo de `1121654`. En una pestaña oculta, Realtime no avisó.*
 - [ ] `npm run validar` en local y adjuntar `docs/validacion.md` y `docs/prueba-documentada.md` a la entrega.
 - [ ] Respaldo: video corto de la demo por si falla la red del evento.
+      *10-oct: GIF sin audio (`respaldo-demo-del-rio.gif`, 31 cuadros, en Descargas de Wal): entrada, Rio, cita con su
+      pasaje, módulo y práctica. Falta un video con voz.*
+- Ojo: en un mismo navegador, entrar como empleado en `companero-ten` reemplaza la sesión de admin en todas sus
+  pestañas. Para probar las dos a la vez, usar otro navegador o la URL del despliegue (`companero-<id>.vercel.app`),
+  que guarda sus cookies aparte.
 
 ## Si `git push` se cuelga
 En la laptop de Wal, `gcr-ssh-agent` deja procesos `ssh-add` girando y los push por SSH no terminan. Alternativa

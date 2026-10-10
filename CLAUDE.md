@@ -12,21 +12,21 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
 
 ---
 
-## Estado actual (actualizar conforme avance) — viernes 9-oct, tarde
+## Estado actual (actualizar conforme avance) — sábado 10-oct, mediodía
 
 - **Reto elegido:** **Del Río — "Tu compañero Del Río": avatar de IA para la inducción de cajeros** (área usuaria: RH).
   - Detalle completo y entregables: [ADR 0001](docs/adr/0001-reto-y-alcance.md).
   - Criterios de evaluación (30/25/20/15/10): [ADR 0008](docs/adr/0008-criterios-de-evaluacion.md).
 - **En línea: https://companero-ten.vercel.app**
   - **Vercel:** proyecto `companero`; **cada push a `main` despliega a producción**.
-  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120900` (la aplicó Bart el 9-oct), con el historial alineado con los archivos. La `121000` la aplica Bart antes del push; la siguiente nueva es `121100` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
+  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `121000`, con el historial alineado con los archivos (revisado por MCP el 10-oct). La siguiente nueva es `121100` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
   - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`). Si `git push` por SSH se cuelga (por `gcr-ssh-agent`), usar HTTPS con `gh`; el comando está al final de `docs/despliegue.md`.
   - **Detalle:** [ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md) y [`docs/despliegue.md`](docs/despliegue.md).
   - ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que sea el correcto.
 - **Pendiente de Wal para que producción funcione de punta a punta** (`docs/despliegue.md`):
   - Login en el panel de Supabase (§3): Site URL y Redirect URLs, **Anonymous OFF y Google OFF**, contraseña mínima de 8, **subir el rate limit de *token verifications*** (la sesión del empleado la abre el servidor) y la plantilla del código de 6 dígitos.
   - Ya hecho (9-oct): `GROQ_API_KEY` y `SUPABASE_SECRET_KEY` en Vercel; nube sembrada (Del Río con 96 secciones, el módulo, 0001–0004 y Wal como admin; Superette).
-  - Falta: la prueba de punta a punta en producción de la entrada separada (ADR 0015; la hace Bart). *Leaked password protection* es opcional.
+  - Prueba de punta a punta en producción (10-oct, 12:00–12:30, Chrome por MCP, estudiantes 0004 y 0002): entrada de empleado, citas con PDF, canalización a supervisor y a RH, voz de Azure, lección, test y práctica. Detalle en `docs/despliegue.md` §6. Falta que un admin califique una práctica, el QR desde otro teléfono y la prueba en incógnito y en el celular. *Leaked password protection* es opcional.
 - **Equipo / nombre del equipo:** _pendiente_
 - **Problema:** la capacitación de cajeros nuevos consume tiempo operativo y hay mucha rotación; cada ingreso repite las mismas explicaciones.
 - **Solución ([ADR 0009](docs/adr/0009-plataforma-multiempresa.md)):** **"Compañero"**, plataforma **multiempresa y multisucursal** "en blanco" para inducción y refuerzos de personal con IA.
@@ -68,10 +68,10 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
     - Prueba documentada: **10/10 con Groq**.
 - **Llaves:**
   - **En local** (`.env.local`): `GROQ_API_KEY` sí; `ANTHROPIC_API_KEY` vacía.
-  - **En Vercel:** las públicas de Supabase, `GROQ_API_KEY` y `SUPABASE_SECRET_KEY` (sensitive). Falta `ANTHROPIC_API_KEY`.
+  - **En Vercel:** las públicas de Supabase, `GROQ_API_KEY`, `SUPABASE_SECRET_KEY` (sensitive) y, desde el 10-oct, las `AZURE_*` de la voz (solo Production). Faltan `ANTHROPIC_API_KEY` y las de ElevenLabs.
 - **Falta (además de lo de Wal):**
   - Llave de Anthropic y repetir la prueba documentada con Claude como eslabón principal.
-  - Pitch y video de respaldo de la demo.
+  - Pitch y video de respaldo de la demo con voz. Ya hay un GIF sin audio: `respaldo-demo-del-rio.gif`, en Descargas de Wal.
   - Prueba en el celular con la URL de producción.
   - Opcionales: Google, embeddings, pulsar para hablar también en la práctica.
 - **Pendiente de Del Río:** si autoriza su logotipo y quién es su **enlace de RH u Operación**. El material ya llegó (ADR 0013). El avatar ya viste el uniforme de Del Río (azul, cuello y vivos rojos, estrella amarilla; colores del logo, decisión de Wal; ADR 0005).

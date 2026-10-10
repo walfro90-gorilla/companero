@@ -78,3 +78,4 @@ salgan de aquí van en `docs/adr/`.
 8. Tablero de validación + panel del supervisor (% citas y escalamientos correctos; dudas no cubiertas → pendientes RH) — 2–3 h, riesgo bajo.
 - Bonus: respuestas en kreyòl/francés/inglés citando el manual en español (personal migrante) — 1–2 h, solo texto.
 - No recomendado ahora: avatar fotorrealista (HeyGen LiveAvatar / Azure TTS Avatar): mucho WOW, 6–10 h, riesgo de red y créditos → "siguiente paso" del pitch.
+- No recomendado ahora (10-oct): servidor MCP para consultar el manual desde Copilot Studio, Claude o ChatGPT. No sube ningún criterio de la ficha y pide dependencias nuevas, autenticación por empresa sin saltarse la RLS y permiso de Del Río para abrir el material: 2–3 h, riesgo medio → "siguiente paso" del pitch.
