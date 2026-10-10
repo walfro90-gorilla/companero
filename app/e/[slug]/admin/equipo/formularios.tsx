@@ -94,7 +94,7 @@ export function FilaMiembro({ slug, miembro, yo, sucursales, puestos }: { slug: 
       <span className="min-w-32 flex-1 font-medium">
         {miembro.numero_reloj ? <span className="mr-1.5 rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">{miembro.numero_reloj}</span> : null}
         {miembro.nombre ?? (miembro.numero_reloj ? '' : 'Sin nombre')}{yo ? ' (tú)' : ''}
-        <span className="block text-xs font-normal text-stone-500">desde {new Date(miembro.ingreso).toLocaleDateString('es-MX')}</span>
+        <span className="block text-xs font-normal text-stone-500">desde {new Date(miembro.ingreso).toLocaleDateString('es-MX', { timeZone: 'UTC' })}</span>
       </span>
       <select name="rol" defaultValue={miembro.rol} disabled={yo} className="rounded-lg border border-stone-300 px-2 py-1">
         {ROLES.map(r => <option key={r} value={r}>{NOMBRE_ROL[r]}</option>)}

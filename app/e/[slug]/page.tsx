@@ -116,7 +116,7 @@ export default async function InicioEmpresa({ params }: PageProps<'/e/[slug]'>) 
           <h2 className="flex items-center gap-2 font-semibold"><Inbox className="size-5" /> Tus dudas canalizadas</h2>
           {dudas!.map(d => (
             <div key={d.id} className={tarjeta}>
-              <p className="text-sm text-stone-500">{d.destino === 'rh' ? 'Recursos Humanos' : 'Tu supervisor'} · {new Date(d.creada_en).toLocaleDateString('es-MX')}</p>
+              <p className="text-sm text-stone-500">{d.destino === 'rh' ? 'Recursos Humanos' : 'Tu supervisor'} · {new Date(d.creada_en).toLocaleDateString('es-MX', { timeZone: 'America/Ciudad_Juarez' })}</p>
               <p className="font-medium">{d.pregunta}</p>
               {d.estado === 'atendida' && d.respuesta ? (
                 <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900"><strong>Respuesta:</strong> {d.respuesta}</p>

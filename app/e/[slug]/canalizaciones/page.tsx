@@ -39,7 +39,7 @@ export default async function Canalizaciones({ params }: PageProps<'/e/[slug]/ca
         <article key={c.id} className={`${tarjeta} ${c.estado === 'abierta' ? 'border-amber-300' : ''}`}>
           <p className="text-xs text-stone-500">
             {nombre.get(c.usuario_id) ?? 'Colaborador'}{c.sucursales?.nombre ? ` · ${c.sucursales.nombre}` : ''} · para{' '}
-            {c.destino === 'rh' ? 'RH' : 'supervisor'} · {new Date(c.creada_en).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+            {c.destino === 'rh' ? 'RH' : 'supervisor'} · {new Date(c.creada_en).toLocaleString('es-MX', { timeZone: 'America/Ciudad_Juarez', dateStyle: 'short', timeStyle: 'short' })}
           </p>
           <p className="mt-1 font-medium">{c.pregunta}</p>
           {c.estado === 'atendida' ? (

@@ -19,7 +19,16 @@ export function EnVivo({ empresaId }: { empresaId: string }) {
         router.refresh();
       })
       .subscribe();
+    // Respaldo por si Realtime no avisa (red del evento, pestaña en segundo plano): la bandeja visible se refresca
+    // cada 15 s y al volver a la pestaña.
+    const refrescarSiVisible = () => {
+      if (document.visibilityState === 'visible') router.refresh();
+    };
+    const respaldo = setInterval(refrescarSiVisible, 15_000);
+    document.addEventListener('visibilitychange', refrescarSiVisible);
     return () => {
+      clearInterval(respaldo);
+      document.removeEventListener('visibilitychange', refrescarSiVisible);
       supabase.removeChannel(canal);
     };
   }, [empresaId, router]);
