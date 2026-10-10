@@ -32,6 +32,20 @@
 El escenario es **Tienda Escuela** (ficticia). La identidad del asistente sigue siendo provisional y sin marca de
 Del Río ni de Superette.
 
+## Uniforme de Del Río (9-oct, decisión de Wal)
+Wal pidió aplicar al avatar la paleta de Del Río, tomando como referencia la foto del uniforme: playera azul con cuello y vivos rojos.
+- **Colores:** salen exactos del logo, contando sus píxeles.
+  - Uniforme azul `#1C54A5`.
+  - Cuello tipo polo, vivos de los hombros y franja de la bolsa en rojo `#DA2027`.
+  - Estrella del pecho amarilla `#F8DA08`, donde el uniforme lleva el logo.
+  - Piel `#E8B08E` y cabello `#583A2A`, aproximados de la foto.
+  - Fondo amarillo claro `#FFF5CC`.
+- **Sin el logotipo:** solo los colores y una estrella genérica.
+- **Cambios en el código:**
+  - El avatar tiene dos colores opcionales nuevos, `detalle` (cuello y vivos) y `acento` (estrella), que se editan en Ajustes. Sin ellos, el uniforme es el de siempre: cuello en V blanco y gafete.
+  - El fleco ahora es recto y cubre toda la cabeza.
+- **Siguen pendientes de Del Río:** si autoriza su logotipo y si prefiere otro nombre para el asistente.
+
 ## Pendiente
 Preguntar en `#reto-del-rio` o en el taller del viernes 10:00 (Ramsés Salinas): ¿tienen mascota o personaje?
 ¿Colores y logotipo autorizados? ¿Nombre preferido para el asistente?

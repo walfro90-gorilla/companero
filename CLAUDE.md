@@ -74,7 +74,7 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - Pitch y video de respaldo de la demo.
   - Prueba en el celular con la URL de producción.
   - Opcionales: Google, embeddings, pulsar para hablar también en la práctica.
-- **Pendiente de Del Río:** la identidad visual del avatar y quién es su **enlace de RH u Operación**. El material ya llegó (ADR 0013).
+- **Pendiente de Del Río:** si autoriza su logotipo y quién es su **enlace de RH u Operación**. El material ya llegó (ADR 0013). El avatar ya viste el uniforme de Del Río (azul, cuello y vivos rojos, estrella amarilla; colores del logo, decisión de Wal; ADR 0005).
 ---
 
 ## Reto Del Río (el nuestro)

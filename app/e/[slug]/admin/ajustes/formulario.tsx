@@ -11,6 +11,15 @@ export function FormAvatar({ slug, avatar }: { slug: string; avatar: DatosAvatar
   const [vista, setVista] = useState(avatar);
   const color = (k: keyof DatosAvatar['colores']) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setVista(v => ({ ...v, colores: { ...v.colores, [k]: e.target.value } }));
+  // Cuello y vivos / estrella: opcionales. Al apagarlos, el uniforme vuelve al cuello en V y al gafete.
+  const [opcional, setOpcional] = useState({ detalle: avatar.colores.detalle ?? '#da2027', acento: avatar.colores.acento ?? '#f8da08' });
+  const alternar = (k: 'detalle' | 'acento') => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setVista(v => ({ ...v, colores: { ...v.colores, [k]: e.target.checked ? opcional[k] : null } }));
+  const colorOpcional = (k: 'detalle' | 'acento') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    setOpcional(o => ({ ...o, [k]: valor }));
+    setVista(v => ({ ...v, colores: { ...v.colores, [k]: v.colores[k] ? valor : null } }));
+  };
   return (
     <form action={enviar} className={`${tarjeta} grid gap-4 md:grid-cols-[200px_1fr]`}>
       <Avatar avatar={vista} estado="reposo" />
@@ -33,6 +42,15 @@ export function FormAvatar({ slug, avatar }: { slug: string; avatar: DatosAvatar
               <input type="color" name={n} defaultValue={avatar.colores[k]} onChange={color(k)} className="h-10 w-full cursor-pointer rounded-lg" />
               {t}
             </label>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {([['detalle', 'Cuello y vivos'], ['acento', 'Estrella en el pecho']] as const).map(([k, t]) => (
+            <div key={k} className="flex items-center gap-2 text-xs text-stone-600">
+              <input type="checkbox" name={`con_${k}`} defaultChecked={Boolean(avatar.colores[k])} onChange={alternar(k)} className="size-4" />
+              <input type="color" name={k} defaultValue={opcional[k]} onChange={colorOpcional(k)} className="h-8 w-12 cursor-pointer rounded-lg" />
+              {t}
+            </div>
           ))}
         </div>
         <label className="block">

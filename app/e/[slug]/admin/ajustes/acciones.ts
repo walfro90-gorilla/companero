@@ -12,7 +12,10 @@ export async function guardarAvatar(slug: string, _: EstadoAjustes, d: FormData)
   // avatarDe valida y recorta: lo que no sirva cae a la base.
   const avatar = avatarDe({
     nombre: t('nombre'), rol: t('rol'), saludo: t('saludo'),
-    colores: { camisa: t('color'), fondo: t('fondo'), piel: t('piel'), cabello: t('cabello') },
+    colores: {
+      camisa: t('color'), fondo: t('fondo'), piel: t('piel'), cabello: t('cabello'),
+      detalle: d.get('con_detalle') === 'on' ? t('detalle') : null, acento: d.get('con_acento') === 'on' ? t('acento') : null,
+    },
     preguntas: t('preguntas').split('\n'),
   });
   const { error } = await supabase.from('empresas').update({ avatar }).eq('id', empresa.id);

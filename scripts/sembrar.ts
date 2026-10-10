@@ -62,8 +62,11 @@ const DEMOS: Demo[] = [
     empleados: [1, 2, 3, 4].map(n => ({ numero: `000${n}`, nombre: `Estudiante ${n}` })),
     // Material ficticio del reto (manual de Tienda Escuela); identidad del asistente provisional, sin logotipo ni
     // colores de Del Río hasta que los autorice (docs/adr/0005 y 0013).
+    // Uniforme de Del Río (decisión de Wal, 9-oct): playera azul con cuello y vivos rojos y la estrella amarilla del
+    // logo; colores exactos del logo (#1C54A5, #DA2027, #F8DA08). Piel y cabello tomados de la foto del uniforme.
     avatar: {
       nombre: 'Rosa', rol: 'tu compañera de capacitación',
+      colores: { piel: '#e8b08e', cabello: '#583a2a', camisa: '#1c54a5', fondo: '#fff5cc', detalle: '#da2027', acento: '#f8da08' },
       preguntas: ['¿Cómo hago una cancelación?', '¿Qué hago si un producto no tiene precio?', '¿Cómo aplico una promoción?',
         '¿Qué debo revisar al cerrar caja?', '¿Cuándo debo llamar al supervisor?'],
     },

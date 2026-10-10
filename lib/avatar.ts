@@ -2,7 +2,11 @@
 // edita admin/RH. Lo que falte se completa con la base genérica. Sin el logotipo ni la marca de una empresa
 // salvo que ella lo autorice.
 
-export type Colores = { piel: string; cabello: string; camisa: string; fondo: string };
+/**
+ * `detalle` (cuello tipo polo y vivos) y `acento` (estrella en el pecho) son opcionales: sin ellos, el uniforme lleva
+ * el cuello en V blanco y el gafete de siempre. Del Río los usa para su uniforme (azul, rojo y amarillo; ADR 0005).
+ */
+export type Colores = { piel: string; cabello: string; camisa: string; fondo: string; detalle: string | null; acento: string | null };
 
 export type Avatar = {
   nombre: string;
@@ -19,7 +23,7 @@ export const AVATAR_BASE: Avatar = {
   nombre: 'Rosa',
   rol: 'tu compañera de capacitación',
   saludo: null,
-  colores: { piel: '#f1c7a0', cabello: '#3b2418', camisa: '#c81e5b', fondo: '#fde7ef' },
+  colores: { piel: '#f1c7a0', cabello: '#3b2418', camisa: '#c81e5b', fondo: '#fde7ef', detalle: null, acento: null },
   preguntas: [
     '¿Qué voy a aprender en mi inducción?',
     '¿Qué hago en mi primer día?',
@@ -36,7 +40,8 @@ const texto = (v: unknown, max: number): string | null =>
 export function avatarDe(json: unknown): Avatar {
   const o = (json && typeof json === 'object' ? json : {}) as Record<string, unknown>;
   const c = (o.colores && typeof o.colores === 'object' ? o.colores : {}) as Record<string, unknown>;
-  const color = (k: keyof Colores) => (typeof c[k] === 'string' && COLOR.test(c[k] as string) ? (c[k] as string) : AVATAR_BASE.colores[k]);
+  const valido = (k: keyof Colores) => (typeof c[k] === 'string' && COLOR.test(c[k] as string) ? (c[k] as string) : null);
+  const color = (k: 'piel' | 'cabello' | 'camisa' | 'fondo') => valido(k) ?? AVATAR_BASE.colores[k];
   const preguntas = Array.isArray(o.preguntas)
     ? o.preguntas.map(p => texto(p, 120)).filter((p): p is string => Boolean(p)).slice(0, 6)
     : [];
@@ -44,7 +49,7 @@ export function avatarDe(json: unknown): Avatar {
     nombre: texto(o.nombre, 30) ?? AVATAR_BASE.nombre,
     rol: texto(o.rol, 60) ?? AVATAR_BASE.rol,
     saludo: texto(o.saludo, 600),
-    colores: { piel: color('piel'), cabello: color('cabello'), camisa: color('camisa'), fondo: color('fondo') },
+    colores: { piel: color('piel'), cabello: color('cabello'), camisa: color('camisa'), fondo: color('fondo'), detalle: valido('detalle'), acento: valido('acento') },
     preguntas: preguntas.length ? preguntas : AVATAR_BASE.preguntas,
   };
 }
