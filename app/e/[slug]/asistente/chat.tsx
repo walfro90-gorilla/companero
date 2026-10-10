@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { BookOpen, FileSearch, RefreshCw, Send, UserRound, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, FileSearch, Play, RefreshCw, Send, UserRound, Volume2, VolumeX } from 'lucide-react';
 import type { Avatar as DatosAvatar } from '@/lib/avatar';
 import { analizar, type Destino } from '@/lib/conocimiento/citas';
 import { citaCorta, nombreCita, type Consultada } from '@/lib/rag/material';
@@ -148,6 +148,15 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
           {voz.activa ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
           {voz.activa ? 'Voz activada' : 'Voz apagada'}
         </button>
+        {voz.bloqueada && (
+          <button
+            type="button"
+            onClick={voz.escuchar}
+            className="fixed bottom-24 right-4 z-50 inline-flex animate-pulse items-center gap-2 rounded-full bg-[var(--marca,#c81e5b)] px-4 py-2 text-sm font-medium text-white shadow-lg md:static md:animate-none"
+          >
+            <Play className="size-4" /> Escuchar a {avatar.nombre}
+          </button>
+        )}
       </aside>
 
       <section className="flex min-h-[60vh] flex-col rounded-2xl border border-stone-200 bg-white shadow-sm">

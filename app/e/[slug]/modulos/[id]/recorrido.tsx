@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { BookOpen, Check, CheckCircle2, ChevronRight, ClipboardCheck, MessageCircle, MessagesSquare, Send, Sparkles, Volume2, VolumeX, XCircle } from 'lucide-react';
+import { BookOpen, Check, CheckCircle2, ChevronRight, ClipboardCheck, MessageCircle, MessagesSquare, Play, Send, Sparkles, Volume2, VolumeX, XCircle } from 'lucide-react';
 import type { Avatar as DatosAvatar } from '@/lib/avatar';
 import type { Progreso } from '@/lib/juego';
 import { analizar } from '@/lib/conocimiento/citas';
@@ -130,6 +130,16 @@ export function Recorrido(p: {
         >
           {voz.activa ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />} {voz.activa ? `Voz de ${p.avatar.nombre} activada` : 'Voz apagada'}
         </button>
+        {voz.bloqueada && (
+          // Fijo en la esquina: la lección o la práctica que habló puede estar lejos del encabezado.
+          <button
+            type="button"
+            onClick={voz.escuchar}
+            className="fixed bottom-6 right-4 z-50 inline-flex animate-pulse items-center gap-2 rounded-full bg-[var(--marca,#c81e5b)] px-4 py-2 text-sm font-medium text-white shadow-lg"
+          >
+            <Play className="size-4" /> Escuchar
+          </button>
+        )}
       </header>
 
       <nav className="grid grid-cols-3 gap-2">

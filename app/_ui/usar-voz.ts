@@ -9,8 +9,23 @@ import { MAX_LITERAL, MAX_TEXTO_VOZ, resumenDeRespaldo, textoLiteral, type Quien
 // (el servidor elige la voz según `quien`) y, si no se puede, dice lo mismo con la voz del navegador: femenina para
 // la asistente y otra distinta para el cliente simulado.
 
-/** WAV vacío: se reproduce dentro del clic que activa la voz para desbloquear el audio en celular y Safari. */
-const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+/**
+ * 0.05 s de silencio (WAV de 8 kHz y 8 bits): se reproduce dentro del clic que activa la voz para desbloquear el audio
+ * en celular y Safari. Antes era un WAV sin muestras, y su play() se quedaba colgado sin desbloquear nada.
+ */
+function silencio(): string {
+  const n = 400;
+  const b = new Uint8Array(44 + n).fill(128);
+  const v = new DataView(b.buffer);
+  const ascii = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  ascii(0, 'RIFF'); v.setUint32(4, 36 + n, true); ascii(8, 'WAVE'); ascii(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true);
+  v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); ascii(36, 'data'); v.setUint32(40, n, true);
+  return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+}
+
+/** Si el audio no arranca en este tiempo (el navegador lo bloqueó o se quedó cargando), se ofrece «Escuchar». */
+const ESPERA_AUDIO_MS = 3500;
 
 /** Las voces del navegador pueden llegar vacías la primera vez: se espera voiceschanged (máximo 1.5 s). */
 function vocesDelNavegador(): Promise<SpeechSynthesisVoice[]> {
@@ -64,19 +79,35 @@ export function useVoz(slug: string) {
   const audio = useRef<HTMLAudioElement | null>(null);
   /** Cada frase tiene su turno: si se pide otra (o se calla), la anterior ya no suena. */
   const turno = useRef(0);
+  /**
+   * Audio que ya llegó pero el navegador no dejó sonar solo (Brave y Safari bloquean lo que arranca segundos después del
+   * clic) o que se quedó cargando: la pantalla muestra «Escuchar» y un toque lo reproduce.
+   */
+  const [bloqueada, setBloqueada] = useState(false);
+  const reanudar = useRef<(() => void) | null>(null);
 
   function callar() {
     turno.current++;
     audio.current?.pause();
     if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
+    reanudar.current = null;
+    setBloqueada(false);
     setDiciendo(null);
+  }
+
+  /** Dentro de un clic: reproduce el audio que el navegador había bloqueado. */
+  function escuchar() {
+    const r = reanudar.current;
+    reanudar.current = null;
+    setBloqueada(false);
+    r?.();
   }
 
   /** Dentro de un clic: deja listo el audio (celular y Safari solo dejan sonar lo que nació en un clic). */
   function desbloquear() {
     const a = audio.current ?? new Audio();
     audio.current = a;
-    a.src = SILENCIO;
+    a.src = silencio();
     a.play().catch(() => {});
     const voz = window.speechSynthesis;
     if (voz) {
@@ -120,10 +151,35 @@ export function useVoz(slug: string) {
         a.onended = fin;
         a.onerror = fin;
         a.src = url;
-        await a.play();
-        return;
+        // play() puede rechazarse (autoplay bloqueado) o quedarse colgado sin arrancar: nunca se espera para siempre.
+        const arranco = await Promise.race([
+          a.play().then(
+            () => 'ok' as const,
+            (e: unknown) => (e instanceof DOMException && e.name === 'NotAllowedError' ? ('bloqueado' as const) : ('error' as const)),
+          ),
+          new Promise<'tarde'>(listo => setTimeout(() => listo('tarde'), ESPERA_AUDIO_MS)),
+        ]);
+        if (arranco === 'ok' || !vigente()) return;
+        a.pause();
+        if (arranco !== 'error') {
+          // Ya está el audio de Azure: un toque en «Escuchar» lo reproduce (dentro del clic ningún navegador lo bloquea).
+          reanudar.current = () => {
+            if (!vigente()) return;
+            setDiciendo(quien);
+            a.currentTime = 0;
+            a.play().catch(fin);
+          };
+          setBloqueada(true);
+          setDiciendo(null);
+          o.alTerminar?.();
+          return;
+        }
+        // El navegador no pudo decodificar el audio: se suelta y cae a la voz del navegador.
+        URL.revokeObjectURL(url);
+        a.onended = a.onerror = null;
+      } else {
+        dicho = ((await res.json().catch(() => null)) as { resumen?: string } | null)?.resumen ?? null;
       }
-      dicho = ((await res.json().catch(() => null)) as { resumen?: string } | null)?.resumen ?? null;
     } catch {
       // Sin red o audio bloqueado: cae a la voz del navegador.
     }
@@ -131,5 +187,5 @@ export function useVoz(slug: string) {
     await decirConNavegador(dicho ?? (modo === 'literal' ? textoLiteral(texto) : resumenDeRespaldo(texto, canaliza)), quien, terminar);
   }
 
-  return { activa, alternar, desbloquear, decir, callar, diciendo };
+  return { activa, alternar, desbloquear, decir, callar, diciendo, bloqueada, escuchar };
 }
