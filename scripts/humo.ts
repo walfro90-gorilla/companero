@@ -6,6 +6,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
+import { elegirProveedor } from '../lib/voz/proveedor.ts';
 
 const SITIO = process.env.HUMO_SITIO ?? 'http://localhost:3000';
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -256,22 +257,29 @@ r = await vozAsistente(cajero, 'x'.repeat(4001));
 revisar(r.status === 400, `un texto de más de 4000 caracteres no se dice (${r.status})`);
 r = await vozAsistente(cajero, respuestaLarga, 'superette');
 revisar(r.status === 404, `ni con el material de otra empresa (${r.status})`);
-r = await vozAsistente(cajero, respuestaLarga);
-if (process.env.AZURE_SPEECH_KEY) {
+const proveedorRio = elegirProveedor(process.env, 'asistente');
+// Texto único por corrida para que la primera vez no venga del caché.
+const respuestaUnica = `${respuestaLarga}\n4. Revisa el ticket ${Date.now()}.`;
+r = await vozAsistente(cajero, respuestaUnica);
+if (proveedorRio) {
   const mp3 = await r.arrayBuffer();
-  revisar(r.status === 200 && (r.headers.get('content-type') ?? '').includes('audio/mpeg') && mp3.byteLength > 1024, `la voz de Azure devuelve el audio del resumen (${r.status}, ${mp3.byteLength} bytes)`);
+  revisar(r.status === 200 && (r.headers.get('content-type') ?? '').includes('audio/mpeg') && mp3.byteLength > 1024 && Boolean(r.headers.get('x-resumen')),
+    `la voz de ${proveedorRio.proveedor} devuelve el audio del resumen (${r.status}, ${mp3.byteLength} bytes)`);
 } else {
   const j = (await r.json().catch(() => null)) as { resumen?: string } | null;
   revisar(r.status === 503 && Boolean(j?.resumen) && !/[\[\]]/.test(j!.resumen!) && j!.resumen!.length <= 300,
-    `sin llave de Azure → 503 con el resumen hablado para la voz del navegador («${j?.resumen?.slice(0, 60)}…»)`);
+    `sin proveedor de voz → 503 con el resumen hablado para la voz del navegador («${j?.resumen?.slice(0, 60)}…»)`);
 }
+r = await vozAsistente(cajero, respuestaUnica);
+await r.arrayBuffer();
+revisar(r.headers.get('x-cache') === 'hit', `lo mismo otra vez sale del caché: no gasta créditos ni otra llamada al resumen (${r.headers.get('x-cache')})`);
 
 // Modo literal (las líneas del cliente simulado se dicen tal cual, con otra voz que elige el servidor).
 const vozCon = (cuerpo: object) => fetch(`${SITIO}/api/voz`, {
   method: 'POST', headers: { 'content-type': 'application/json', cookie: cajero }, body: JSON.stringify({ empresa: 'del-rio', ...cuerpo }),
 });
 r = await vozCon({ texto: '¡Oiga! Me cobró dos veces [D1-5] el refresco.', modo: 'literal', quien: 'cliente' });
-if (process.env.AZURE_SPEECH_KEY) revisar(r.status === 200, `el cliente simulado habla con su voz (${r.status})`);
+if (elegirProveedor(process.env, 'cliente')) revisar(r.status === 200, `el cliente simulado habla con su voz (${r.status})`);
 else {
   const j = (await r.json().catch(() => null)) as { resumen?: string } | null;
   revisar(r.status === 503 && j?.resumen === '¡Oiga! Me cobró dos veces el refresco.', `la línea del cliente se dice tal cual, sin pasar por el modelo («${j?.resumen}»)`);

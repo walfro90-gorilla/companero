@@ -1,10 +1,41 @@
-# ADR 0016 — Voz natural del asistente: resumen hablado con Azure Speech
+# ADR 0016 — Voz natural del asistente: resumen hablado con ElevenLabs (o Azure Speech)
 
 - Estado: **aceptado (2026-10-09, noche)**. Wal quiere que la voz del avatar sea más femenina y más humana, y decidió (respondiendo a la otra sesión, Bart):
   - **Azure Speech** con `es-MX-DaliaNeural`;
   - la voz del navegador **bien elegida** como respaldo;
   - un **resumen hablado** en vez de leer toda la respuesta.
 - Enmienda la parte de voz del ADR 0005. La voz es una mejora opcional según la ficha; aporta a «Experiencia de uso» (15 %).
+
+## Enmienda (10-oct, madrugada): ElevenLabs es la voz principal
+Wal **no** quiere Azure como voz principal: decidió **ElevenLabs**, y para la demo presentar desde **Edge**, donde el respaldo del navegador ya elige «Microsoft Dalia Online (Natural)».
+- **Orden** (`lib/voz/proveedor.ts`):
+  1. ElevenLabs, si hay `ELEVENLABS_API_KEY` y voz para ese personaje.
+  2. Azure, si hay `AZURE_SPEECH_KEY`. El código de Azure se queda.
+  3. Si no, 503 con el resumen y la voz del navegador.
+  - Si falta la voz del cliente en ElevenLabs, el cliente no habla con la voz de Rio: usa Azure o el navegador, que elige otra voz.
+- **Variables de ElevenLabs:**
+
+  | Variable | Para qué |
+  |---|---|
+  | `ELEVENLABS_API_KEY` | La llave |
+  | `ELEVENLABS_VOZ` | voice_id de Rio |
+  | `ELEVENLABS_VOZ_CLIENTE` y `ELEVENLABS_VOZ_CLIENTA` | voice_id del cliente y de la clienta |
+  | `ELEVENLABS_MODELO` | `eleven_flash_v2_5` por omisión: el rápido, a mitad de precio por carácter; o `eleven_multilingual_v2` |
+
+  Los voice_id deben ser alfanuméricos y el modelo `eleven_…`.
+- **Llamada** (revisada contra la documentación oficial el 9-oct):
+  - `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_64`, con `xi-api-key`.
+  - Cuerpo: `text`, `model_id` y `voice_settings` (stability 0.45, similarity_boost 0.8, style 0.1, use_speaker_boost).
+  - `language_code: "es"` **solo** con Flash/Turbo v2.5: la documentación dice que `multilingual_v2` no lo acepta.
+  - Timeout de 12 s.
+- **Si ElevenLabs falla** (401, 402, cuota agotada, 429 o red): 502 con el resumen, y el navegador lo dice. Solo se registra el código de error, nunca el texto ni la llave.
+- **Caché para cuidar los créditos** (el plan gratis trae 10 000 al mes):
+  - En memoria del proceso, con los 200 más recientes. Guarda el resumen y el audio.
+  - Llave: `sha256(proveedor, voz, modelo, modo, quién, texto)`.
+  - Si 10 jueces oyen la misma lección, se gasta una sola síntesis y una sola llamada al resumen.
+  - Un fallo no se guarda, para reintentar.
+  - La cabecera `X-Cache` (hit o miss) deja comprobarlo; está probado en el humo.
+- **Pendiente opcional:** un tope diario por usuario.
 
 ## Por qué
 - **Antes, la voz cambiaba con cada equipo:** el chat tomaba la primera voz en español del navegador. En Linux suele ser eSpeak, que suena robótica, y en Windows a veces una voz de hombre («Raúl»). Además leía la respuesta completa, con listas y montos, y sonaba a lectura.
@@ -65,6 +96,7 @@ El hook `app/_ui/usar-voz.ts` tiene la voz del navegador y lo usan el chat y la 
 - **Lo que no va:** ni datos personales ni la pregunta del empleado.
 
 ## Configuración
+- ElevenLabs (principal): ver la enmienda de arriba.
 - `AZURE_SPEECH_KEY`: secreta, en `.env.local` y en Vercel como *sensitive*.
 - `AZURE_SPEECH_REGION`: `eastus` por omisión.
 - `AZURE_VOZ`, `AZURE_VOZ_CLIENTE` y `AZURE_VOZ_CLIENTA`: opcionales, para probar otras voces neurales de es-MX sin tocar código.
