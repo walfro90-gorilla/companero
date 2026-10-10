@@ -63,12 +63,13 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `grep '^GROQ_API_KEY=' .env.local | cut -d= -f2- | tr -d '\n' | vercel env add GROQ_API_KEY production --sensitive --yes`
       (repetir con `preview`). Después, volver a desplegar (las variables solo aplican a despliegues nuevos).
 - [ ] `ANTHROPIC_API_KEY` (opcional, eslabón principal cuando exista), igual que la de Groq.
-- [ ] **Voz natural (ADR 0016): ElevenLabs** (principal): `ELEVENLABS_API_KEY` (*sensitive*), `ELEVENLABS_VOZ` (voice_id de
-      Rio), `ELEVENLABS_VOZ_CLIENTE` y `ELEVENLABS_VOZ_CLIENTA` (voice_id), y opcional `ELEVENLABS_MODELO`. Azure Speech
-      queda como segunda opción (`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`). Sin ninguna, el navegador dice el resumen
-      con una voz femenina; en Edge, «Microsoft Dalia Online (Natural)». Para la demo: presentar desde Edge.
-      *10-oct: las `AZURE_*` están en Production desde las 11:20 (con su despliegue); `/api/voz` responde 200 con
-      `audio/mpeg` en el chat y en «Escúchala». ElevenLabs no está configurado.*
+- [x] **Voz natural (ADR 0016): Azure Speech**, recurso F0 de Wal en **`northcentralus`**, en Production y Preview (10-oct):
+      `AZURE_SPEECH_KEY` (*sensitive*), `AZURE_SPEECH_REGION=northcentralus`, `AZURE_VOZ=es-MX-DaliaMultilingualNeural`,
+      `AZURE_VOZ_CLIENTE=es-MX-JorgeNeural` y `AZURE_VOZ_CLIENTA=es-MX-BeatrizNeural`. `/api/voz` responde 200 con
+      `audio/mpeg` (resumen en 1.6 s; la misma frase otra vez sale del caché en 0.4 s).
+      ElevenLabs **no** se configuró: con la cuenta gratis, las voces mexicanas de la biblioteca dan 402. Si alguna vez se
+      cargan las `ELEVENLABS_*` en Vercel, tienen prioridad sobre Azure.
+      Si el navegador bloquea el audio (Brave, Safari), aparece «▶ Escuchar a Rio»: un toque lo reproduce (`5967920`).
 - [x] **`SUPABASE_SECRET_KEY` (obligatoria desde el ADR 0014: acceso por número de reloj y alta de empleados)**, como
       *sensitive*, en Production y Preview, igual que la de Groq (desde `.env.nube`, sin imprimirla). La usa solo el
       servidor (`lib/supabase/admin.ts`).
@@ -102,6 +103,10 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       *10-oct: «¿Cómo aplico una promoción?» cita las secciones 3, 6 y 7, y la fuente abre el PDF en la pág. 17. Vales de
       despensa → supervisor; vacaciones y horas extra → RH. Con la bandeja visible llegan sin recargar en menos de 20 s
       gracias al refresco de respaldo de `1121654`. En una pestaña oculta, Realtime no avisó.*
+- [x] **Prueba de estrés en producción** (10-oct, 12:55, Bart): unos 40 jueces simulados durante 2 minutos, **226/226
+      operaciones sin fallas**. Entradas, páginas, 20 preguntas a la vez al chat, voz de Azure, caché, micrófono y
+      práctica. Las respuestas dadas bajo carga tienen 0 citas inválidas, y DESC10 = $160.50. Detalle y cómo repetirla en
+      [`prueba-de-estres.md`](prueba-de-estres.md).
 - [ ] `npm run validar` en local y adjuntar `docs/validacion.md` y `docs/prueba-documentada.md` a la entrega.
 - [ ] Respaldo: video corto de la demo por si falla la red del evento.
       *10-oct: GIF sin audio (`respaldo-demo-del-rio.gif`, 31 cuadros, en Descargas de Wal): entrada, Rio, cita con su

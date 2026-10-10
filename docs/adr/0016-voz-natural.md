@@ -1,4 +1,4 @@
-# ADR 0016 — Voz natural del asistente: resumen hablado con ElevenLabs (o Azure Speech)
+# ADR 0016 — Voz natural del asistente: resumen hablado con Azure Speech (ElevenLabs opcional)
 
 - Estado: **aceptado (2026-10-09, noche)**. Wal quiere que la voz del avatar sea más femenina y más humana, y decidió (respondiendo a la otra sesión, Bart):
   - **Azure Speech** con `es-MX-DaliaNeural`;
@@ -36,6 +36,35 @@ Wal **no** quiere Azure como voz principal: decidió **ElevenLabs**, y para la d
   - Un fallo no se guarda, para reintentar.
   - La cabecera `X-Cache` (hit o miss) deja comprobarlo; está probado en el humo.
 - **Pendiente opcional:** un tope diario por usuario.
+
+## Enmienda (10-oct, mediodía): en producción la voz es Azure
+- **ElevenLabs no quedó:** con la cuenta gratis, las voces mexicanas de la biblioteca responden **402 `payment_required`**. Solo las voces predeterminadas funcionan gratis, y ninguna es mexicana. El plan Starter cuesta unos 5 USD al mes. Wal eligió **Azure F0 (gratis)**. El código de ElevenLabs se queda; en Vercel no hay variables `ELEVENLABS_*`, así que el proveedor es Azure.
+  - **Ojo en local:** `.env.local` todavía tiene las `ELEVENLABS_*`. Con ellas, en local se intenta ElevenLabs primero, da 502 y cae al respaldo. Para probar Azure en local, hay que comentar esas líneas.
+- **Recurso de Azure:**
+  - Es de Wal, creado con su cuenta universitaria, plan **F0**: 500 000 caracteres al mes de voz neural, gratis.
+  - La región es **`northcentralus`**, no `eastus`. La llave solo vale en la región de su recurso; con otra región, Azure responde 401. Se encontró probando la llave contra `https://{región}.api.cognitive.microsoft.com/sts/v1.0/issueToken` en 25 regiones.
+- **Voces en producción** (variables en Production y Preview desde el 10-oct):
+
+  | Personaje | Variable | Voz |
+  |---|---|---|
+  | Rio | `AZURE_VOZ` | `es-MX-DaliaMultilingualNeural` |
+  | Cliente | `AZURE_VOZ_CLIENTE` | `es-MX-JorgeNeural` |
+  | Clienta | `AZURE_VOZ_CLIENTA` | `es-MX-BeatrizNeural` |
+
+  - Para Rio, Wal pidió «la mejor para alguien que explica temas». Se escucharon las 9 voces femeninas es-MX de la cuenta (Dalia, Dalia multilingüe, Renata, Marina, Candela, Beatriz, Carlota, Larissa y Nuria), y Bart eligió **Dalia multilingüe**: es la versión más nueva de Dalia, más natural y expresiva.
+  - Para cambiarla basta la variable y un redespliegue, sin tocar código.
+- **El navegador no siempre deja sonar el audio** (commit `5967920`):
+  - Wal no oía nada en su laptop con Brave, aunque `/api/voz` respondía 200 con `audio/mpeg`.
+  - Causa 1: Brave y Safari bloquean el audio que arranca segundos después del clic.
+  - Causa 2: el respaldo del navegador calla en Linux, porque solo hay eSpeak.
+  - Causa 3: el WAV de desbloqueo no tenía muestras, así que su `play()` se quedaba colgado sin desbloquear nada.
+  - Causa 4: un `play()` colgado dejaba al avatar en «Respondiendo» para siempre.
+  - **Ahora:**
+    - El desbloqueo usa 0.05 s de silencio válido.
+    - `play()` tiene un límite de 3.5 s.
+    - Si el audio se bloquea o no arranca, aparece **«▶ Escuchar a Rio»** (chat) o **«▶ Escuchar»** (inducción, fijo en la esquina), y un toque lo reproduce. Dentro de un clic, ningún navegador lo bloquea.
+    - Si el audio no se puede decodificar, se usa la voz del navegador, como antes.
+- **Carga:** en la prueba de estrés en producción (`docs/prueba-de-estres.md`) se pidieron 12 voces a la vez y salieron 12/12, en 3.4 s típicos. La misma voz pedida por 10 personas a la vez salió del caché en 1 s.
 
 ## Por qué
 - **Antes, la voz cambiaba con cada equipo:** el chat tomaba la primera voz en español del navegador. En Linux suele ser eSpeak, que suena robótica, y en Windows a veces una voz de hombre («Raúl»). Además leía la respuesta completa, con listas y montos, y sonaba a lectura.
@@ -96,9 +125,9 @@ El hook `app/_ui/usar-voz.ts` tiene la voz del navegador y lo usan el chat y la 
 - **Lo que no va:** ni datos personales ni la pregunta del empleado.
 
 ## Configuración
-- ElevenLabs (principal): ver la enmienda de arriba.
+- ElevenLabs: opcional y sin configurar en producción (ver las enmiendas de arriba).
 - `AZURE_SPEECH_KEY`: secreta, en `.env.local` y en Vercel como *sensitive*.
-- `AZURE_SPEECH_REGION`: `eastus` por omisión.
+- `AZURE_SPEECH_REGION`: `eastus` por omisión. **En producción es `northcentralus`**, la región del recurso de Wal.
 - `AZURE_VOZ`, `AZURE_VOZ_CLIENTE` y `AZURE_VOZ_CLIENTA`: opcionales, para probar otras voces neurales de es-MX sin tocar código.
 - Sin la llave todo funciona con el respaldo, así que se puede desplegar antes de tenerla.
 

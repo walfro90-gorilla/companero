@@ -37,7 +37,12 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
     Las dos llevan una franja de contenido ficticio.
   - **Asistente con avatar:** responde **citando como pide el manual («sección N, Subtítulo»)** (RAG, [ADR 0010](docs/adr/0010-rag-en-supabase.md)).
   - **Aprendizaje:** arma módulos con test y práctica; es **gamificable** sin rankings entre personas; **canaliza en vivo** al supervisor o a RH ([ADR 0011](docs/adr/0011-aprendizaje-gamificacion-y-canalizaciones.md)).
-  - **Voz:** se le puede preguntar **pulsando para hablar** ([ADR 0005](docs/adr/0005-avatar.md)), y responde con un **resumen hablado** en voz neural de México (ElevenLabs; Azure Speech como segunda opción; respaldo: voz femenina del navegador, en Edge «Dalia Online (Natural)»; caché para no gastar créditos dos veces; [ADR 0016](docs/adr/0016-voz-natural.md)). En la inducción, la asistente es el **coach**: presenta cada lección («Escúchala»), anima en el test y da la retroalimentación de la práctica; el cliente simulado tiene su propio avatar y otra voz, y se le responde también con el micrófono.
+  - **Voz:** se le puede preguntar **pulsando para hablar** ([ADR 0005](docs/adr/0005-avatar.md)), y responde con un **resumen hablado** en voz neural de México ([ADR 0016](docs/adr/0016-voz-natural.md)):
+    - **En producción: Azure Speech.** Es el recurso F0 de Wal, en la región `northcentralus`. Las voces son Rio `es-MX-DaliaMultilingualNeural`, el cliente Jorge y la clienta Beatriz.
+    - ElevenLabs queda como opción sin configurar: con la cuenta gratis, las voces mexicanas dan 402.
+    - Respaldo: una voz femenina del navegador; en Edge, «Dalia Online (Natural)».
+    - Hay caché para no sintetizar dos veces la misma frase.
+    - Si el navegador bloquea el audio (Brave, Safari), aparece **«▶ Escuchar a Rio»**. En la inducción, la asistente es el **coach**: presenta cada lección («Escúchala»), anima en el test y da la retroalimentación de la práctica; el cliente simulado tiene su propio avatar y otra voz, y se le responde también con el micrófono.
   - **Acceso ([ADR 0014](docs/adr/0014-acceso-por-numero-de-reloj-y-revision.md) y [ADR 0015](docs/adr/0015-entrada-separada-sin-contrasena.md)):**
     - **`/entrar`** es un selector: «Soy empleado» (grande) o «Administración» (discreto). Los empleados nunca ven la entrada de administración.
     - **Empleados** (colaborador y supervisor): **solo con su número de reloj, sin contraseña** (lo pide la ficha; el NIP se probó y se descartó), en `/acceso` (lista de empresas) → `/acceso/{empresa}` o con el QR de su sucursal. Un número nuevo por QR queda dado de alta.
@@ -66,9 +71,15 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
     - Búsqueda: 18/18 (16/18 sin reescritura).
     - Punta a punta: 61 (selector de entrada, empleados sin liga a administración, login por número de reloj, 20 entradas a la vez del mismo número, nadie entra directo contra Auth, QR, límite de altas, revisión, práctica guardada por el servidor, historial largo en el chat, salir, voz).
     - Prueba documentada: **10/10 con Groq**.
+  - **Prueba de estrés en producción** (10-oct, 12:55): unos 40 jueces simulados, **226/226 operaciones sin fallas**.
+    - 20 preguntas al chat a la vez, en ≤7 s.
+    - 12 voces de Azure a la vez.
+    - 0 citas inválidas bajo carga, y DESC10 = $160.50.
+    - Detalle en [`docs/prueba-de-estres.md`](docs/prueba-de-estres.md); el script es `pruebas/estres-produccion.py`, que corre contra producción y lo que crea se borra después.
 - **Llaves:**
   - **En local** (`.env.local`): `GROQ_API_KEY` sí; `ANTHROPIC_API_KEY` vacía.
-  - **En Vercel:** las públicas de Supabase, `GROQ_API_KEY`, `SUPABASE_SECRET_KEY` (sensitive) y, desde el 10-oct, las `AZURE_*` de la voz (solo Production). Faltan `ANTHROPIC_API_KEY` y las de ElevenLabs.
+  - **En Vercel:** las públicas de Supabase, `GROQ_API_KEY`, `SUPABASE_SECRET_KEY` (sensitive) y, desde el 10-oct, las `AZURE_*` de la voz (Production y Preview; región `northcentralus`). Faltan `ANTHROPIC_API_KEY` y, a propósito, las de ElevenLabs: si se cargan, tienen prioridad sobre Azure.
+  - **En local**, `.env.local` tiene también las `AZURE_*` y unas `ELEVENLABS_*`. Esas hacen que en local se intente ElevenLabs primero (402 → respaldo); hay que comentarlas para probar Azure en local.
 - **Falta (además de lo de Wal):**
   - Llave de Anthropic y repetir la prueba documentada con Claude como eslabón principal.
   - Pitch y video de respaldo de la demo con voz. Ya hay un GIF sin audio: `respaldo-demo-del-rio.gif`, en Descargas de Wal.
