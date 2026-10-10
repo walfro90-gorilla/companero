@@ -13,7 +13,7 @@ function estrella(cx: number, cy: number, r: number): string {
   }).join(' ');
 }
 
-const ETIQUETA: Record<EstadoAvatar, string> = {
+export const ETIQUETA: Record<EstadoAvatar, string> = {
   reposo: 'Lista para ayudarte',
   escuchando: 'Te escucho…',
   pensando: 'Revisando tu material…',

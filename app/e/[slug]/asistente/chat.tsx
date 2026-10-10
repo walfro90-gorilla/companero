@@ -1,11 +1,11 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { BookOpen, FileSearch, Play, RefreshCw, Send, UserRound, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, FileSearch, Play, RefreshCw, Send, UserRound, Volume2, VolumeX, X } from 'lucide-react';
 import type { Avatar as DatosAvatar } from '@/lib/avatar';
 import { analizar, type Destino } from '@/lib/conocimiento/citas';
 import { citaCorta, nombreCita, type Consultada } from '@/lib/rag/material';
-import { Avatar, type EstadoAvatar } from '@/app/_ui/avatar';
+import { Avatar, ETIQUETA, type EstadoAvatar } from '@/app/_ui/avatar';
 import { ChipCita, ConNegritas, PanelSeccion } from '@/app/_ui/fuentes';
 import { PulsarParaHablar } from '@/app/_ui/pulsar-para-hablar';
 import { useVoz } from '@/app/_ui/usar-voz';
@@ -47,7 +47,13 @@ function leerConsultadas(cabecera: string | null): Consultada[] {
   }
 }
 
-export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: DatosAvatar; bienvenida: string }) {
+/**
+ * `compacto`: el mismo chat dentro de la burbuja flotante (app/e/[slug]/burbuja-asistente.tsx), con el avatar y la
+ * voz en una barra arriba en vez de la columna lateral.
+ */
+export function Chat({
+  slug, avatar, bienvenida, compacto = false, onCerrar,
+}: { slug: string; avatar: DatosAvatar; bienvenida: string; compacto?: boolean; onCerrar?: () => void }) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([{ rol: 'avatar', texto: bienvenida, fija: true }]);
   const [entrada, setEntrada] = useState('');
   const [estado, setEstado] = useState<EstadoAvatar>('reposo');
@@ -132,34 +138,78 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
   const ultimoAvatar = mensajes.findLastIndex(m => m.rol === 'avatar' && !m.fija && !m.error && m.texto);
   const seccionAbierta = abierta ? secciones.get(abierta) : undefined;
 
-  return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4 md:grid md:grid-cols-[280px_1fr] md:gap-6 md:p-6">
-      <aside className="flex flex-col items-center gap-4 md:sticky md:top-6 md:self-start">
-        <Avatar avatar={avatar} estado={estado} />
-        <button
-          type="button"
-          onClick={() => {
-            if (voz.activa && !cargando && estado === 'hablando') setEstado('reposo');
-            voz.alternar();
-          }}
-          className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm hover:bg-stone-50"
-          aria-pressed={voz.activa}
-        >
-          {voz.activa ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-          {voz.activa ? 'Voz activada' : 'Voz apagada'}
-        </button>
-        {voz.bloqueada && (
-          <button
-            type="button"
-            onClick={voz.escuchar}
-            className="fixed bottom-24 right-4 z-50 inline-flex animate-pulse items-center gap-2 rounded-full bg-[var(--marca,#c81e5b)] px-4 py-2 text-sm font-medium text-white shadow-lg md:static md:animate-none"
-          >
-            <Play className="size-4" /> Escuchar a {avatar.nombre}
-          </button>
-        )}
-      </aside>
+  const botonVoz = (
+    <button
+      type="button"
+      onClick={() => {
+        if (voz.activa && !cargando && estado === 'hablando') setEstado('reposo');
+        voz.alternar();
+      }}
+      className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-stone-300 bg-white text-sm hover:bg-stone-50 ${compacto ? 'px-3 py-1.5' : 'px-4 py-2'}`}
+      aria-pressed={voz.activa}
+      aria-label={voz.activa ? 'Voz activada' : 'Voz apagada'}
+    >
+      {voz.activa ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+      <span className={compacto ? 'sr-only sm:not-sr-only' : ''}>{voz.activa ? 'Voz activada' : 'Voz apagada'}</span>
+    </button>
+  );
 
-      <section className="flex min-h-[60vh] flex-col rounded-2xl border border-stone-200 bg-white shadow-sm">
+  return (
+    <div
+      className={
+        compacto
+          ? 'flex h-full min-h-0 flex-col'
+          : 'mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4 md:grid md:grid-cols-[280px_1fr] md:gap-6 md:p-6'
+      }
+    >
+      {!compacto && (
+        <aside className="flex flex-col items-center gap-4 md:sticky md:top-6 md:self-start">
+          <Avatar avatar={avatar} estado={estado} />
+          {botonVoz}
+          {voz.bloqueada && (
+            <button
+              type="button"
+              onClick={voz.escuchar}
+              className="fixed bottom-24 right-4 z-50 inline-flex animate-pulse items-center gap-2 rounded-full bg-[var(--marca,#c81e5b)] px-4 py-2 text-sm font-medium text-white shadow-lg md:static md:animate-none"
+            >
+              <Play className="size-4" /> Escuchar a {avatar.nombre}
+            </button>
+          )}
+        </aside>
+      )}
+
+      <section
+        className={
+          compacto
+            ? 'flex min-h-0 flex-1 flex-col bg-white'
+            : 'flex min-h-[60vh] flex-col rounded-2xl border border-stone-200 bg-white shadow-sm'
+        }
+      >
+        {compacto && (
+          <div className="flex items-center gap-2 border-b border-stone-200 py-1 pl-1 pr-2">
+            <Avatar avatar={avatar} estado={estado} chico />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{avatar.nombre}</p>
+              <p className="truncate text-xs text-stone-500">{ETIQUETA[estado]}</p>
+            </div>
+            {voz.bloqueada ? (
+              <button
+                type="button"
+                onClick={voz.escuchar}
+                className="inline-flex shrink-0 animate-pulse items-center gap-1.5 rounded-full bg-[var(--marca,#c81e5b)] px-3 py-1.5 text-sm font-medium text-white"
+              >
+                <Play className="size-4" /> Escuchar
+              </button>
+            ) : (
+              botonVoz
+            )}
+            {onCerrar && (
+              <button type="button" onClick={onCerrar} className="shrink-0 rounded-full p-2 text-stone-500 hover:bg-stone-100" aria-label="Cerrar el chat">
+                <X className="size-5" />
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
           {mensajes.map((m, i) =>
             m.rol === 'usuario' ? (
@@ -182,8 +232,8 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
           <div ref={final} />
         </div>
 
-        <div className="border-t border-stone-200 p-3 md:p-4">
-          <div className="mb-3 flex flex-wrap gap-2">
+        <div className={`border-t border-stone-200 p-3 ${compacto ? '' : 'md:p-4'}`}>
+          <div className={`mb-3 flex flex-wrap gap-2 ${compacto && mensajes.length > 1 ? 'hidden' : ''}`}>
             {avatar.preguntas.map(p => (
               <button
                 key={p}
@@ -206,7 +256,7 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
             <input
               value={entrada}
               onChange={e => setEntrada(e.target.value)}
-              placeholder={`Escribe o mantén presionado el micrófono para hablarle a ${avatar.nombre}…`}
+              placeholder={compacto ? `Pregúntale a ${avatar.nombre}…` : `Escribe o mantén presionado el micrófono para hablarle a ${avatar.nombre}…`}
               maxLength={2000}
               className="min-w-0 flex-1 rounded-xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
               aria-label="Tu pregunta"

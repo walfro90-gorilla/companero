@@ -1,8 +1,10 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import { bienvenida } from '@/lib/avatar';
 import { esCorreoDeEmpleado } from '@/lib/reloj';
 import { NOMBRE_ROL, contextoEmpresa } from '@/lib/sesion';
 import { BotonSalir } from '@/app/_ui/salir';
+import { BurbujaAsistente } from './burbuja-asistente';
 import { Navegacion, type Enlace } from './navegacion';
 
 // Marco de cada empresa (docs/adr/0009): color de marca, nombre y menú según el rol.
@@ -52,6 +54,9 @@ export default async function LayoutEmpresa({ children, params }: LayoutProps<'/
         </p>
       )}
       {children}
+      {/* Espacio para que la burbuja de la asistente no tape lo último de cada página. */}
+      <div className="h-20 shrink-0" aria-hidden />
+      <BurbujaAsistente slug={slug} avatar={empresa.avatar} bienvenida={bienvenida(empresa.avatar, empresa.nombre, miembro.puesto)} />
     </div>
   );
 }

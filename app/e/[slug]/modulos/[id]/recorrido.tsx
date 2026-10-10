@@ -135,7 +135,7 @@ export function Recorrido(p: {
           <button
             type="button"
             onClick={voz.escuchar}
-            className="fixed bottom-6 right-4 z-50 inline-flex animate-pulse items-center gap-2 rounded-full bg-[var(--marca,#c81e5b)] px-4 py-2 text-sm font-medium text-white shadow-lg"
+            className="fixed bottom-24 right-4 z-50 inline-flex animate-pulse items-center gap-2 rounded-full bg-[var(--marca,#c81e5b)] px-4 py-2 text-sm font-medium text-white shadow-lg md:right-6"
           >
             <Play className="size-4" /> Escuchar
           </button>
