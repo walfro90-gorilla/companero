@@ -48,7 +48,7 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
     - **Empleados** (colaborador y supervisor): **solo con su número de reloj, sin contraseña** (lo pide la ficha; el NIP se probó y se descartó), en `/acceso` (lista de empresas) → `/acceso/{empresa}` o con el QR de su sucursal. Un número nuevo por QR queda dado de alta.
     - **Admin y RH:** correo y contraseña en `/entrar/admin`.
     - **Sin Google ni modo invitado.**
-    - **Estudiantes de la demo:** **0001–0004** en Del Río.
+    - **Estudiantes de la demo:** **0001–0004** en Del Río. **Jueces:** **1001–1010** («Juez 1» a «Juez 10»), en `/acceso/del-rio`; los dio de alta el seed el 10-oct.
   - **Respuestas:** panel donde admin y RH **revisan y califican** (0–10 con comentario) las prácticas y los tests. El empleado ve su calificación y el aviso de que su instructor revisa.
 - **Material del reto:** "Manual de procedimientos para cajeros — Tienda Escuela", **ficticio**, 15 secciones, en `conocimiento/del-rio/`.
   - Pide citar "sección N, Subtítulo".

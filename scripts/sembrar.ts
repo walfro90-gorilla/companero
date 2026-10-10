@@ -8,7 +8,8 @@
 // duplica. Con `--reiniciar` borra y vuelve a crear esas dos empresas.
 // Admin: SEMBRAR_ADMIN_EMAIL + SEMBRAR_ADMIN_PASSWORD crea (o actualiza) la cuenta de admin con contraseña y la deja
 // como admin de las demos (docs/adr/0014). Solo con el correo, deja una invitación.
-// Empleados: los de `empleados` de cada demo entran con su número de reloj (Del Río: estudiantes 0001–0004).
+// Empleados: los de `empleados` de cada demo entran con su número de reloj (Del Río: estudiantes 0001–0004 y jueces
+// 1001–1010). Si la empresa ya existe, solo da de alta a los que falten.
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
@@ -59,7 +60,11 @@ const DEMOS: Demo[] = [
     slug: 'del-rio', nombre: 'Del Río', giro: 'Comercio / tiendas', carpeta: 'conocimiento/del-rio',
     sucursales: ['Sucursal Centro', 'Sucursal Las Torres'], puestos: ['Cajero'],
     // Estudiantes para la demo (decisión de Wal, 9-oct): entran en /acceso/del-rio con su número.
-    empleados: [1, 2, 3, 4].map(n => ({ numero: `000${n}`, nombre: `Estudiante ${n}` })),
+    // Y un número por juez (10-oct): 1001–1010.
+    empleados: [
+      ...[1, 2, 3, 4].map(n => ({ numero: `000${n}`, nombre: `Estudiante ${n}` })),
+      ...Array.from({ length: 10 }, (_, i) => ({ numero: String(1001 + i), nombre: `Juez ${i + 1}` })),
+    ],
     // Material ficticio del reto (manual de Tienda Escuela); identidad del asistente provisional, sin logotipo ni
     // colores de Del Río hasta que los autorice (docs/adr/0005 y 0013).
     // Uniforme de Del Río (decisión de Wal, 9-oct): playera azul con cuello y vivos rojos y la estrella amarilla del
@@ -84,6 +89,20 @@ const DEMOS: Demo[] = [
   },
 ];
 
+/** Da de alta a los empleados que falten, en la primera sucursal y el primer puesto. Devuelve los números nuevos. */
+async function altaEmpleados(empresaId: string, empleados: { numero: string; nombre: string }[]) {
+  if (!empleados.length) return [];
+  const { data: sucursales } = await supabase.from('sucursales').select('id').eq('empresa_id', empresaId).order('creada_en').limit(1);
+  const { data: puestos } = await supabase.from('puestos').select('id').eq('empresa_id', empresaId).limit(1);
+  const nuevos: string[] = [];
+  for (const e of empleados) {
+    const r = await altaEmpleado(supabase, { empresaId, numero: e.numero, nombre: e.nombre, sucursalId: sucursales?.[0]?.id, puestoId: puestos?.[0]?.id });
+    if ('error' in r) throw new Error(`empleado ${e.numero}: ${r.error}`);
+    if (r.nuevo) nuevos.push(e.numero);
+  }
+  return nuevos;
+}
+
 async function sembrar(d: Demo) {
   const { data: existe } = await supabase.from('empresas').select('id').eq('slug', d.slug).maybeSingle();
   if (existe && reiniciar) {
@@ -91,7 +110,9 @@ async function sembrar(d: Demo) {
     await supabase.from('empresas').delete().eq('id', existe.id);
     console.log(`↺ ${d.slug}: borrada`);
   } else if (existe) {
-    console.log(`= ${d.slug}: ya existe (usa --reiniciar para recrearla)`);
+    // Ya existe: solo da de alta a los empleados que falten (altaEmpleado no duplica).
+    const nuevos = await altaEmpleados(existe.id, d.empleados ?? []);
+    console.log(`= ${d.slug}: ya existe (usa --reiniciar para recrearla)${nuevos.length ? ` · empleados nuevos: ${nuevos.join(', ')}` : ''}`);
     return;
   }
   const { data: empresa, error } = await supabase
@@ -101,13 +122,9 @@ async function sembrar(d: Demo) {
   await supabase.from('sucursales').insert(d.sucursales.map(nombre => ({ empresa_id: empresa.id, nombre })));
   await supabase.from('puestos').insert(d.puestos.map(nombre => ({ empresa_id: empresa.id, nombre })));
   const { data: sucursales } = await supabase.from('sucursales').select('id').eq('empresa_id', empresa.id).order('creada_en');
-  const { data: puestos } = await supabase.from('puestos').select('id').eq('empresa_id', empresa.id);
   if (adminId) await supabase.from('miembros').insert({ empresa_id: empresa.id, usuario_id: adminId, rol: 'admin', sucursal_id: sucursales?.[0]?.id ?? null });
   else if (adminEmail) await supabase.from('invitaciones').insert({ empresa_id: empresa.id, email: adminEmail, rol: 'admin' });
-  for (const e of d.empleados ?? []) {
-    const r = await altaEmpleado(supabase, { empresaId: empresa.id, numero: e.numero, nombre: e.nombre, sucursalId: sucursales?.[0]?.id, puestoId: puestos?.[0]?.id });
-    if ('error' in r) throw new Error(`empleado ${e.numero}: ${r.error}`);
-  }
+  await altaEmpleados(empresa.id, d.empleados ?? []);
   if (d.empleados?.length) console.log(`  empleados: ${d.empleados.map(e => e.numero).join(', ')} (entran en /acceso/${d.slug})`);
 
   for (const archivo of readdirSync(d.carpeta).filter(a => a.endsWith('.pdf')).sort()) await sembrarPdf(empresa.id, d.nombre, d.carpeta, archivo);
