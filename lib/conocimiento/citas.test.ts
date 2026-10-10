@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { analizar, textoPlano } from './citas.ts';
+import { analizar, codigosCitados, normalizarCodigo, textoPlano } from './citas.ts';
 
 const existe = (id: string) => ['D1-1', 'D1-5', 'D2-3'].includes(id);
 
@@ -47,4 +47,22 @@ test('acepta los corchetes 【】 de gpt-oss', () => {
   const a = analizar('Revisa la línea del descuento【D1-4】.\n【CANALIZAR:supervisor】', id => id === 'D1-4');
   assert.deepEqual(a.citas, ['D1-4']);
   assert.equal(a.canalizar, 'supervisor');
+});
+
+test('reconoce las citas como de verdad las escribe Groq: guion U+2011, varios códigos y texto extra (Bart, 9-oct)', () => {
+  const existe = (id: string) => ['D1-6', 'D1-7', 'D1-36', 'D1-51', 'D1-53', 'D1-57'].includes(id);
+  const texto = 'Llama al supervisor [D1‑51]. Paso 1 [D1‑53, paso 1]. Ver también [D1‑6, D1‑36] y 【D1-7】 o [D1-57]. Mal: [D1-999].';
+  const a = analizar(texto, existe);
+  assert.deepEqual(a.citas, ['D1-51', 'D1-53', 'D1-6', 'D1-36', 'D1-7', 'D1-57']);
+  assert.deepEqual(a.invalidas, ['D1-999']);
+  assert.ok(a.trozos.every(t => t.tipo !== 'texto' || !/D1/.test(t.texto)), 'ninguna marca queda como texto');
+});
+
+test('otros guiones y separadores también cuentan; el código se normaliza', () => {
+  const todo = () => true;
+  assert.deepEqual(analizar('[d1 – 4; D2−3] [D1-5 y D1-8] [D3－2]', todo).citas, ['D1-4', 'D2-3', 'D1-5', 'D1-8', 'D3-2']);
+  assert.deepEqual(codigosCitados('[D1‑3] y [D1-3, nota]'), ['D1-3', 'D1-3']);
+  assert.equal(normalizarCodigo(' d12‑ 7 '), 'D12-7');
+  // Un corchete que no es cita no se toca.
+  assert.deepEqual(analizar('[nota: ver arriba] [D-1]', todo).citas, []);
 });

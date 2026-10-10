@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { conmutar } from '@/lib/ia/cadena';
-import { MAX_CARACTERES } from '@/lib/ia/mensajes';
+import { MAX_CARACTERES, MAX_CARACTERES_HISTORIAL, MAX_MENSAJES_HISTORIAL } from '@/lib/ia/mensajes';
 import { peticionPersonaje, peticionRetroalimentacion } from '@/lib/ia/practica';
 import { configurados } from '@/lib/ia/proveedores';
 import { materialParaPrompt } from '@/lib/rag/material';
@@ -18,7 +18,7 @@ const Cuerpo = z.object({
   empresa: z.string().regex(/^[a-z0-9-]{3,40}$/),
   escenario: z.string().uuid(),
   evaluar: z.boolean().default(false),
-  mensajes: z.array(z.object({ rol: z.enum(['usuario', 'avatar']), texto: z.string().trim().min(1).max(MAX_CARACTERES) })).max(40),
+  mensajes: z.array(z.object({ rol: z.enum(['usuario', 'avatar']), texto: z.string().trim().min(1).max(MAX_CARACTERES_HISTORIAL) })).max(MAX_MENSAJES_HISTORIAL),
 });
 
 const error = (mensaje: string, status: number) => Response.json({ error: mensaje }, { status });
@@ -30,6 +30,11 @@ export async function POST(request: Request) {
   const datos = Cuerpo.safeParse(await request.json().catch(() => null));
   if (!datos.success) return error('Mensaje inválido.', 400);
   if (datos.data.evaluar && !datos.data.mensajes.some(m => m.rol === 'usuario')) return error('Primero responde en la práctica.', 400);
+  // Estricto solo con el último turno de la persona; el resto del historial se valida con holgura (lib/ia/mensajes.ts).
+  const ultimo = datos.data.mensajes.at(-1);
+  if (ultimo?.rol === 'usuario' && ultimo.texto.length > MAX_CARACTERES) return error(`Tu respuesta es muy larga: máximo ${MAX_CARACTERES} caracteres.`, 400);
+  // Lo que se guarda para RH: la conversación completa hasta 60 turnos.
+  const conversacion = datos.data.mensajes.slice(-60);
   const { supabase, usuario } = s;
   const { data: empresa } = await supabase.from('empresas').select('id, nombre').eq('slug', datos.data.empresa).maybeSingle();
   if (!empresa) return error('No encontré esa empresa.', 404);
@@ -53,7 +58,7 @@ export async function POST(request: Request) {
   const escena = { empresa: empresa.nombre, personaje: esc.personaje, situacion: esc.situacion, objetivo: esc.objetivo, material };
   const r = await conmutar(
     configurados(),
-    datos.data.evaluar ? peticionRetroalimentacion(escena, datos.data.mensajes) : peticionPersonaje(escena, datos.data.mensajes),
+    datos.data.evaluar ? peticionRetroalimentacion(escena, conversacion) : peticionPersonaje(escena, conversacion),
   );
   if (!r.ok) return error('No pude responder en este momento. Intenta de nuevo en un minuto.', 502);
 
@@ -79,7 +84,7 @@ export async function POST(request: Request) {
       if (datos.data.evaluar && completo && texto.trim()) {
         const { error: e } = await clienteAdmin().from('practicas').insert({
           empresa_id: empresa.id, usuario_id: usuario.id, modulo_id: esc.modulo_id, escenario_id: datos.data.escenario,
-          transcripcion: datos.data.mensajes, retroalimentacion: texto.slice(0, 6000),
+          transcripcion: conversacion, retroalimentacion: texto.slice(0, 6000),
         });
         if (e) console.error('[practica] no se guardó la práctica:', e.message);
       }

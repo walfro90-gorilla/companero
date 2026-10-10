@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { z } from 'zod';
 import { altaEmpleado } from '@/lib/empleados';
 import { abrirSesion } from '@/lib/sesion-empleado';
-import { LIMITE_ALTAS, LIMITE_FALLOS, VENTANA_MIN, normalizarNumero } from '@/lib/reloj';
+import { LIMITE_ALTAS, LIMITE_FALLOS, VENTANA_MIN, correoDeEmpleado, normalizarNumero } from '@/lib/reloj';
 import { accesoRelojDisponible, clienteAdmin } from '@/lib/supabase/admin';
 import { rutaSegura } from '@/lib/texto';
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     nuevo = alta.nuevo;
   }
 
-  const sesion = await abrirSesion(admin, usuarioId);
+  const sesion = await abrirSesion(admin, usuarioId, correoDeEmpleado(empresa.id, numero));
   if (sesion === 'saturado') return error('Hay muchas entradas en este momento. Intenta de nuevo en un minuto.', 503);
   if (sesion === 'error') return error('No se pudo abrir la sesión. Intenta de nuevo.', 500);
   await admin.from('accesos_reloj').insert({ ip, empresa_id: empresa.id, numero, exito: true, alta: nuevo });

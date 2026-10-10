@@ -1,4 +1,5 @@
 import 'server-only';
+import { createHmac } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './supabase/tipos.ts';
 import { correoDeEmpleado } from './reloj.ts';
@@ -8,6 +9,20 @@ import { correoDeEmpleado } from './reloj.ts';
 // sucursal); aquí no se decide quién puede.
 
 type Admin = SupabaseClient<Database>;
+
+/**
+ * Clave INTERNA del usuario de Auth de un empleado (docs/adr/0015): el empleado no la conoce ni la escribe (entra solo
+ * con su número de reloj); la calcula el servidor con la llave secreta, así que nadie puede entrar directo contra
+ * Supabase Auth. Sirve para abrir sesión con signInWithPassword: a diferencia del enlace mágico (un token de un solo
+ * uso que el siguiente reemplaza), varias entradas del mismo número a la vez no se pisan (los jueces comparten 0001).
+ * Lleva mayúscula, minúscula, dígito y símbolo por si Auth exige alguna regla de contraseñas; 68 caracteres (< 72 de
+ * bcrypt).
+ */
+export function claveDeEmpleado(correo: string): string {
+  const secreta = process.env.SUPABASE_SECRET_KEY;
+  if (!secreta) throw new Error('Falta SUPABASE_SECRET_KEY');
+  return `Ce1_${createHmac('sha256', secreta).update(`companero-empleado:${correo}`).digest('hex')}`;
+}
 export type RolEmpleado = 'colaborador' | 'supervisor';
 
 export async function altaEmpleado(
@@ -18,8 +33,9 @@ export async function altaEmpleado(
     .from('miembros').select('usuario_id').eq('empresa_id', e.empresaId).eq('numero_reloj', e.numero).maybeSingle();
   if (existente) return { usuarioId: existente.usuario_id, nuevo: false };
 
+  const correo = correoDeEmpleado(e.empresaId, e.numero);
   const { data, error } = await admin.auth.admin.createUser({
-    email: correoDeEmpleado(e.empresaId, e.numero), email_confirm: true, user_metadata: { tipo: 'empleado' },
+    email: correo, password: claveDeEmpleado(correo), email_confirm: true, user_metadata: { tipo: 'empleado' },
   });
   if (error || !data.user) return { error: 'No se pudo dar de alta al empleado.' };
   const { error: e2 } = await admin.from('miembros').insert({

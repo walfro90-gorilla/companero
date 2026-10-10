@@ -99,7 +99,8 @@ export function Chat({ slug, avatar, bienvenida }: { slug: string; avatar: Datos
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           empresa: slug,
-          mensajes: historial.filter(m => !m.fija && !m.error && m.texto).map(({ rol, texto }) => ({ rol, texto })),
+          // Solo lo reciente: el modelo usa los últimos 12 y un historial enorme no debe tumbar la pregunta nueva.
+          mensajes: historial.filter(m => !m.fija && !m.error && m.texto).slice(-24).map(({ rol, texto }) => ({ rol, texto })),
         }),
       });
       if (!res.ok || !res.body) {

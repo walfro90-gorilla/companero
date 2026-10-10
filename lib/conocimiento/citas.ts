@@ -18,9 +18,24 @@ export type Analisis = {
   canalizar: Destino | null;
 };
 
-// Tolera espacios dentro de los corchetes ("[ D1-7 ]") y los corchetes 【】 que usa gpt-oss en Groq (prueba
-// documentada del 9-oct): el contenido era correcto y la cita no se reconocía.
-const MARCA = /[\[【]\s*((?:D\d+-\d+\s*,\s*)*D\d+-\d+)\s*[\]】]|[\[【]\s*CANALIZAR:\s*(supervisor|rh)\s*[\]】]/gi;
+// Lo que de verdad escriben los modelos (pruebas del 9-oct), y que tiene que reconocerse como cita:
+//   - corchetes 【】 de gpt-oss en Groq y espacios dentro ("[ D1-7 ]");
+//   - cualquier guion: Groq usa a veces el guion que no se corta (U+2011: "[D1‑51]"), y sin reconocerlo la respuesta
+//     salía SIN fuentes (lo encontró Bart en producción: «¿Cómo hago una cancelación?» con 12 citas y 0 reconocidas);
+//   - varios códigos ("[D1‑6, D1‑36]", "[D1-6; D1-7]", "[D1-6 y D1-7]") y un texto corto después ("[D1‑53, paso 1]").
+// El código se normaliza a "D1-53" (guion ASCII, mayúsculas) antes de validarlo contra lo consultado.
+const GUION = '[-\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]';
+const CODIGO = `D\\d+\\s*${GUION}\\s*\\d+`;
+const SEPARADOR = '\\s*(?:[,;/]|\\by\\b)\\s*';
+const CITAS = `[\\[【]\\s*(${CODIGO}(?:${SEPARADOR}${CODIGO})*)(?:\\s*[,;:(][^\\]】\\n]{0,40})?\\s*[\\]】]`;
+const MARCA = new RegExp(`${CITAS}|[\\[【]\\s*CANALIZAR:\\s*(supervisor|rh)\\s*[\\]】]`, 'gi');
+
+/** "d1‑53 " → "D1-53". */
+export const normalizarCodigo = (c: string) => c.replace(new RegExp(GUION, 'g'), '-').replace(/\s+/g, '').toUpperCase();
+const codigosDe = (grupo: string) => [...grupo.matchAll(new RegExp(CODIGO, 'gi'))].map(m => normalizarCodigo(m[0]));
+
+/** Todos los códigos citados en un texto, normalizados y en orden (con repetidos). */
+export const codigosCitados = (texto: string) => [...texto.matchAll(MARCA)].flatMap(m => (m[1] ? codigosDe(m[1]) : []));
 
 export function analizar(texto: string, existe: (id: string) => boolean): Analisis {
   const trozos: Trozo[] = [];
@@ -36,7 +51,7 @@ export function analizar(texto: string, existe: (id: string) => boolean): Analis
       canalizar = m[2].toLowerCase() as Destino;
       continue;
     }
-    const ids = m[1].split(',').map(x => x.trim().toUpperCase());
+    const ids = codigosDe(m[1]);
     const validos = ids.filter(existe);
     for (const id of ids) {
       if (!existe(id)) {

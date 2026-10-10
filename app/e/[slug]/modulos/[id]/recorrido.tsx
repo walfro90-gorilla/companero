@@ -331,7 +331,7 @@ function Simulador({ slug, escenario, onSalir, onCompletada }: { slug: string; e
     try {
       const res = await fetch('/api/practica', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ empresa: slug, escenario: escenario.id, evaluar, mensajes: historial }),
+        body: JSON.stringify({ empresa: slug, escenario: escenario.id, evaluar, mensajes: historial.slice(-60) }),
       });
       if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? 'No pude responder.');
       if (evaluar) {

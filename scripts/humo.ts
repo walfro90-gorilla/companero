@@ -14,6 +14,7 @@ const email = (process.env.HUMO_EMAIL || process.env.SEMBRAR_ADMIN_EMAIL || '').
 const password = process.env.HUMO_PASSWORD || process.env.SEMBRAR_ADMIN_PASSWORD || '';
 if (!url.includes('127.0.0.1') && !url.includes('localhost')) throw new Error('humo solo corre contra Supabase local');
 if (!email || !password) throw new Error('Faltan SEMBRAR_ADMIN_EMAIL y SEMBRAR_ADMIN_PASSWORD en .env.local');
+if (!process.env.SUPABASE_SECRET_KEY) throw new Error('Falta SUPABASE_SECRET_KEY en .env.local');
 
 let fallas = 0;
 function revisar(ok: boolean, que: string) {
@@ -94,9 +95,21 @@ revisar(r.status === 200, `/e/del-rio/admin/metricas → ${r.status}`);
 // respuestas del test; no entra a la gestión.
 html = await (await pedir('/e/del-rio/admin/equipo', admin)).text();
 revisar(['0001', '0002', '0003', '0004'].every(n => html.includes(n)), 'Equipo muestra a los estudiantes 0001–0004');
+const servicio = createClient(url, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
+const { data: emp0001 } = await servicio.from('empresas').select('id').eq('slug', 'del-rio').single();
 let acceso = await sesionReloj({ empresa: 'del-rio', numero: '0001' });
 const cajero = acceso.cookie;
 revisar(acceso.status === 200 && acceso.json?.destino === '/e/del-rio' && Boolean(cajero), 'el estudiante 0001 entra con su número de reloj');
+// Varios jueces entran como 0001 al mismo tiempo (ADR 0015): con el enlace mágico ~1 de cada 4 fallaba porque cada
+// enlace nuevo reemplaza al anterior; con la clave interna todas las entradas se abren.
+const rafaga = await Promise.all(Array.from({ length: 20 }, () => sesionReloj({ empresa: 'del-rio', numero: '0001' })));
+const buenas = rafaga.filter(a => a.status === 200 && a.cookie).length;
+revisar(buenas === 20, `20 entradas a la vez con el mismo número (0001): ${buenas} de 20 abren sesión`);
+// La clave interna la calcula el servidor con la llave secreta: nadie entra directo contra Supabase Auth adivinándola.
+const directo = createClient(url, llave, { auth: { persistSession: false } });
+const correo0001 = `r-${emp0001!.id}-0001@reloj.companero.invalid`;
+const intentos = await Promise.all(['0001', '123456', 'password', ''].map(p => directo.auth.signInWithPassword({ email: correo0001, password: p })));
+revisar(intentos.every(i => i.error && !i.data.session), 'nadie entra como 0001 directo contra Supabase Auth con la llave pública');
 r = await pedir('/entrar/admin', cajero);
 revisar(r.status === 307 && (r.headers.get('location') ?? '').endsWith('/e/del-rio'), 'si el estudiante abre la entrada de administración, regresa a su empresa');
 html = await (await pedir('/e/del-rio', cajero)).text();
@@ -205,6 +218,22 @@ r = await pedir('/api/chat', colaborador, {
   body: JSON.stringify({ empresa: 'del-rio', mensajes: [{ rol: 'usuario', texto: '¿Cómo hago una cancelación?' }] }),
 });
 revisar(r.status === 404, `el chat no responde con el material de otra empresa (${r.status})`);
+// Una respuesta larga de la asistente (un corte de caja con cálculo) o una conversación larga no deben tumbar la
+// pregunta siguiente (Bart, en producción: el historial se rechazaba y todas las preguntas siguientes fallaban).
+const chatCon = (mensajes: { rol: string; texto: string }[]) => pedir('/api/chat', colaborador, {
+  method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ empresa: 'superette', mensajes }),
+});
+r = await chatCon([
+  { rol: 'usuario', texto: '¿Qué hago al iniciar mi turno?' }, { rol: 'avatar', texto: 'Paso a paso. '.repeat(200) },
+  { rol: 'usuario', texto: '¿Y al cerrar?' },
+]);
+await r.text();
+revisar(r.status === 200 || r.status === 502, `después de una respuesta de 2 600 caracteres, la pregunta siguiente sí se atiende (${r.status})`);
+r = await chatCon([...Array.from({ length: 59 }, (_, i) => ({ rol: i % 2 ? 'avatar' : 'usuario', texto: `mensaje ${i}` })), { rol: 'usuario', texto: '¿Cómo recibo mercancía?' }]);
+await r.text();
+revisar(r.status === 200 || r.status === 502, `y con 60 mensajes en la conversación también (${r.status})`);
+r = await chatCon([{ rol: 'usuario', texto: 'x'.repeat(2001) }]);
+revisar(r.status === 400, `pero una pregunta de más de 2000 caracteres no (${r.status})`);
 
 // Al salir, el empleado regresa a la entrada de SU empresa (no al selector) y solo se cierra esa sesión (ADR 0015).
 acceso = await sesionReloj({ codigo: qr!, numero: numeroNuevo });

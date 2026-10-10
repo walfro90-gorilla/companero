@@ -1,13 +1,13 @@
 # Validación técnica
 
-Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 5:45 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
+Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:08 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
 
 | Qué se prueba | Resultado | |
 |---|---|---|
-| Lógica de la aplicación | 64 de 64 | ✅ |
-| Aislamiento entre empresas, roles y privacidad | 40 comprobaciones | ✅ |
+| Lógica de la aplicación | 68 de 68 | ✅ |
+| Aislamiento entre empresas, roles y privacidad | 42 comprobaciones | ✅ |
 | Búsqueda del RAG (encuentra la sección correcta) | 18 de 18 (sin reescritura: 16) | ✅ |
-| Punta a punta (login, pantallas, QR, permisos) | 56 de 56 | ✅ |
+| Punta a punta (login, pantallas, QR, permisos) | 61 de 61 | ✅ |
 | Prueba documentada con IA (≥10 consultas) | 10 de 10 (groq) | ✅ |
 
 > Material: el manual oficial del reto («Manual de procedimientos para cajeros — Tienda Escuela»), **ficticio** y con fines educativos, cargado en la empresa «Del Río» de la demo; no describe políticas reales de Del Río ni de Superette. La empresa «Superette (demo)» usa contenido de ejemplo escrito por el equipo.
@@ -16,16 +16,20 @@ Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 5:
 
 Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se parte un documento en secciones citables, cómo se detectan y validan las citas `[D1-3]` y las canalizaciones, el paso de búsqueda del RAG, el respaldo entre proveedores de IA (si Anthropic falla, responde Groq sin que se note) y las reglas de la gamificación.
 
-**Resultado:** 64 pasan, 0 fallan.
+**Resultado:** 68 pasan, 0 fallan.
 
 <details><summary>Ver cada caso</summary>
 
+- ✅ el uniforme con cuello, vivos y estrella (Del Río) se lee del jsonb
+- ✅ sin detalle ni acento, el uniforme de siempre; un color inválido cae a la base
 - ✅ separa texto y citas, sin repetir fuentes
 - ✅ una cita a una sección inexistente nunca se muestra como fuente
 - ✅ detecta la canalización y la quita del texto
 - ✅ el texto para la voz va sin marcas ni markdown
 - ✅ tolera espacios dentro de los corchetes (lo hace gpt-oss en Groq)
 - ✅ acepta los corchetes 【】 de gpt-oss
+- ✅ reconoce las citas como de verdad las escribe Groq: guion U+2011, varios códigos y texto extra (Bart, 9-oct)
+- ✅ otros guiones y separadores también cuentan; el código se normaliza
 - ✅ responde el primero si funciona
 - ✅ una llave muerta pasa al siguiente y queda registrada como "clave"
 - ✅ una respuesta vacía también es fallo (el caso de gpt-oss sin tokens)
@@ -133,6 +137,8 @@ Los permisos los hace cumplir la base de datos (Row Level Security de Postgres),
 | nadie con sesión lee auth.users | ✅ |
 | ni cambia la cuenta de nadie | ✅ |
 | sin sesión no se lee la tabla de empresas | ✅ |
+| una cuenta de empleado no crea empresas | ✅ |
+| una empresa nueva NO aparece en la lista de «Soy empleado» hasta que su admin la prenda | ✅ |
 | un anónimo no crea empresas | ✅ |
 | todas las tablas de public tienen RLS | ✅ |
 
@@ -144,7 +150,7 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 
 | Pregunta | Sección esperada | Sin reescritura | Con reescritura |
 |---|---|---|---|
-| ¿Cómo hago una cancelación? | sección 8 | ✅ posición 1 | ✅ posición 4 |
+| ¿Cómo hago una cancelación? | sección 8 | ✅ posición 1 | ✅ posición 6 |
 | ¿Qué hago si un producto no tiene precio? | sección 3, Producto sin precio o diferencia con la etiqueta | ✅ posición 1 | ✅ posición 1 |
 | ¿Cómo aplico una promoción? | sección 6 / sección 7 | ✅ posición 1 | ✅ posición 1 |
 | ¿Qué debo revisar al cerrar caja? | sección 12 | ✅ posición 2 | ✅ posición 1 |
@@ -155,9 +161,9 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 | ¿Hasta cuándo puede devolver un cliente unas pilas que compró? | sección 6, Catálogo | ✅ posición 2 | ✅ posición 4 |
 | ¿Qué reviso cuando cierro mi caja? | sección 12 | ✅ posición 1 | ✅ posición 1 |
 | ¿Cómo cancelo un ticket que ya cobré? | sección 8, Ticket liquidado / sección 9 | ❌ | ✅ posición 12 |
-| Me sobran 50 pesos en el corte | sección 12 | ✅ posición 12 | ✅ posición 6 |
+| Me sobran 50 pesos en el corte | sección 12 | ✅ posición 12 | ✅ posición 7 |
 | ¿Puedo devolver un yogur abierto? | sección 9, Condiciones de atención | ✅ posición 2 | ✅ posición 1 |
-| ¿Qué hago si no tengo cambio? | sección 4, Si no hay cambio suficiente | ✅ posición 1 | ✅ posición 7 |
+| ¿Qué hago si no tengo cambio? | sección 4, Si no hay cambio suficiente | ✅ posición 1 | ✅ posición 5 |
 | ¿Cuánto cuesta el café? | sección 6, Catálogo | ✅ posición 1 | ✅ posición 1 |
 | ¿Cuánto efectivo puedo tener en la gaveta? | sección 10, Solicitar un retiro a resguardo | ✅ posición 5 | ✅ posición 4 |
 | ¿Qué pasa si la terminal no responde? | sección 4, Terminal sin respuesta o con registros diferentes | ✅ posición 4 | ✅ posición 5 |
@@ -167,7 +173,7 @@ Antes de responder, el asistente busca en el material publicado: un modelo rápi
 
 Un script usa la app como lo haría una persona: el admin entra con correo y contraseña; el estudiante 0001 entra solo con su número de reloj; un empleado nuevo se da de alta con el QR de una sucursal; el estudiante deja un test, el admin lo califica en Respuestas y el estudiante ve su calificación. Comprueba desde la web que un empleado no entra a la gestión ni a otra empresa, que un número no registrado no entra sin QR y que no hay Google ni modo invitado.
 
-**Resultado:** 56 de 56.
+**Resultado:** 61 de 61.
 
 | Paso | |
 |---|---|
@@ -194,6 +200,8 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | /e/del-rio/admin/metricas → 200 | ✅ |
 | Equipo muestra a los estudiantes 0001–0004 | ✅ |
 | el estudiante 0001 entra con su número de reloj | ✅ |
+| 20 entradas a la vez con el mismo número (0001): 20 de 20 abren sesión | ✅ |
+| nadie entra como 0001 directo contra Supabase Auth con la llave pública | ✅ |
 | si el estudiante abre la entrada de administración, regresa a su empresa | ✅ |
 | las pantallas del estudiante no llevan a la entrada de administración | ✅ |
 | el estudiante ve su número, su ruta de capacitación y su nivel | ✅ |
@@ -214,7 +222,7 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | el QR de Superette está en Equipo (69BA724A) | ✅ |
 | la página del QR pide el número de reloj (sin sesión) | ✅ |
 | la página del QR NO lleva a la entrada de administración | ✅ |
-| un número nuevo por QR queda dado de alta y entra (H89560265) | ✅ |
+| un número nuevo por QR queda dado de alta y entra (H98132299) | ✅ |
 | el colaborador ve el inicio de Superette | ✅ |
 | después de 20 altas desde la misma red, un número nuevo espera (429) | ✅ |
 | pero quien ya está dado de alta sí entra desde esa red (200) | ✅ |
@@ -222,6 +230,9 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | ni a otra empresa (404) | ✅ |
 | chat responde con citas ([{"codigo":"D1-2","documento":"Manual del colaborador de tienda (EJEMPLO)","titu…) | ✅ |
 | el chat no responde con el material de otra empresa (404) | ✅ |
+| después de una respuesta de 2 600 caracteres, la pregunta siguiente sí se atiende (200) | ✅ |
+| y con 60 mensajes en la conversación también (200) | ✅ |
+| pero una pregunta de más de 2000 caracteres no (400) | ✅ |
 | al salir, el empleado regresa a la entrada de SU empresa | ✅ |
 | y su otra sesión sigue abierta (salir no saca a quien comparte el número) | ✅ |
 | voz sin sesión → 401 (401) | ✅ |

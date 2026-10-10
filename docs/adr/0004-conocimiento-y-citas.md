@@ -54,3 +54,12 @@ La ficha técnica dice que Del Río aportaría "manuales, presentaciones, guías
   va el minuto, para que la cita sea verificable.
 - En todos los casos hay revisión humana antes de marcarlo `autorizado`. Si es posible, la hace el enlace de
   RH u Operación de Del Río.
+
+## Cómo se reconoce una cita (9-oct)
+Hay **una sola regla**, en `lib/conocimiento/citas.ts`. La usan el chat, las lecciones, el test, la práctica y la generación de módulos, y está probada en `citas.test.ts`. Acepta lo que de verdad escriben los modelos:
+- corchetes `[]` o `【】`;
+- cualquier guion (Groq usa a veces U+2011: `[D1‑51]`);
+- varios códigos (`[D1-6, D1-36]`, `;` o «y»);
+- un texto corto después (`[D1-53, paso 1]`).
+
+El código se normaliza a `D1-53` antes de validarlo contra lo que se consultó. Una cita a una sección que no se consultó sigue sin mostrarse y queda como inválida. Antes, con el guion U+2011, la respuesta salía sin fuentes (ADR 0015).

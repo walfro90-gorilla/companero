@@ -28,7 +28,8 @@ la configuración de Auth en el panel (paso 3) y sembrar los datos de demo (paso
       **25/25**; la base quedó en 0 usuarios y 0 empresas.
 - [x] Llave publicable: `sb_publishable_0yIhQ3WBZAs-o9AiwTrFWA_ouXuOnPE` (pública por diseño; protege la RLS).
 
-Aplicadas hasta la `120900` (9-oct). Las siguientes, `121000` o mayor, se aplican **antes** de empujar el código que
+Aplicadas hasta la `120900` (9-oct); la `121000` (lista de empresas apagada por omisión y empleados sin crear
+empresas) la aplica Bart antes del push. Las siguientes, `121100` o mayor, se aplican **antes** de empujar el código que
 las usa; aplicarlas por MCP (`apply_migration` con el mismo
 nombre y luego alinear la versión) o por CLI: `! supabase login`, `supabase link --project-ref bavkhusmzyyswtfksosk`,
 `supabase db push`.
@@ -40,9 +41,10 @@ Panel: https://supabase.com/dashboard/project/bavkhusmzyyswtfksosk/auth/url-conf
       `http://localhost:3000/**`.
 - [ ] **Sign In / Providers** → **Anonymous sign-ins: OFF** y **Google: OFF** (ADR 0014: los empleados entran con su número
       de reloj; admin y RH con correo y contraseña). **Email**: contraseña mínima de 8 caracteres.
-- [ ] **Rate Limits** → subir *token verifications* (por omisión unas 30 cada 5 min por IP) a 300 o más: la sesión de
-      cada empleado la abre el servidor (`verifyOtp`) y para Supabase todas vienen de la IP de Vercel (ADR 0015). Si se
-      llena, el empleado ve «Hay muchas entradas en este momento» y no cuenta como intento fallido.
+- [ ] **Rate Limits** → subir *sign-ins and sign-ups* (y, por si acaso, *token verifications*) a 300 o más: la sesión
+      de cada empleado la abre el servidor con su clave interna (`signInWithPassword`, ADR 0015) y para Supabase todas
+      vienen de la IP de Vercel. Si se llena, el empleado ve «Hay muchas entradas en este momento» y no cuenta como
+      intento fallido.
 - [ ] **Email Templates** → en *Confirm signup* y en *Magic Link* pegar el contenido de
       `supabase/templates/codigo.html` (asunto: "Tu código para entrar"). Así llega el **código de 6
       dígitos** (`{{ .Token }}`) en vez de un enlace.

@@ -2,6 +2,7 @@
 
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 import { ExternalLink, X } from 'lucide-react';
+import { analizar } from '@/lib/conocimiento/citas';
 import { citaCorta } from '@/lib/rag/material';
 import { leerSecciones, type SeccionVisible } from '@/app/e/[slug]/asistente/acciones';
 
@@ -14,8 +15,6 @@ const Etiquetas = createContext<Record<string, string>>({});
 export function ProveedorEtiquetas({ etiquetas, children }: { etiquetas: Record<string, string>; children: ReactNode }) {
   return <Etiquetas value={etiquetas}>{children}</Etiquetas>;
 }
-
-const MARCA = /([\[【]\s*(?:D\d+-\d+\s*,\s*)*D\d+-\d+\s*[\]】])/g;
 
 /** Negritas mínimas (**así**); el resto se respeta tal cual con whitespace-pre-wrap. */
 export function ConNegritas({ texto }: { texto: string }) {
@@ -50,12 +49,12 @@ export function TextoConCitas({ slug, texto, etiquetas: propias = {} }: { slug: 
   return (
     <>
       <span className="whitespace-pre-wrap leading-relaxed">
-        {/* split con grupo de captura: las posiciones impares son las citas. */}
-        {texto.split(MARCA).map((t, i) =>
-          i % 2 === 1 ? (
-            t.slice(1, -1).split(',').map(c => c.trim()).map(c => <ChipCita key={`${i}-${c}`} codigo={c} onAbrir={setAbierta} titulo={etiquetas[c]} etiqueta={citaCorta(etiquetas[c], c)} />)
+        {/* La misma regla que el chat (lib/conocimiento/citas.ts): cualquier guion, varios códigos, texto corto después. */}
+        {analizar(texto, () => true).trozos.map((t, i) =>
+          t.tipo === 'cita' ? (
+            t.ids.map(c => <ChipCita key={`${i}-${c}`} codigo={c} onAbrir={setAbierta} titulo={etiquetas[c]} etiqueta={citaCorta(etiquetas[c], c)} />)
           ) : (
-            <ConNegritas key={i} texto={t} />
+            <ConNegritas key={i} texto={t.texto} />
           ),
         )}
       </span>

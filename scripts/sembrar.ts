@@ -95,7 +95,8 @@ async function sembrar(d: Demo) {
     return;
   }
   const { data: empresa, error } = await supabase
-    .from('empresas').insert({ slug: d.slug, nombre: d.nombre, giro: d.giro, avatar: d.avatar as never }).select('id').single();
+    // Las demos sí salen en la lista de «Soy empleado» (una empresa nueva no, hasta que su admin la prenda; ADR 0015).
+    .from('empresas').insert({ slug: d.slug, nombre: d.nombre, giro: d.giro, avatar: d.avatar as never, en_lista_acceso: true }).select('id').single();
   if (error || !empresa) throw new Error(`${d.slug}: ${error?.message}`);
   await supabase.from('sucursales').insert(d.sucursales.map(nombre => ({ empresa_id: empresa.id, nombre })));
   await supabase.from('puestos').insert(d.puestos.map(nombre => ({ empresa_id: empresa.id, nombre })));

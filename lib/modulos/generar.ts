@@ -4,6 +4,7 @@
 // RH revisa y publica: nada generado llega al personal sin aprobación humana.
 
 import { z } from 'zod';
+import { codigosCitados, normalizarCodigo } from '../conocimiento/citas.ts';
 import type { Peticion } from '../ia/cadena.ts';
 
 export type SeccionFuente = { codigo: string; documento: string; titulo: string; texto: string };
@@ -73,8 +74,6 @@ Propón 3 situaciones prácticas realistas del día a día del puesto en las que
 
 // ─────────────────── Validación de lo que devuelve el modelo ───────────────────
 
-const CITA = /[\[【]\s*(?:D\d+-\d+\s*,\s*)*D\d+-\d+\s*[\]】]/g;
-const codigosEn = (t: string) => [...t.matchAll(CITA)].flatMap(m => m[0].slice(1, -1).split(',').map(x => x.trim()));
 
 const Leccion = z.object({
   titulo: z.string().trim().min(2).max(120),
@@ -110,7 +109,8 @@ export type Revision = { descartadas: string[] };
 
 /** Las secciones que cita un texto, si TODAS existen; null si cita algo que no se le dio (o nada). */
 function citasValidas(texto: string, extra: string[], validos: Set<string>): string[] | null {
-  const todas = [...new Set([...codigosEn(texto), ...extra.map(s => s.trim().toUpperCase())])];
+  // La misma regla que el chat (lib/conocimiento/citas.ts): cualquier guion, varios códigos, texto corto después.
+  const todas = [...new Set([...codigosCitados(texto), ...extra.map(normalizarCodigo)])];
   if (!todas.length || todas.some(c => !validos.has(c))) return null;
   return todas;
 }
@@ -137,7 +137,7 @@ export function validarPreguntas(json: unknown, validos: Set<string>, r: Revisio
   for (const x of lista) {
     const p = Pregunta.safeParse(x);
     if (!p.success) { r.descartadas.push('una pregunta con formato inválido'); continue; }
-    const seccion = p.data.seccion.replace(/[[\]]/g, '').toUpperCase();
+    const seccion = normalizarCodigo(p.data.seccion.replace(/[[\]【】]/g, ''));
     if (p.data.correcta >= p.data.opciones.length) { r.descartadas.push(`pregunta "${p.data.enunciado}": la respuesta correcta no existe`); continue; }
     if (new Set(p.data.opciones.map(o => o.toLowerCase())).size < p.data.opciones.length) { r.descartadas.push(`pregunta "${p.data.enunciado}": opciones repetidas`); continue; }
     if (!validos.has(seccion) || !citasValidas(p.data.explicacion, [seccion], validos)) {

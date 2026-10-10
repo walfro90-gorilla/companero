@@ -206,6 +206,20 @@ begin
 exception when insufficient_privilege then raise notice 'ok: sin sesión no se lee la tabla de empresas';
 end $$;
 
+-- Un empleado (cuenta interna de número de reloj) no crea empresas, ni llamando a la RPC directo (ADR 0015).
+select pg_temp.root();
+insert into auth.users (id, email, aud, role) values
+  ('00000000-0000-4000-8000-0000000000d4', 'r-x-0001@reloj.companero.invalid', 'authenticated', 'authenticated');
+select pg_temp.como('00000000-0000-4000-8000-0000000000d4', 'r-x-0001@reloj.companero.invalid');
+do $$ begin
+  perform public.crear_empresa('Empresa del juez', 'del-juez');
+  raise exception 'FALLÓ: una cuenta de empleado creó una empresa';
+exception when insufficient_privilege then raise notice 'ok: una cuenta de empleado no crea empresas'; end $$;
+-- Y una empresa nueva no sale sola en la lista pública de «Soy empleado».
+select pg_temp.root();
+select pg_temp.esperar((select bool_and(not en_lista_acceso) from public.empresas where slug in ('uno', 'dos')),
+  'una empresa nueva NO aparece en la lista de «Soy empleado» hasta que su admin la prenda');
+
 -- Un usuario anónimo (modo invitado) no puede crear empresas.
 select pg_temp.root();
 select set_config('role', 'authenticated', true);

@@ -19,7 +19,7 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - Criterios de evaluación (30/25/20/15/10): [ADR 0008](docs/adr/0008-criterios-de-evaluacion.md).
 - **En línea: https://companero-ten.vercel.app**
   - **Vercel:** proyecto `companero`; **cada push a `main` despliega a producción**.
-  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120900` (la aplicó Bart el 9-oct), con el historial alineado con los archivos. La siguiente nueva es `121000` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
+  - **Supabase:** `del_rio_hackathon`, ref `bavkhusmzyyswtfksosk`, `us-east-1`. Migraciones aplicadas hasta la `120900` (la aplicó Bart el 9-oct), con el historial alineado con los archivos. La `121000` la aplica Bart antes del push; la siguiente nueva es `121100` o mayor y va en la nube **antes** de empujar el código que la usa. El aislamiento dio 25/25 también en la nube (con las pruebas de entonces).
   - **Repo:** https://github.com/walfro90-gorilla/companero (privado, cuenta `walfro90-gorilla`). Si `git push` por SSH se cuelga (por `gcr-ssh-agent`), usar HTTPS con `gh`; el comando está al final de `docs/despliegue.md`.
   - **Detalle:** [ADR 0012](docs/adr/0012-despliegue-supabase-propio-y-vercel.md) y [`docs/despliegue.md`](docs/despliegue.md).
   - ⚠️ **NO usar `cncvxfjsyrntilcbbcfi`** ("asistenteIA_RH"): es la base de una app de repartos con datos reales (muy probablemente Donna Repartos). Antes de aplicar migraciones a cualquier proyecto, revisar con `list_tables` que sea el correcto.
@@ -61,10 +61,10 @@ Si algo choca entre ambas, manda el manual (la web dice "9 y 10 de octubre"; el 
   - **Módulos generados con IA y revisados** (lecciones, test y práctica con cliente simulado), gamificación (puntos, niveles, insignias, racha, festejo; reto por sucursal sin rankings), métricas agregadas y canalizaciones en vivo.
   - **Pulsar para hablar** (Whisper en Groq, sin guardar audio, filtro de frases fantasma).
   - **Evidencia para el jurado:** `npm run validar` → `docs/validacion.md`:
-    - Lógica: 64.
-    - Aislamiento SQL: 40 (incluye número de reloj, revisión, el endurecimiento de la `120800` y que la tabla de empresas y `auth.users` no se leen).
+    - Lógica: 68.
+    - Aislamiento SQL: 42 (incluye número de reloj, revisión, el endurecimiento de la `120800`, que la tabla de empresas y `auth.users` no se leen y que un empleado no crea empresas).
     - Búsqueda: 18/18 (16/18 sin reescritura).
-    - Punta a punta: 56 (selector de entrada, empleados sin liga a administración, login por número de reloj, QR, límite de altas, revisión, práctica guardada por el servidor, salir, voz).
+    - Punta a punta: 61 (selector de entrada, empleados sin liga a administración, login por número de reloj, 20 entradas a la vez del mismo número, nadie entra directo contra Auth, QR, límite de altas, revisión, práctica guardada por el servidor, historial largo en el chat, salir, voz).
     - Prueba documentada: **10/10 con Groq**.
 - **Llaves:**
   - **En local** (`.env.local`): `GROQ_API_KEY` sí; `ANTHROPIC_API_KEY` vacía.

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { canalizacionFaltante, responder } from '@/lib/ia/asistente';
-import { MAX_CARACTERES, MAX_MENSAJES } from '@/lib/ia/mensajes';
+import { MAX_CARACTERES, MAX_CARACTERES_HISTORIAL, MAX_MENSAJES_HISTORIAL } from '@/lib/ia/mensajes';
 import { analizar } from '@/lib/conocimiento/citas';
 import type { Consultada } from '@/lib/rag/material';
 import { avatarDe } from '@/lib/avatar';
@@ -18,9 +18,9 @@ const PLAZO_TOTAL = 55_000;
 const Cuerpo = z.object({
   empresa: z.string().regex(/^[a-z0-9-]{3,40}$/),
   mensajes: z
-    .array(z.object({ rol: z.enum(['usuario', 'avatar']), texto: z.string().trim().min(1).max(MAX_CARACTERES) }))
+    .array(z.object({ rol: z.enum(['usuario', 'avatar']), texto: z.string().trim().min(1).max(MAX_CARACTERES_HISTORIAL) }))
     .min(1)
-    .max(MAX_MENSAJES * 4),
+    .max(MAX_MENSAJES_HISTORIAL),
 });
 
 const error = (mensaje: string, status: number) => Response.json({ error: mensaje }, { status });
@@ -40,6 +40,8 @@ export async function POST(request: Request) {
   const { mensajes } = datos.data;
   const pregunta = mensajes.at(-1);
   if (pregunta?.rol !== 'usuario') return error('El último mensaje debe ser del usuario.', 400);
+  // Estricto solo con lo que la persona escribe ahora; el historial ya pasó (ver lib/ia/mensajes.ts).
+  if (pregunta.texto.length > MAX_CARACTERES) return error(`Tu pregunta es muy larga: máximo ${MAX_CARACTERES} caracteres.`, 400);
 
   const { supabase, usuario } = s;
   const { data: empresa } = await supabase.from('empresas').select('id, nombre, giro, avatar').eq('slug', datos.data.empresa).maybeSingle();
