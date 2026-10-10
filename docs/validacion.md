@@ -1,10 +1,10 @@
 # Validación técnica
 
-Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:41 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
+Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:45 p.m. (hora de Cd. Juárez). Cada resultado es de esta corrida; para reproducirlo basta correr el mismo comando.
 
 | Qué se prueba | Resultado | |
 |---|---|---|
-| Lógica de la aplicación | 76 de 76 | ✅ |
+| Lógica de la aplicación | 77 de 77 | ✅ |
 | Aislamiento entre empresas, roles y privacidad | 42 comprobaciones | ✅ |
 | Búsqueda del RAG (encuentra la sección correcta) | 18 de 18 (sin reescritura: 16) | ✅ |
 | Punta a punta (login, pantallas, QR, permisos) | 69 de 69 | ✅ |
@@ -16,7 +16,7 @@ Generado automáticamente por `npm run validar` el 9 de octubre de 2026 a las 8:
 
 Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se parte un documento en secciones citables, cómo se detectan y validan las citas `[D1-3]` y las canalizaciones, el paso de búsqueda del RAG, el respaldo entre proveedores de IA (si Anthropic falla, responde Groq sin que se note) y las reglas de la gamificación.
 
-**Resultado:** 76 pasan, 0 fallan.
+**Resultado:** 77 pasan, 0 fallan.
 
 <details><summary>Ver cada caso</summary>
 
@@ -96,6 +96,7 @@ Pruebas automáticas de las piezas que deciden qué ve el usuario: cómo se part
 - ✅ lo que no puede faltar en el resumen: los pasos en pantalla o el aviso, una sola vez
 - ✅ una línea del cliente se dice tal cual, sin marcas y corta
 - ✅ la voz del cliente en el navegador es distinta de la de la asistente y nunca eSpeak
+- ✅ sin pasos (o si canaliza) no dice «pasos en la pantalla», y cada oración empieza con mayúscula
 
 </details>
 
@@ -231,7 +232,7 @@ Un script usa la app como lo haría una persona: el admin entra con correo y con
 | el QR de Superette está en Equipo (69BA724A) | ✅ |
 | la página del QR pide el número de reloj (sin sesión) | ✅ |
 | la página del QR NO lleva a la entrada de administración | ✅ |
-| un número nuevo por QR queda dado de alta y entra (H00159279) | ✅ |
+| un número nuevo por QR queda dado de alta y entra (H00388778) | ✅ |
 | el colaborador ve el inicio de Superette | ✅ |
 | después de 20 altas desde la misma red, un número nuevo espera (429) | ✅ |
 | pero quien ya está dado de alta sí entra desde esa red (200) | ✅ |

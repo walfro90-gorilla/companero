@@ -30,14 +30,14 @@
 
 ## La asistente guía la inducción (9-oct, noche; pedido de Wal)
 La ficha pide que el avatar guíe la inducción (criterios de Utilidad, 25 %, y Experiencia, 15 %). En `/e/{empresa}/modulos/{id}`:
-- **Botón de voz** del módulo: «Voz de Rosa activada».
-- **Lecciones:** Rosa, con su avatar y el uniforme de la empresa, presenta cada lección a partir de su objetivo («En esta lección vas a aprender a…»). **«Escúchala»** dice el resumen hablado de la lección.
-- **Test:** Rosa anima al empezar y comenta el resultado al calificar. Es texto fijo, sin IA nueva: el puntaje es automático (ADR 0011).
+- **Botón de voz** del módulo: «Voz de Rio activada».
+- **Lecciones:** Rio (así se llama la asistente de Del Río), con su avatar y el uniforme de la empresa, presenta cada lección a partir de su objetivo («En esta lección vas a aprender a…»). **«Escúchala»** dice el resumen hablado de la lección.
+- **Test:** Rio anima al empezar y comenta el resultado al calificar. Es texto fijo, sin IA nueva: el puntaje es automático (ADR 0011).
 - **Práctica:**
   - El cliente simulado es **otro personaje**: su propio avatar genérico, «Cliente» o «Clienta» según el personaje, y **otra voz**.
   - Sus líneas se dicen tal cual (modo `literal`), sin pasar por el modelo.
   - El cajero le responde escribiendo o **con el micrófono** (pulsar para hablar con Whisper, igual que en el chat).
-  - Al terminar, **Rosa** da la retroalimentación con su voz.
+  - Al terminar, **Rio** da la retroalimentación con su voz.
 
 ### Cambios en `/api/voz`
 - **`modo`:**

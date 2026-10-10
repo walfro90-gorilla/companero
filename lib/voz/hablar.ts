@@ -53,7 +53,7 @@ export function peticionResumen(respuesta: string, canaliza: 'supervisor' | 'rh'
       'Di SOLO lo que dice la respuesta: no agregues datos, montos, pasos ni reglas, y no cambies quién hace qué ' +
       '(cliente, cajero, supervisor) ni el orden de los pasos. Sin citas, corchetes, listas, ' +
       'viñetas, emojis ni símbolos. El dinero se escribe así: "160 pesos con 50 centavos". Si es un cálculo, di solo el ' +
-      'resultado final y "te dejo el desglose en la pantalla". Si la respuesta trae pasos o ' +
+      'resultado final y "te dejo el desglose en la pantalla". SOLO si la respuesta trae una lista de pasos o ' +
       `detalles que no caben, termina con "Te dejo los pasos en la pantalla."${aviso} Responde solo el texto que se va a decir.`,
     messages: [{ role: 'user', content: textoPlano(respuesta).slice(0, MAX_TEXTO_VOZ) }],
     maxOutputTokens: 1200,
@@ -92,6 +92,9 @@ export function resumenDeRespaldo(respuesta: string, canaliza: 'supervisor' | 'r
   return recortar(limpiarResumen(dicho), MAX_RESUMEN - cierre.length) + cierre;
 }
 
+/** Mayúscula al empezar el texto y después de cada punto, signo de admiración o de interrogación. */
+const mayusculas = (t: string) => t.replace(/(^|[.!?]\s+)(\p{Ll})/gu, (_, antes: string, letra: string) => antes + letra.toUpperCase());
+
 /** Cuántos pasos en lista trae una respuesta escrita. */
 const pasosDe = (respuesta: string) => textoPlano(respuesta).split('\n').filter(l => /^\s*(?:\d+[.)]|[-•*])\s+/.test(l)).length;
 
@@ -101,6 +104,10 @@ const pasosDe = (respuesta: string) => textoPlano(respuesta).split('\n').filter(
  */
 export function completarResumen(resumen: string, respuesta: string, canaliza: 'supervisor' | 'rh' | null): string {
   const destino = canaliza === 'rh' ? 'Recursos Humanos' : 'tu supervisor';
+  // Sin pasos (o si canaliza) no hay «pasos en la pantalla», aunque el modelo lo diga (Bart, en producción: «Eso no
+  // está en el material. Te dejo los pasos en la pantalla. ya le avisé a Recursos Humanos»).
+  if (canaliza || pasosDe(respuesta) <= 2) resumen = resumen.replace(/\s*te dejo los pasos en la pantalla\.?/gi, ' ');
+  resumen = mayusculas(resumen.replace(/\s+/g, ' ').trim());
   const cierre =
     canaliza && !/avis[eé]|te lo paso|le paso|canalic|ya sabe/i.test(resumen) ? ` Ya le avisé a ${destino}.`
     : !canaliza && pasosDe(respuesta) > 2 && !/pantalla/i.test(resumen) ? ' Te dejo los pasos en la pantalla.'

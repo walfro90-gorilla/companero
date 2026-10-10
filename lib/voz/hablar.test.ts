@@ -66,3 +66,9 @@ test('la voz del cliente en el navegador es distinta de la de la asistente y nun
   assert.equal(elegirVozCliente(voces, asistente, false)?.name, 'Microsoft Raul - Spanish (Mexico)');
   assert.equal(elegirVozCliente([voces[0], voces[2]], asistente, true), null);
 });
+
+test('sin pasos (o si canaliza) no dice «pasos en la pantalla», y cada oración empieza con mayúscula', () => {
+  const r = completarResumen('Entiendo tu duda, pero esa información no está en el material. Te dejo los pasos en la pantalla. ya le avisé a Recursos Humanos.', 'Eso no viene en tu material. [CANALIZAR:rh]', 'rh');
+  assert.equal(r, 'Entiendo tu duda, pero esa información no está en el material. Ya le avisé a Recursos Humanos.');
+  assert.equal(completarResumen('pide tu ticket. te dejo los pasos en la pantalla.', 'Pide tu ticket.', null), 'Pide tu ticket.');
+});
